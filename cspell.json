@@ -1,0 +1,39 @@
+{
+  "version": "0.2",
+  "import": "@pega/cspell-config",
+  "language": "en-US",
+  "ignorePaths": [
+    "package-lock.json",
+    "**/*.tsbuildinfo",
+    "**/node_modules/**",
+    "lib",
+    "**/.DS_Store",
+    "**/*.zip",
+    "**/*.tgz",
+    ".eslintrc.json"
+  ],
+  "allowCompoundWords": true,
+  "words": [
+    "arcgis",
+    "camelcase",
+    "daygrid",
+    "ESRI",
+    "fullcalendar",
+    "Gantt",
+    "IBAN",
+    "imask",
+    "isday",
+    "jsbarcode",
+    "Leanez",
+    "Lenovo",
+    "OPENWORKBYHANDLE",
+    "pangea",
+    "pasteable",
+    "PHARMACODE",
+    "reactflow",
+    "SAOAUTH",
+    "Talia",
+    "timegrid",
+    "widthpx"
+  ]
+}

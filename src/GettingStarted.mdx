@@ -1,0 +1,77 @@
+import { Meta } from '@storybook/blocks';
+
+<Meta title='Getting Started' />
+
+# Getting Started
+
+Welcome to the Constellation DX Components UI Gallery!
+
+Constellation's flexible architecture empowers advanced users (professional front-end developers with ReactJS and web technology expertise) to extend the platform. You can achieve this by programmatically combining core Constellation presentational components and leveraging the Constellation DX API to build custom components, known as "Constellation DX components."
+
+This gallery provides a collection of ready-to-use and customizable components. Explore them directly or [delve into the source code](https://github.com/pegasystems/constellation-ui-gallery/tree/master/src/components) for deeper understanding. Use this resource to gain inspiration, best practices, and a solid foundation for implementing Constellation DX components.
+
+## How to use the UI Gallery
+
+Pre-built versions of these components is available as a RAP file for easy import into your Pega application. Get them on GitHub: [https://github.com/pegasystems/constellation-ui-gallery/releases](https://github.com/pegasystems/constellation-ui-gallery/releases)
+
+Each Constellation UI Gallery release offers two RAP files:
+
+- **ConstellationUIGallery_x_x_x.zip**: This includes a complete, standalone application called "Computerland" showcasing all the components in action.
+- **ConstellationUIGallery_x_x_x_COMPONENTS_ONLY.zip**: This leaner option provides only the Constellation DX components packaged as Rule-UI-Component rules.
+
+### Compatibility:
+
+These components are confirmed to work with Pega Platform versions 23 and 24. To ensure compatibility, follow these guidelines:
+
+- **Pega '23**: Use version 1.x and the release/1.x.x branch.
+- **Pega '24.1**: Use version 2.x and the master branch.
+
+### Important Note:
+
+While the components themselves are provided, some require additional setup to function fully. This might include creating specific classes, data pages, activities, or other rules within your application layer. If you choose the "Components Only" RAP, you'll need to recreate these supporting elements for runtime functionality.
+
+## Implementing a Constellation DX component
+
+Before diving in, take a moment to review our Constellation design guidelines. This valuable resource offers insights into our design philosophy and ensures consistency across your creations.
+
+- [UI/UX Guidelines](https://design.pega.com)
+- [Best practices](https://design.pega.com/design/getting-started/)
+
+Before you start to reuse and customize some of the components presented in this UI Gallery, please review our best practices when creating a Constellation DX Component:
+
+- [Design requirements](https://docs.pega.com/bundle/constellation-dx-components/page/constellation-dx-components/custom-components/design-requirements-constellation-dx-components.html)
+- [Governance and best practices](https://community.pega.com/event/clsa-community-extension-dx-components-responsible-lsas-guide?)
+
+The Constellation DX Components allows to extend the library of out-of-the-box assets that are tailored to your specific business needed. A Constellation DX Component is built as code using a typical front-end development process and the compiled version of the component is uploaded to the Pega Platform during development and stored as a Rule-UI-Component. This component can be authored in App Studio and configured into a view.
+
+![Architecture](Overview.png)
+
+Here are a set of best practices when implementing a Constellation DX Component:
+
+### Leverage the Constellation Presentational Component Library
+
+For consistency, the Constellation DX component should reuse the components already provided by the Constellation component library available at [design.pega.com/develop](https://design.pega.com/develop). This best pratice includes using the Icon component and the list of icons provided as part of the library.
+
+### Use PCore and PConnect public APIs
+
+When making calls to the platform, handle all the requests through the getPConnect object passed to your component as well as the global PCore object. For more details see [Using PCore and PConnect Public APIs](https://docs.pega.com/bundle/pcore-pconnect/page/pcore-pconnect-public-apis/api/using-pcore-pconnect-public-apis.html).
+
+### Use styled component library and design tokens
+
+Reuses the OOTB design tokens provided by the theme and use styled component to add some additional styles to your Constellation DX Component. There are theme tokens for colors, spacing, border-radius, typography etc at base level and specific components.
+
+### Use Typescript
+
+Typescript is highly recommended for writing a Constellation DX component. Strong type checking allows best practices to be enforced when writing code and avoids many errors at runtime.
+
+### Use rem instead of px
+
+Rem (short for “root-em”) units dictate an element's font size relative to the size of the root element. It is recommended to use rem as unit for font sizes or spacing rather than px. This ensures that any future change in root font size gets translated accordingly to all components.
+
+### Prefer functional components over class components
+
+Functional components helps to group related code together in a single block thus making the code more readable.
+
+### Review accessibility of the component before starting to code
+
+If using a 3rd party library to implement a Constellation DX component, it is important to evaluate the library in terms of accessibility compliance with [WCAG (Web Content Accessibility Guidelines) 2.1](https://www.w3.org/TR/WCAG21/).

@@ -1,0 +1,88 @@
+{
+  "name": "EASA_Extensions_CardGallery",
+  "label": "Gallery",
+  "description": "Card Gallery",
+  "organization": "EASA",
+  "version": "1.0.0",
+  "library": "Extensions",
+  "allowedApplications": [],
+  "componentKey": "EASA_Extensions_CardGallery",
+  "type": "Widget",
+  "subtype": ["PAGE", "CASE"],
+  "properties": [
+    {
+      "name": "heading",
+      "label": "Heading",
+      "format": "TEXT"
+    },
+    {
+      "name": "useInDashboard",
+      "label": "Set to true if you are using in a dashboard - use a queryable data page",
+      "format": "BOOLEAN",
+      "defaultValue": false
+    },
+    {
+      "name": "dataPage",
+      "label": "List Data Page name to get all objects",
+      "format": "TEXT",
+      "required": true
+    },
+    {
+      "name": "createClassname",
+      "label": "Create case className (empty to disable create)",
+      "format": "TEXT"
+    },
+    {
+      "name": "rendering",
+      "label": "Rendering",
+      "format": "SELECT",
+      "source": [
+        {
+          "key": "vertical",
+          "value": "Vertical"
+        },
+        {
+          "key": "horizontal",
+          "value": "Horizontal"
+        }
+      ]
+    },
+    {
+      "name": "minWidth",
+      "label": "Minimum width of each card",
+      "format": "TEXT"
+    },
+    {
+      "name": "detailsDataPage",
+      "label": "Data Page used to show the card (pyID as param)",
+      "format": "TEXT",
+      "required": true
+    },
+    {
+      "name": "detailsViewName",
+      "label": "Name of the view used to retrieve case details",
+      "format": "TEXT",
+      "required": true
+    },
+    {
+      "format": "CONTENTPICKER",
+      "label": "Add actions",
+      "name": "addActions",
+      "source": {
+        "name": "D_pzGetCaseTypesInApp",
+        "displayProp": "pyLabel",
+        "valueProp": "pyClassName",
+        "parameters": {
+          "AppName": "OBService_DEV",
+          "AppVersion": "01.01.01"
+        },
+        "filter": "$this.pyClassName STARTS_WITH 'EASA-OBService-Work'"
+      }
+    }
+  ],
+  "defaultConfig": {
+    "heading": "Card Gallery",
+    "minWidth": "400px",
+    "rendering": "horizontal"
+  }
+}
