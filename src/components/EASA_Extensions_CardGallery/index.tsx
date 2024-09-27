@@ -6,8 +6,6 @@ import {
   Card,
   CardHeader,
   Progress,
-  Button,
-  Icon,
   EmptyState,
   ErrorState,
   Flex
@@ -37,7 +35,6 @@ type CardGalleryProps = {
 
 export const EasaExtensionsCardGallery = (props: CardGalleryProps) => {
   const {
-    addActions,
     heading = '',
     dataPage = '',
     useInDashboard = true,
@@ -54,14 +51,6 @@ export const EasaExtensionsCardGallery = (props: CardGalleryProps) => {
   const errorMsg = useRef<string>('');
   const isEmpty = useRef<boolean>(false);
   const [loading, setLoading] = useState<boolean>(true);
-
-  const addNewEvent = () => {
-    if (createClassname) {
-      getPConnect().getActionsApi().createWork(createClassname, {
-        openCaseViewAfterCreate: false
-      });
-    }
-  };
 
   const getDetails = (id: string, classname: string) => {
     return loadDetails({
