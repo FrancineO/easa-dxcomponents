@@ -282,9 +282,6 @@ export const EasaExtensionsCardGallery = (props: CardGalleryProps) => {
 
   return (
     <Card>
-      <CardHeader>
-        <Text variant='h2'>{heading}</Text>
-      </CardHeader>
       {content}
     </Card>
   );
