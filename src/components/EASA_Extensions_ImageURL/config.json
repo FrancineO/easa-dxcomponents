@@ -13,9 +13,9 @@
   "properties": [
     {
       "name": "source",
-      "label": "Source",
+      "label": "Overridden source",
       "format": "TEXT",
-      "required": true
+      "required": false
     },
     {
       "name": "altText",

@@ -9,8 +9,8 @@ enum Alignment {
 
 // interface for props
 interface ExtensionsImageUrlProps {
-  // If any, enter additional props that only exist on TextInput here
-  source: string;
+  value: string;
+  source?: string;
   altText: string;
   width: number;
   alignment: Alignment;
@@ -21,7 +21,9 @@ interface ExtensionsImageUrlProps {
 // props passed in combination of props from property panel (config.json) and run time props from Constellation
 // any default values in config.pros should be set in defaultProps at bottom of this file
 function ExtensionsImageUrl(props: ExtensionsImageUrlProps) {
-  const { source, altText, width, alignment } = props;
+  const { value, source, altText, width, alignment } = props;
+  if (!value) return null;
+
   let justifyValue = 'left';
   switch (alignment) {
     case Alignment.RIGHT:
@@ -50,7 +52,7 @@ function ExtensionsImageUrl(props: ExtensionsImageUrlProps) {
             | 'stretch'
         }}
       >
-        <Image src={source} alt={altText} width={width} />
+        <Image src={value || source} alt={altText} width={width} />
       </Flex>
     </StyledExtensionsImageUrlWrapper>
   );
