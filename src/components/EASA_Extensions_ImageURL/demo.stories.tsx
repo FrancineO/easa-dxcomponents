@@ -21,6 +21,7 @@ type Story = StoryObj<typeof EasaExtensionsImageUrl>;
 
 export const BaseEasaExtensionsImageUrl: Story = args => {
   const props = {
+    value: configProps.value,
     source: configProps.source,
     altText: configProps.altText,
     width: configProps.width,
@@ -35,6 +36,7 @@ export const BaseEasaExtensionsImageUrl: Story = args => {
 };
 
 BaseEasaExtensionsImageUrl.args = {
+  value: 'https://www.pega.com/themes/custom/pegawww_theme/images/pega-logo.svg',
   source:
     configProps.source || 'https://www.pega.com/themes/custom/pegawww_theme/images/pega-logo.svg',
   altText: configProps.altText || 'Pega',
