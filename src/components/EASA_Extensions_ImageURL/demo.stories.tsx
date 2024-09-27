@@ -25,6 +25,7 @@ export const BaseEasaExtensionsImageUrl: Story = args => {
     source: configProps.source,
     altText: configProps.altText,
     width: configProps.width,
+    height: configProps.height,
     alignment: configProps.alignment
   };
 
@@ -41,5 +42,6 @@ BaseEasaExtensionsImageUrl.args = {
     configProps.source || 'https://www.pega.com/themes/custom/pegawww_theme/images/pega-logo.svg',
   altText: configProps.altText || 'Pega',
   width: configProps.width || 100,
+  height: configProps.height || 60,
   alignment: stateProps.alignment || 'left'
 };

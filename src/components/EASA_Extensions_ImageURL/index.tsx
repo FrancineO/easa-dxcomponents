@@ -13,6 +13,7 @@ interface ExtensionsImageUrlProps {
   source?: string;
   altText: string;
   width: number;
+  height: number;
   alignment: Alignment;
 }
 
@@ -21,7 +22,7 @@ interface ExtensionsImageUrlProps {
 // props passed in combination of props from property panel (config.json) and run time props from Constellation
 // any default values in config.pros should be set in defaultProps at bottom of this file
 function ExtensionsImageUrl(props: ExtensionsImageUrlProps) {
-  const { value, source, altText, width, alignment } = props;
+  const { value, source, altText, width, height, alignment } = props;
   if (!value) return null;
 
   let justifyValue = 'left';
@@ -54,7 +55,7 @@ function ExtensionsImageUrl(props: ExtensionsImageUrlProps) {
             | 'stretch'
         }}
       >
-        <Image src={value || source} alt={altText} width={width} />
+        <Image src={value || source} alt={altText} width={width} height={height} />
       </Flex>
     </>
   );
