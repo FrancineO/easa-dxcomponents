@@ -30,6 +30,7 @@ type CardGalleryProps = {
   detailsDataPage: string;
   detailsViewName: string;
   getPConnect: any;
+  propertyToForward: string;
   addActions: any;
 };
 
@@ -44,6 +45,7 @@ export const EasaExtensionsCardGallery = (props: CardGalleryProps) => {
     rendering = 'vertical',
     detailsDataPage = '',
     detailsViewName = '',
+    propertyToForward = '',
     getPConnect
   } = props;
   const [tasks, setTasks] = useState<any>();
@@ -133,7 +135,9 @@ export const EasaExtensionsCardGallery = (props: CardGalleryProps) => {
                 classname: createClassname,
                 insKey: item.pzInsKey,
                 isVisible: true,
-                getPConnect
+                propertyToForward,
+                getPConnect,
+                properties: {...item}
               });
             });
             let numTasks = tmpTasks.length;
@@ -141,6 +145,7 @@ export const EasaExtensionsCardGallery = (props: CardGalleryProps) => {
               tmpTasks.forEach(async (tmpTask: any) => {
                 const details = await getDetails(tmpTask.id, tmpTask.classname);
                 tmpTask.details = details;
+
                 numTasks -= 1;
                 if (numTasks === 0) {
                   setTasks(tmpTasks);
@@ -282,6 +287,9 @@ export const EasaExtensionsCardGallery = (props: CardGalleryProps) => {
 
   return (
     <Card>
+      <CardHeader>
+        <Text variant='h2'>{heading}</Text>
+      </CardHeader>
       {content}
     </Card>
   );

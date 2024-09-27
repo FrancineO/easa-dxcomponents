@@ -379,6 +379,7 @@ export const Default: Story = {
     rendering: 'horizontal',
     detailsDataPage: '',
     detailsViewName: '',
+    propertyToForward: 'Test.pyGUID',
     numCards: 10
   }
 };

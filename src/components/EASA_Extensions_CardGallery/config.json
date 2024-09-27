@@ -65,6 +65,11 @@
       "required": true
     },
     {
+      "name": "propertyToForward",
+      "label": "Property to forward to create case",
+      "format": "TEXT"
+    },
+    {
       "format": "CONTENTPICKER",
       "label": "Add actions",
       "name": "addActions",
