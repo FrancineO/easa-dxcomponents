@@ -29,6 +29,11 @@
       "format": "NUMBER"
     },
     {
+      "name": "height",
+      "label": "Height (px)",
+      "format": "NUMBER"
+    },
+    {
       "name": "alignment",
       "label": "Alignment",
       "format": "SELECT",
