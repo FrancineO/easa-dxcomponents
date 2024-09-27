@@ -293,15 +293,7 @@ export const EasaExtensionsCardGallery = (props: CardGalleryProps) => {
 
   return (
     <Card>
-      <CardHeader
-        actions={
-          createClassname ? (
-            <Button variant='simple' label='Create new task' icon compact onClick={addNewEvent}>
-              <Icon name='plus' />
-            </Button>
-          ) : undefined
-        }
-      >
+      <CardHeader>
         <Text variant='h2'>{heading}</Text>
       </CardHeader>
       {content}
