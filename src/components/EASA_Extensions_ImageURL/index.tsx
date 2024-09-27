@@ -1,5 +1,5 @@
 import { withConfiguration, Image, Flex } from '@pega/cosmos-react-core';
-import StyledExtensionsImageUrlWrapper from './styles';
+import GlobalStyles from './styles';
 
 enum Alignment {
   LEFT = 'left',
@@ -39,8 +39,10 @@ function ExtensionsImageUrl(props: ExtensionsImageUrlProps) {
   }
 
   return (
-    <StyledExtensionsImageUrlWrapper>
+    <>
+      <GlobalStyles />
       <Flex
+        className='image-url-container'
         container={{
           justify: justifyValue as
             | 'start'
@@ -54,7 +56,7 @@ function ExtensionsImageUrl(props: ExtensionsImageUrlProps) {
       >
         <Image src={value || source} alt={altText} width={width} />
       </Flex>
-    </StyledExtensionsImageUrlWrapper>
+    </>
   );
 }
 
