@@ -23,6 +23,7 @@
     "authenticate": "custom-dx-components authenticate",
     "buildComponent": "custom-dx-components buildComponent",
     "buildAllComponents": "custom-dx-components buildAllComponents",
+    "create": "custom-dx-components create",
     "publish": "custom-dx-components publish",
     "publishAll": "custom-dx-components publishAll",
     "list": "custom-dx-components list",
