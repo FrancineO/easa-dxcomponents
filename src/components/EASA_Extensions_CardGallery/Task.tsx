@@ -29,7 +29,9 @@ export const Task = (props: TaskProps) => {
     const options = {
       openCaseViewAfterCreate: true,
       startingFields: {
-        // pyAddCaseContextPage: { pyGUID: details.props.pyGUID }
+        pyAddCaseContextPage: {
+          pyGUID: details.props.pyGUID
+        }
       }
     };
     getPConnect().getActionsApi().createWork(classname, options);

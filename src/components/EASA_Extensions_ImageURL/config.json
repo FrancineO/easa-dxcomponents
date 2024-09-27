@@ -1,0 +1,53 @@
+{
+  "name": "EASA_Extensions_ImageURL",
+  "label": "Image URL",
+  "description": "Image URL",
+  "organization": "EASA",
+  "version": "1.0.0",
+  "library": "Extensions",
+  "allowedApplications": [],
+  "componentKey": "EASA_Extensions_ImageURL",
+  "type": "Field",
+  "subtype": "Text-URL",
+  "icon": "images/pz-url-active.svg",
+  "properties": [
+    {
+      "name": "source",
+      "label": "Source",
+      "format": "TEXT",
+      "required": true
+    },
+    {
+      "name": "altText",
+      "label": "Image Alternative text",
+      "format": "TEXT",
+      "required": true
+    },
+    {
+      "name": "width",
+      "label": "Width (px)",
+      "format": "NUMBER"
+    },
+    {
+      "name": "alignment",
+      "label": "Alignment",
+      "format": "SELECT",
+      "source": [
+        {
+          "key": "left",
+          "value": "Left"
+        },
+        {
+          "key": "center",
+          "value": "Center"
+        },
+        {
+          "key": "right",
+          "value": "Right"
+        }
+      ],
+      "defaultValue": "left"
+    }
+
+  ]
+}

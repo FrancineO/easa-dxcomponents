@@ -82,7 +82,50 @@ export const EasaExtensionsCardGallery = (props: CardGalleryProps) => {
         dataViewParameters: {},
         query: {
           ...(filterExpr ? { filter: filterExpr } : null),
-          select: [{ field: 'pyGUID' }, { field: 'pyLabel' }, { field: 'pxObjClass' }]
+          select: [
+            {
+              field: 'pyLabel'
+            },
+            {
+              field: 'Domain'
+            },
+            {
+              field: 'LegalName'
+            },
+            {
+              field: 'pxUpdateDateTime'
+            },
+            {
+              field: 'pyGUID'
+            },
+            {
+              field: 'pxCommitDateTime'
+            },
+            {
+              field: 'pxCreateDateTime'
+            },
+            {
+              field: 'pxCreateOperator'
+            },
+            {
+              field: 'pxCreateOpName'
+            },
+            {
+              field: 'pxCreateSystemID'
+            },
+            {
+              field: 'pxSaveDateTime'
+            },
+            {
+              field: 'pxUpdateOperator'
+            },
+            {
+              field: 'pxUpdateOpName'
+            },
+            {
+              field: 'pxUpdateSystemID'
+            }
+          ]
         }
       };
     }
@@ -261,7 +304,6 @@ export const EasaExtensionsCardGallery = (props: CardGalleryProps) => {
       >
         <Text variant='h2'>{heading}</Text>
       </CardHeader>
-      {JSON.stringify(addActions)}
       {content}
     </Card>
   );
