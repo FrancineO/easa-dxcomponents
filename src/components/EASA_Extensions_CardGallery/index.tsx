@@ -78,13 +78,13 @@ export const EasaExtensionsCardGallery = (props: CardGalleryProps) => {
               field: 'pyLabel'
             },
             {
-              field: 'Domain'
-            },
-            {
               field: 'LegalName'
             },
             {
               field: 'pxUpdateDateTime'
+            },
+            {
+              field: 'pyID'
             },
             {
               field: 'pyGUID'
