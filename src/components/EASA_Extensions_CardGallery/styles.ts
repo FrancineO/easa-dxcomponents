@@ -5,10 +5,8 @@ export const StyledCardContent = styled.div(({ theme }: { theme: typeof themeDef
   return css`
     & > article {
       border: 0.0625rem solid ${theme.base.palette['border-line']};
-      padding: 0.5rem;
       white-space: normal;
       background: ${theme.base.palette['primary-background']};
-      margin-bottom: 0.25rem;
       height: 100%;
     }
     & dl:last-child {
@@ -31,7 +29,7 @@ export const MainCard = styled.div(
         grid-template-columns: repeat(auto-fit, minmax(${minWidth}, 1fr));
         grid-gap: 1rem;
         grid-template-rows: repeat(1, 1fr);
-        padding: 0 1rem 1rem;
+        padding: 0;
       `;
     }
     return css`

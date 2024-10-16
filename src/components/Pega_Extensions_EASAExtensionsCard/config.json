@@ -37,6 +37,19 @@
       "format": "CONTENTPICKER",
       "addTypeList": ["Fields", "Views"],
       "allowCreatingGroup": true
+    },
+    {
+      "name": "showDomainIconData",
+      "label": "Enable Domain Icon image",
+      "format": "BOOLEAN"
+    },
+    {
+      "name": "DomainIconData",
+      "label": "Domain Icon",
+      "format": "CONTENTPICKER",
+      "addTypeList": ["Fields", "Views"],
+      "visibility": "$this.showDomainIconData = true",
+      "saveToConfig": true
     }
   ]
 }

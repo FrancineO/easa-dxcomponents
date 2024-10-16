@@ -7,9 +7,9 @@ export default function StatusWorkRenderer({ value }: any) {
   let variant: 'success' | 'urgent' | 'warn' | 'pending' | 'info';
   variant = 'info';
 
-  const warnStrings = ['fail', 'cancel', 'reject', 'revoke', 'stopped', 'warn'];
+  const warnStrings = ['fail', 'cancel', 'reject', 'revoke', 'stopped', 'warn', 'suspended'];
   const infoStrings = ['open', 'hold', 'info', 'new'];
-  const successStrings = ['resolved', 'completed', 'success'];
+  const successStrings = ['resolved', 'completed', 'success', 'valid'];
   const pendingStrings = ['pending'];
 
   if (new RegExp(warnStrings.join('|'), 'i').test(value)) {
