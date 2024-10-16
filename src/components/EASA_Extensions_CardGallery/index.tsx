@@ -2,9 +2,6 @@ import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import {
   withConfiguration,
   registerIcon,
-  Text,
-  Card,
-  CardHeader,
   Progress,
   EmptyState,
   ErrorState,
@@ -13,6 +10,7 @@ import {
 import { Task } from './Task';
 import { loadDetails, getFilters } from './utils';
 import { MainCard } from './styles';
+import { StyledCardContent } from './styles';
 import '../create-nonce';
 
 import * as plusIcon from '@pega/cosmos-react-core/lib/components/Icon/icons/plus.icon';
@@ -36,7 +34,6 @@ type CardGalleryProps = {
 
 export const EasaExtensionsCardGallery = (props: CardGalleryProps) => {
   const {
-    heading = '',
     dataPage = '',
     useInDashboard = true,
     numCards,
@@ -302,14 +299,7 @@ export const EasaExtensionsCardGallery = (props: CardGalleryProps) => {
     );
   }, [loading, tasks, rendering, minWidth]);
 
-  return (
-    <Card>
-      <CardHeader>
-        <Text variant='h2'>{heading}</Text>
-      </CardHeader>
-      {content}
-    </Card>
-  );
+  return <StyledCardContent>{content}</StyledCardContent>;
 };
 
 export default withConfiguration(EasaExtensionsCardGallery);

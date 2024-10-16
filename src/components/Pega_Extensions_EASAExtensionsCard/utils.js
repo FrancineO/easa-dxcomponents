@@ -11,17 +11,22 @@ export function getAllFields(pConnect) {
 
   let allFields = [];
 
-  const makeField = (f) => ({
+  const makeField = f => ({
     ...pConnect().resolveConfigProps(f.config),
     type: f.type
   });
 
   const hasRegions = !!metadata.children[0]?.children;
   if (hasRegions) {
-    allFields = metadata.children.map((region) =>
-      region.children.map((field) => {
+    allFields = metadata.children.map(region =>
+      region.children.map(field => {
         // Do not resolve the config props if is status work, instead create component here as status badge and mark as status display
         if (field.config?.value === '@P .pyStatusWork') {
+          field.type = 'TextInput';
+          field.config.displayAsStatus = true;
+          return pConnect().createComponent(field);
+        }
+        if (field.config?.value === '@P .ApprovalStatus') {
           field.type = 'TextInput';
           field.config.displayAsStatus = true;
           return pConnect().createComponent(field);
@@ -37,8 +42,6 @@ export function getAllFields(pConnect) {
   return allFields;
 }
 
-
-
 export function getFilteredFields(getPConnect) {
   let primaryFieldsRaw;
   let secondaryFieldsRaw;
@@ -52,12 +55,12 @@ export function getFilteredFields(getPConnect) {
   }
 
   // Filter out fields that are not visible and unsupported types for primary fields (for CaseSummary)
-  primaryFieldsRaw = primaryFieldsRaw.filter((item) => {
+  primaryFieldsRaw = primaryFieldsRaw.filter(item => {
     const resolvedItem = getPConnect().resolveConfigProps(item.config);
     return resolvedItem.visibility !== false && item.type !== 'TextContent';
   });
 
-  secondaryFieldsRaw = secondaryFieldsRaw.filter((item) => {
+  secondaryFieldsRaw = secondaryFieldsRaw.filter(item => {
     const resolvedItem = getPConnect().resolveConfigProps(item.config);
     return resolvedItem.visibility !== false && item.type !== 'TextContent';
   });
@@ -84,7 +87,9 @@ export function getLayoutDataFromRegion(regionData) {
       const itemPConnect = item?.getPConnect();
 
       return {
-        id: itemPConnect?.getComponentName() ? `${itemPConnect.getComponentName()}--${index}` : `item--${index}`,
+        id: itemPConnect?.getComponentName()
+          ? `${itemPConnect.getComponentName()}--${index}`
+          : `item--${index}`,
         content: itemPConnect?.getComponent(),
         layoutConfig: {
           ...defaultLayoutConfig,

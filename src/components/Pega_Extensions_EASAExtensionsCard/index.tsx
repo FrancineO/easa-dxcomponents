@@ -1,9 +1,6 @@
 import { Fragment, Children, type ReactElement } from 'react';
 import {
   Grid,
-  Card,
-  CardMedia,
-  CardContent,
   Flex,
   FieldGroup,
   withConfiguration,
@@ -13,12 +10,14 @@ import type { PConnFieldProps } from './PConnProps';
 import './create-nonce';
 import DetailsRender from './DetailsRender';
 import HighlightRender from './HighlightRender';
+import ImageContainer from './ImageContainer';
 
 import {
   StyledPegaExtensionsEasaExtensionsCardWrapper,
   StyledDetailsGridContainer,
   StyledHighlightedFieldsHrLine,
-  StyledCard
+  StyledGridItem,
+  StyledGridContainer
 } from './styles';
 
 // includes in bundle
@@ -29,13 +28,20 @@ interface PegaExtensionsEasaExtensionsCardProps extends PConnFieldProps {
   // If any, enter additional props that only exist on TextInput here
   showLabel: boolean;
   showHighlightedData: boolean;
+  showDomainIconData: boolean;
   children: any;
 }
 
 // props passed in combination of props from property panel (config.json) and run time props from Constellation
 // any default values in config.pros should be set in defaultProps at bottom of this file
 function PegaExtensionsEasaExtensionsCard(props: PegaExtensionsEasaExtensionsCardProps) {
-  const { getPConnect, label, showLabel = true, showHighlightedData = false } = props;
+  const {
+    getPConnect,
+    label,
+    showLabel = true,
+    showHighlightedData = false,
+    showDomainIconData = true
+  } = props;
   const propsToUse = { label, showLabel, ...getPConnect().getInheritedProps() };
 
   // storybook doesn't get children of 1 as an array of 1
@@ -70,11 +76,43 @@ function PegaExtensionsEasaExtensionsCard(props: PegaExtensionsEasaExtensionsCar
     });
   }
 
+  // Set up Domain Icon data to pass in return if is set to show, need raw metadata to pass to createComponent
+  let DomainIconDataArr = [];
+  if (showDomainIconData) {
+    // @ts-ignore
+    const { DomainIconData = [] } = getPConnect().getRawMetadata().config;
+    // @ts-ignore
+    DomainIconDataArr = DomainIconData.map(field => {
+      return <ImageContainer field={field} getPConnect={props.getPConnect} />;
+    });
+  }
+
   return (
     <StyledPegaExtensionsEasaExtensionsCardWrapper>
-      <Card as={StyledCard}>
-        <FieldGroup name={propsToUse.showLabel ? propsToUse.label : ''}>
-          <CardMedia>
+      <FieldGroup name={propsToUse.showLabel ? propsToUse.label : ''}>
+        <Grid
+          container={{
+            cols: '70px 1fr',
+            rows: 'auto',
+            areas: '"sidebar main"'
+          }}
+          as={StyledGridContainer}
+          height={20}
+        >
+          <Grid item={{ area: 'sidebar' }} as={StyledGridItem}>
+            {showDomainIconData && DomainIconDataArr.length > 0 && (
+              <Flex
+                // @ts-ignore
+                container={{ direction: 'row', alignItems: 'normal', colGap: 10 }}
+                data-testid={`highlighted-column-count-${numRegions}`}
+              >
+                {DomainIconDataArr.map((child: ReactElement, i: number) => (
+                  <Fragment key={`hf-${i + 1}`}>{child}</Fragment>
+                ))}
+              </Flex>
+            )}
+          </Grid>
+          <Grid item={{ area: 'main' }} as={StyledGridItem}>
             {showHighlightedData && highlightedDataArr.length > 0 && (
               <>
                 <Flex
@@ -89,8 +127,6 @@ function PegaExtensionsEasaExtensionsCard(props: PegaExtensionsEasaExtensionsCar
                 <StyledHighlightedFieldsHrLine />
               </>
             )}
-          </CardMedia>
-          <CardContent>
             <Grid
               as={StyledDetailsGridContainer}
               container={gridContainer}
@@ -106,9 +142,9 @@ function PegaExtensionsEasaExtensionsCard(props: PegaExtensionsEasaExtensionsCar
                 </Flex>
               ))}
             </Grid>
-          </CardContent>
-        </FieldGroup>
-      </Card>
+          </Grid>
+        </Grid>
+      </FieldGroup>
     </StyledPegaExtensionsEasaExtensionsCardWrapper>
   );
 }

@@ -1,10 +1,15 @@
-
 /* eslint-disable react/jsx-no-useless-fragment */
 // @ts-nocheck
 import type { Meta, StoryObj } from '@storybook/react';
 import { Text, FieldValueList, Button, DateTimeDisplay, useTheme } from '@pega/cosmos-react-core';
 import PegaExtensionsEasaExtensionsCard from './index';
-import { pyReviewRaw, pyReviewResolved, regionChildrenResolved, operatorDetails, configProps } from './mock';
+import {
+  pyReviewRaw,
+  pyReviewResolved,
+  regionChildrenResolved,
+  operatorDetails,
+  configProps
+} from './mock';
 import StatusWorkRenderer from './StatusWork';
 import Operator from './Operator';
 
@@ -45,7 +50,6 @@ window.PCore.getUserApi = () => {
 const Region = props => {
   return <></>;
 };
-
 
 const renderField = resolvedProps => {
   const {
@@ -199,5 +203,6 @@ export const BasePegaExtensionsEasaExtensionsCard: Story = args => {
 BasePegaExtensionsEasaExtensionsCard.args = {
   showLabel: true,
   label: 'Details template',
-  showHighlightedData: true
+  showHighlightedData: true,
+  showDomainIconData: true
 };

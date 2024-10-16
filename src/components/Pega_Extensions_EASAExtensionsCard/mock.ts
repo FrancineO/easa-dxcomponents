@@ -1,4 +1,3 @@
-
 // @ts-nocheck
 export const pyReviewRaw = {
   name: 'pyReview',
@@ -51,6 +50,19 @@ export const pyReviewRaw = {
           placeholder: 'Select...',
           displayMode: 'STACKED_LARGE_VAL',
           key: 'pxCreateOperator'
+        }
+      }
+    ],
+    DomainIconData: [
+      {
+        type: 'TextInput',
+        config: {
+          value: '@P .pyStatusWork',
+          label: '@L Work Status',
+          hideLabel: true,
+          displayMode: 'STACKED_LARGE_VAL',
+          displayAsStatus: true,
+          key: 'pyStatusWork'
         }
       }
     ],
@@ -122,7 +134,7 @@ export const pyReviewResolved = {
     {
       type: 'TextInput',
       config: {
-        value: 'New',
+        value: 'valid',
         label: 'Work Status',
         displayAsStatus: true
       }
