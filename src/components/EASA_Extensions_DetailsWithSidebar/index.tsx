@@ -10,10 +10,9 @@ import type { PConnFieldProps } from './PConnProps';
 import './create-nonce';
 import DetailsRender from './DetailsRender';
 import HighlightRender from './HighlightRender';
-import ImageContainer from './ImageContainer';
+import SidePanelRender from './SidePanelRender';
 
-import {
-  StyledPegaExtensionsEasaExtensionsCardWrapper,
+import StyledPegaExtensionsDetailsWithSidebarWrapper, {
   StyledDetailsGridContainer,
   StyledHighlightedFieldsHrLine,
   StyledGridItem,
@@ -24,25 +23,25 @@ import {
 import { getAllFields } from './utils';
 
 // interface for props
-interface PegaExtensionsEasaExtensionsCardProps extends PConnFieldProps {
+interface PegaExtensionsDetailsWithSidebarProps extends PConnFieldProps {
   // If any, enter additional props that only exist on TextInput here
   showLabel: boolean;
-  showHighlightedData: boolean;
   showSidePanelData: boolean;
-  asideWidth: string;
+  sidePanelWidth: string;
+  showHighlightedData: boolean;
   children: any;
 }
 
 // props passed in combination of props from property panel (config.json) and run time props from Constellation
 // any default values in config.pros should be set in defaultProps at bottom of this file
-function PegaExtensionsEasaExtensionsCard(props: PegaExtensionsEasaExtensionsCardProps) {
+function PegaExtensionsDetailsWithSidebar(props: PegaExtensionsDetailsWithSidebarProps) {
   const {
     getPConnect,
     label,
     showLabel = true,
     showHighlightedData = false,
     showSidePanelData = true,
-    asideWidth = '70px'
+    sidePanelWidth = '90px'
   } = props;
   const propsToUse = { label, showLabel, ...getPConnect().getInheritedProps() };
 
@@ -63,7 +62,7 @@ function PegaExtensionsEasaExtensionsCard(props: PegaExtensionsEasaExtensionsCar
   const numRegions = getAllFields(getPConnect)?.length;
   const gridRepeat = 'repeat('.concat(numRegions).concat(', 1fr)');
 
-  const gridContainer: GridContainerProps = { colGap: 1 };
+  const gridContainer: GridContainerProps = { colGap: 2 };
   gridContainer.cols = gridRepeat;
   gridContainer.alignItems = 'start';
 
@@ -78,30 +77,30 @@ function PegaExtensionsEasaExtensionsCard(props: PegaExtensionsEasaExtensionsCar
     });
   }
 
-  // Set up Side Panel data to pass in return if is set to show, need raw metadata to pass to createComponent
-  let SidePanelDataArr = [];
+  // Set up side panel data to pass in return if is set to show, need raw metadata to pass to createComponent
+  let sidePanelDataArr = [];
   if (showSidePanelData) {
     // @ts-ignore
-    const { SidePanelData = [] } = getPConnect().getRawMetadata().config;
+    const { sidePanelData = [] } = getPConnect().getRawMetadata().config;
     // @ts-ignore
-    SidePanelDataArr = SidePanelData.map(field => {
-      return <ImageContainer field={field} getPConnect={props.getPConnect} />;
+    sidePanelDataArr = sidePanelData.map(field => {
+      return <SidePanelRender field={field} getPConnect={props.getPConnect} />;
     });
   }
 
   return (
-    <StyledPegaExtensionsEasaExtensionsCardWrapper>
+    <StyledPegaExtensionsDetailsWithSidebarWrapper>
       <FieldGroup name={propsToUse.showLabel ? propsToUse.label : ''}>
         <Grid
           container={{
-            cols: `${showSidePanelData ? asideWidth : '0'} 1fr`,
+            cols: `${showSidePanelData ? sidePanelWidth : '0'} 1fr`,
             rows: 'auto',
             areas: '"sidebar main"'
           }}
           as={StyledGridContainer}
           height={20}
         >
-          {showSidePanelData && SidePanelDataArr.length > 0 && (
+          {showSidePanelData && sidePanelDataArr.length > 0 && (
             <Grid
               item={{ area: 'sidebar' }}
               as={StyledGridItem}
@@ -109,7 +108,7 @@ function PegaExtensionsEasaExtensionsCard(props: PegaExtensionsEasaExtensionsCar
               container={{ direction: 'column', alignItems: 'normal', colGap: 1, rowGap: 1.5 }}
               data-testid={`highlighted-column-count-${numRegions}`}
             >
-              {SidePanelDataArr.map((child: ReactElement, i: number) => (
+              {sidePanelDataArr.map((child: ReactElement, i: number) => (
                 <Fragment key={`hf-${i + 1}`}>{child}</Fragment>
               ))}
             </Grid>
@@ -148,8 +147,8 @@ function PegaExtensionsEasaExtensionsCard(props: PegaExtensionsEasaExtensionsCar
           </Grid>
         </Grid>
       </FieldGroup>
-    </StyledPegaExtensionsEasaExtensionsCardWrapper>
+    </StyledPegaExtensionsDetailsWithSidebarWrapper>
   );
 }
 
-export default withConfiguration(PegaExtensionsEasaExtensionsCard);
+export default withConfiguration(PegaExtensionsDetailsWithSidebar);

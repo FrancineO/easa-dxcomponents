@@ -30,7 +30,7 @@ const HighlightRender = (props: HighlightRenderProps) => {
       data-testid={field.testId}
       fields={[
         {
-          id: '3',
+          id: '2',
           name: configProps.hideLabel ? '' : configProps.label,
           value: (
             <Text variant='h1' as='span'>

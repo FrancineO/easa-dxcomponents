@@ -18,6 +18,9 @@ export const StyledCardContent = styled.div(({ theme }: { theme: typeof themeDef
     & dl:last-child > dd {
       padding-bottom: 0.5rem;
     }
+    & > article > header {
+      padding-bottom: 0 !important;
+    }
   `;
 });
 
@@ -26,7 +29,7 @@ export const MainCard = styled.div(
     if (rendering === 'horizontal') {
       return css`
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(${minWidth}, 1fr));
+        grid-template-columns: repeat(auto-fill, minmax(${minWidth}, 1fr));
         grid-gap: 1rem;
         grid-template-rows: repeat(1, 1fr);
         padding: 0;

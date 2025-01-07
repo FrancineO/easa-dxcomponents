@@ -1,15 +1,15 @@
 {
-  "name": "Pega_Extensions_EASAExtensionsCard",
-  "label": "EASA Ext Card",
-  "description": "Layout card template",
-  "organization": "Pega",
-  "version": "01.01.01",
+  "name": "EASA_Extensions_DetailsWithSidePanel",
+  "label": "Details With Side panel",
+  "description": "Configurable left side panel",
+  "organization": "EASA",
+  "version": "1.0.0",
   "library": "Extensions",
   "allowedApplications": [],
-  "componentKey": "Pega_Extensions_EASAExtensionsCard",
+  "componentKey": "EASA_Extensions_DetailsWithSidePanel",
   "type": "Template",
   "subtype": "DETAILS",
-  "icon": "OneColumnDetails.svg",
+  "icon": "webwb/SidePanelDetails.svg",
   "properties": [
     {
       "name": "showSidePanelData",
@@ -17,13 +17,13 @@
       "format": "BOOLEAN"
     },
     {
-      "name": "asideWidth",
+      "name": "sidePanelWidth",
       "label": "Width of the side panel",
       "format": "TEXT"
     },
     {
-      "name": "SidePanelData",
-      "label": "Side Panel",
+      "name": "sidePanelData",
+      "label": "Side panel",
       "format": "CONTENTPICKER",
       "addTypeList": ["Fields", "Views"],
       "visibility": "$this.showSidePanelData = true",

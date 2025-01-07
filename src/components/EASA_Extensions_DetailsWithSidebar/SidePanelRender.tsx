@@ -1,22 +1,15 @@
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-import React from 'react';
 import { FieldValueList, Text } from '@pega/cosmos-react-core';
 import type { PConnProps } from './PConnProps';
 
-interface HighlightRenderProps extends PConnProps {
+interface SidePanelProps extends PConnProps {
   field?: any;
+  children?: never;
 }
 
-const HighlightRender = (props: HighlightRenderProps) => {
+const SidePanelRender = (props: SidePanelProps) => {
   const { getPConnect, field } = props;
 
   field.config.displayMode = 'DISPLAY_ONLY';
-
-  // Mark as status display when using pyStatusWork
-  if (field.config?.value === '@P .pyStatusWork' || field.config?.value === '@P .ApprovalStatus') {
-    field.type = 'TextInput';
-    field.config.displayAsStatus = true;
-  }
 
   const configProps = getPConnect().resolveConfigProps(field.config);
 
@@ -25,12 +18,12 @@ const HighlightRender = (props: HighlightRenderProps) => {
 
   return (
     <FieldValueList
-      style={{ width: 'auto' }}
+      style={{ width: '20rem' }}
       variant='stacked'
       data-testid={field.testId}
       fields={[
         {
-          id: '3',
+          id: '2',
           name: configProps.hideLabel ? '' : configProps.label,
           value: (
             <Text variant='h1' as='span'>
@@ -43,4 +36,4 @@ const HighlightRender = (props: HighlightRenderProps) => {
   );
 };
 
-export default HighlightRender;
+export default SidePanelRender;

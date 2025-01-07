@@ -2,7 +2,7 @@
 // @ts-nocheck
 import type { Meta, StoryObj } from '@storybook/react';
 import { Text, FieldValueList, Button, DateTimeDisplay, useTheme } from '@pega/cosmos-react-core';
-import PegaExtensionsEasaExtensionsCard from './index';
+import PegaExtensionsDetailsWithSidebar from './index';
 import {
   pyReviewRaw,
   pyReviewResolved,
@@ -13,9 +13,9 @@ import {
 import StatusWorkRenderer from './StatusWork';
 import Operator from './Operator';
 
-const meta: Meta<typeof PegaExtensionsEasaExtensionsCard> = {
-  title: 'PegaExtensionsEasaExtensionsCard',
-  component: PegaExtensionsEasaExtensionsCard,
+const meta: Meta<typeof PegaExtensionsDetailsWithSidebar> = {
+  title: 'PegaExtensionsDetailsWithSidebar',
+  component: PegaExtensionsDetailsWithSidebar,
   excludeStories: /.*Data$/,
   parameters: {
     type: 'Details'
@@ -23,7 +23,7 @@ const meta: Meta<typeof PegaExtensionsEasaExtensionsCard> = {
 };
 
 export default meta;
-type Story = StoryObj<typeof PegaExtensionsEasaExtensionsCard>;
+type Story = StoryObj<typeof PegaExtensionsDetailsWithSidebar>;
 
 if (!window.PCore) {
   window.PCore = {};
@@ -128,7 +128,7 @@ const renderField = resolvedProps => {
   return <FieldValueList variant={variant} fields={[{ name: label, value: val }]} key={key} />;
 };
 
-export const BasePegaExtensionsEasaExtensionsCard: Story = args => {
+export const BasePegaExtensionsDetailsWithSidebar: Story = args => {
   const props = {
     getPConnect: () => {
       return {
@@ -155,10 +155,6 @@ export const BasePegaExtensionsEasaExtensionsCard: Story = args => {
               return renderField(pyReviewResolved.highlightedData[2].config);
             case '@USER .pxCreateOperator':
               return renderField(pyReviewResolved.highlightedData[3].config);
-            case '@P .ApprovalStatus':
-              return renderField(pyReviewResolved.highlightedData[4].config);
-            case '@P .ApprovalStatus':
-              return renderField(pyReviewResolved.SidePanelData[1].config);
             case '@P .pySLADeadline':
               return renderField(regionChildrenResolved[0]);
             case '@P .pySLAGoal':
@@ -179,7 +175,7 @@ export const BasePegaExtensionsEasaExtensionsCard: Story = args => {
 
   return (
     <>
-      <PegaExtensionsEasaExtensionsCard {...props} {...args}>
+      <PegaExtensionsDetailsWithSidebar {...props} {...args}>
         <Region
           {...{
             getPConnect: () => ({
@@ -199,15 +195,15 @@ export const BasePegaExtensionsEasaExtensionsCard: Story = args => {
             })
           }}
         />
-      </PegaExtensionsEasaExtensionsCard>
+      </PegaExtensionsDetailsWithSidebar>
     </>
   );
 };
 
-BasePegaExtensionsEasaExtensionsCard.args = {
+BasePegaExtensionsDetailsWithSidebar.args = {
+  showSidePanelData: true,
+  sidePanelWidth: '90px',
   showLabel: true,
   label: 'Details template',
-  showHighlightedData: true,
-  showSidePanelData: true,
-  asideWidth: '90px'
+  showHighlightedData: true
 };
