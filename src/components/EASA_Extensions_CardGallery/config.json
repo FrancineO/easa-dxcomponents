@@ -68,21 +68,6 @@
       "name": "propertyToForward",
       "label": "Property to forward to create case",
       "format": "TEXT"
-    },
-    {
-      "format": "CONTENTPICKER",
-      "label": "Add actions",
-      "name": "addActions",
-      "source": {
-        "name": "D_pzGetCaseTypesInApp",
-        "displayProp": "pyLabel",
-        "valueProp": "pyClassName",
-        "parameters": {
-          "AppName": "OBService_DEV",
-          "AppVersion": "01.01.01"
-        },
-        "filter": "$this.pyClassName STARTS_WITH 'EASA-OBService-Work'"
-      }
     }
   ],
   "defaultConfig": {

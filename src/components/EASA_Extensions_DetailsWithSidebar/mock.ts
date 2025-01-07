@@ -1,3 +1,4 @@
+
 // @ts-nocheck
 export const pyReviewRaw = {
   name: 'pyReview',
@@ -19,17 +20,6 @@ export const pyReviewRaw = {
           displayMode: 'STACKED_LARGE_VAL',
           displayAsStatus: true,
           key: 'pyStatusWork'
-        }
-      },
-      {
-        type: 'TextInput',
-        config: {
-          value: '@P .ApprovalStatus',
-          label: '@L Approval Status',
-          hideLabel: true,
-          displayMode: 'STACKED_LARGE_VAL',
-          displayAsStatus: true,
-          key: 'ApprovalStatus'
         }
       },
       {
@@ -61,19 +51,6 @@ export const pyReviewRaw = {
           placeholder: 'Select...',
           displayMode: 'STACKED_LARGE_VAL',
           key: 'pxCreateOperator'
-        }
-      }
-    ],
-    SidePanelData: [
-      {
-        type: 'TextInput',
-        config: {
-          value: '@P .ApprovalStatus',
-          label: '@L Approval Status',
-          hideLabel: true,
-          displayMode: 'STACKED_LARGE_VAL',
-          displayAsStatus: true,
-          key: 'ApprovalStatus'
         }
       }
     ],
@@ -128,46 +105,6 @@ export const pyReviewRaw = {
           }
         }
       ]
-    },
-    {
-      name: 'B',
-      type: 'Region',
-      key: 'B',
-      getPConnect: () => {
-        return {
-          getRawMetadata: () => {
-            return pyReviewRaw.children[0];
-          }
-        };
-      },
-      children: [
-        {
-          type: 'DateTime',
-          config: {
-            value: '@P .pySLADeadline',
-            label: '@L SLA Deadline',
-            key: 'pySLADeadline'
-          }
-        },
-        {
-          type: 'DateTime',
-          config: {
-            value: '@P .pySLAGoal',
-            label: '@L SLA Goal',
-            key: 'pySLAGoal'
-          }
-        },
-        {
-          type: 'RadioButtons',
-          config: {
-            value: '@P .pySLAStartTime',
-            label: '@L SLA Start Time',
-            listType: 'associated',
-            datasource: '@ASSOCIATED .pySLAStartTime',
-            key: 'pySLAStartTime'
-          }
-        }
-      ]
     }
   ],
   classID: 'MyCo-MyCompon-Work-MyComponents'
@@ -185,16 +122,8 @@ export const pyReviewResolved = {
     {
       type: 'TextInput',
       config: {
-        value: 'fail',
+        value: 'New',
         label: 'Work Status',
-        displayAsStatus: true
-      }
-    },
-    {
-      type: 'TextInput',
-      config: {
-        value: 'Valid',
-        label: 'Approval Status',
         displayAsStatus: true
       }
     },

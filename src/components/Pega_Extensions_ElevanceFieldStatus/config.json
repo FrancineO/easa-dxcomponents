@@ -1,0 +1,76 @@
+{
+  "name": "Pega_Extensions_ElevanceFieldStatus",
+  "label": "Field Status",
+  "description": "Field Status",
+  "organization": "Pega",
+  "version": "1.0.0",
+  "library": "Extensions",
+  "allowedApplications": [],
+  "componentKey": "Pega_Extensions_ElevanceFieldStatus",
+  "type": "Field",
+  "subtype": "Text",
+  "icon": "images/pz-text-input-active.svg",
+  "properties": [
+    {
+      "name": "label",
+      "label": "Field label",
+      "format": "TEXT",
+      "required": true
+    },
+    {
+      "name": "propVariant",
+      "label": "Variant Property (Primary)",
+      "format": "PROPERTY"
+    },
+    {
+      "name": "variant",
+      "label": "Status Variant (Fallback)",
+      "format": "SELECT",
+      "defaultValue": "success",
+      "source": [
+        {
+          "key": "success",
+          "value": "success"
+        },
+        {
+          "key": "urgent",
+          "value": "urgent"
+        },
+        {
+          "key": "warn",
+          "value": "warn"
+        },
+        {
+          "key": "pending",
+          "value": "pending"
+        },
+        {
+          "key": "info",
+          "value": "info"
+        }
+      ]
+    },
+    {
+      "name": "readOnly",
+      "label": "Edit mode",
+      "format": "READONLY"
+    },
+    {
+      "label": "Advanced",
+      "format": "GROUP",
+      "collapsible": true,
+      "properties": [
+        {
+          "name": "testId",
+          "label": "Test ID",
+          "format": "TEXT",
+          "ignorePattern": "[^-_\\p{N}\\p{L}]",
+          "includeAnnotations": false
+        }
+      ]
+    }
+  ],
+  "defaultConfig": {
+    "label": "@L $this.label"
+  }
+}
