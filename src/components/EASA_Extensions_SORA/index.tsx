@@ -1,13 +1,5 @@
-import {
-  withConfiguration,
-  Card,
-  Text,
-  CardContent,
-  CardHeader,
-  useTheme
-} from '@pega/cosmos-react-core';
+import { withConfiguration, Card, Text, CardContent, CardHeader } from '@pega/cosmos-react-core';
 import MapView from '@arcgis/core/views/MapView';
-import SketchViewModel from '@arcgis/core/widgets/Sketch/SketchViewModel';
 import GraphicsLayer from '@arcgis/core/layers/GraphicsLayer';
 import Layer from '@arcgis/core/layers/Layer';
 import Point from '@arcgis/core/geometry/Point';
@@ -15,10 +7,9 @@ import PortalItem from '@arcgis/core/portal/PortalItem';
 import Map from '@arcgis/core/Map';
 import { useEffect, useRef, useState } from 'react';
 import StyledEasaExtensionsSORA from './styles';
-import { createGraphic } from './utils';
 // import { getAllFields, createGraphic } from './utils';
 import '../create-nonce';
-import type Graphic from '@arcgis/core/Graphic';
+import { DrawToolbar } from './draw-toolbar';
 
 export const View = new MapView({
   ui: {
@@ -47,16 +38,6 @@ export const EasaExtensionsSORA = (props: MapProps) => {
 
   const mapDiv = useRef(null);
   const [graphicsLayer] = useState<GraphicsLayer>(new GraphicsLayer({}));
-  const [graphic, setGraphic] = useState<Graphic | null>(null);
-  const theme = useTheme();
-
-  useEffect(() => {
-    if (!graphic) {
-      graphicsLayer.removeAll();
-      return;
-    }
-    createGraphic(graphicsLayer, View, graphic.geometry, true, theme);
-  }, [graphic, graphicsLayer, theme]);
 
   /**
    * Initialize application
@@ -66,7 +47,6 @@ export const EasaExtensionsSORA = (props: MapProps) => {
     // console.log(tmpFields);
 
     let map: Map;
-    let sketchViewModel: SketchViewModel;
 
     if (mapDiv.current) {
       map = new Map({
@@ -88,23 +68,6 @@ export const EasaExtensionsSORA = (props: MapProps) => {
       View.zoom = parseFloat(Zoom);
 
       View.focus();
-      View.when(() => {
-        sketchViewModel = new SketchViewModel({
-          view: View,
-          layer: graphicsLayer
-        });
-        sketchViewModel.create('polyline');
-        sketchViewModel.on('create', event => {
-          if (event.state === 'start') {
-            setGraphic(null);
-            graphicsLayer.removeAll();
-          }
-          if (event.state === 'complete') {
-            setGraphic(event.graphic);
-            sketchViewModel.create('polyline');
-          }
-        });
-      });
     }
     return () => {
       View.destroy();
@@ -119,6 +82,10 @@ export const EasaExtensionsSORA = (props: MapProps) => {
       </CardHeader>
       <CardContent>
         <StyledEasaExtensionsSORA height={height} ref={mapDiv} />
+        <DrawToolbar
+          style={{ position: 'absolute', right: '15px', top: '5px' }}
+          graphicsLayer={graphicsLayer}
+        />
       </CardContent>
     </Card>
   );
