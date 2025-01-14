@@ -33,7 +33,7 @@
       "name": "Zoom",
       "label": "Zoom",
       "format": "TEXT",
-      "defaultValue": "4"
+      "defaultValue": "8"
     },
     {
       "name": "height",
