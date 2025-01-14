@@ -39,15 +39,8 @@
     "fix:pkg": "sort-package-json package.json packages/*/package.json"
   },
   "dependencies": {
-    "@arcgis/core": "^4.30.9",
-    "@fullcalendar/core": "^6.1.15",
-    "@fullcalendar/daygrid": "^6.1.15",
-    "@fullcalendar/react": "^6.1.15",
-    "@fullcalendar/timegrid": "^6.1.15",
-    "@hello-pangea/dnd": "^16.6.0",
-    "@pega/cosmos-react-core": "^4.0.1",
-    "@pega/cosmos-react-social": "^4.0.1",
-    "@pega/cosmos-react-work": "^4.0.1",
+    "@pega/cosmos-react-core": "^6.0.3",
+    "@pega/cosmos-react-work": "^6.0.3",
     "dagre": "^0.8.5",
     "gantt-task-react": "^0.3.9",
     "imask": "^7.6.1",
@@ -58,7 +51,17 @@
     "react-image-magnifiers": "^1.4.0",
     "reactflow": "^11.11.4",
     "signature_pad": "^5.0.3",
-    "styled-components": "5.3.6"
+    "styled-components": "5.3.6",
+    "@arcgis/core": "^4.30.9",
+    "@pega/cosmos-react-condition-builder": "^6.0.3",
+    "dayjs": "^1.11.10",
+    "lodash.get": "^4.4.2",
+    "prop-types": "^15.8.1",
+    "react-autosuggest": "^10.1.0",
+    "react-is": "^17.0.2",
+    "react-player": "^2.10.1",
+    "react-redux": "^7.2.6",
+    "ts-loader": "^9.5.1"
   },
   "devDependencies": {
     "@babel/preset-env": "^7.25.4",
