@@ -50,7 +50,7 @@ export const createGraphic = (
   theme: DefaultTheme
 ) => {
   const graphic = new Graphic({
-    geometry: geometry,
+    geometry,
     symbol: {
       // @ts-ignore
       type: 'simple-line',
