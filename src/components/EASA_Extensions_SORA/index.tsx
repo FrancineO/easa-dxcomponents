@@ -15,7 +15,8 @@ import PortalItem from '@arcgis/core/portal/PortalItem';
 import Map from '@arcgis/core/Map';
 import { useEffect, useRef, useState } from 'react';
 import StyledEasaExtensionsSORA from './styles';
-import { getAllFields, createGraphic } from './utils';
+import { createGraphic } from './utils';
+// import { getAllFields, createGraphic } from './utils';
 import '../create-nonce';
 import type Graphic from '@arcgis/core/Graphic';
 
@@ -26,7 +27,7 @@ export const View = new MapView({
 });
 
 type MapProps = {
-  getPConnect?: any;
+  // getPConnect?: any;
   heading?: string;
   height?: string;
   Latitude?: string;
@@ -36,7 +37,7 @@ type MapProps = {
 
 export const EasaExtensionsSORA = (props: MapProps) => {
   const {
-    getPConnect,
+    // getPConnect,
     heading = 'SORA',
     height = '40rem',
     Latitude = '50.9375',
@@ -45,7 +46,7 @@ export const EasaExtensionsSORA = (props: MapProps) => {
   } = props;
 
   const mapDiv = useRef(null);
-  const [graphicsLayer, setGraphicsLayer] = useState<GraphicsLayer>(new GraphicsLayer({}));
+  const [graphicsLayer] = useState<GraphicsLayer>(new GraphicsLayer({}));
   const [graphic, setGraphic] = useState<Graphic | null>(null);
   const theme = useTheme();
 
@@ -55,14 +56,14 @@ export const EasaExtensionsSORA = (props: MapProps) => {
       return;
     }
     createGraphic(graphicsLayer, View, graphic.geometry, true, theme);
-  }, [graphic]);
+  }, [graphic, graphicsLayer, theme]);
 
   /**
    * Initialize application
    */
   useEffect(() => {
-    const tmpFields: any = getAllFields(getPConnect);
-    console.log(tmpFields);
+    // const tmpFields: any = getAllFields(getPConnect);
+    // console.log(tmpFields);
 
     let map: Map;
     let sketchViewModel: SketchViewModel;
