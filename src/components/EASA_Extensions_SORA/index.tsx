@@ -10,12 +10,7 @@ import StyledEasaExtensionsSORA from './styles';
 // import { getAllFields, createGraphic } from './utils';
 import '../create-nonce';
 import { DrawToolbar } from './draw-toolbar';
-
-export const View = new MapView({
-  ui: {
-    components: []
-  }
-});
+import View from './View';
 
 type MapProps = {
   // getPConnect?: any;
@@ -37,7 +32,6 @@ export const EasaExtensionsSORA = (props: MapProps) => {
   } = props;
 
   const mapDiv = useRef(null);
-  const [graphicsLayer] = useState<GraphicsLayer>(new GraphicsLayer({}));
 
   /**
    * Initialize application
@@ -50,8 +44,7 @@ export const EasaExtensionsSORA = (props: MapProps) => {
 
     if (mapDiv.current) {
       map = new Map({
-        basemap: 'gray-vector',
-        layers: [graphicsLayer]
+        basemap: 'gray-vector'
       });
 
       Layer.fromPortalItem({
@@ -72,7 +65,6 @@ export const EasaExtensionsSORA = (props: MapProps) => {
     return () => {
       View.destroy();
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [Latitude, Longitude, Zoom, height]);
 
   return (
@@ -82,10 +74,7 @@ export const EasaExtensionsSORA = (props: MapProps) => {
       </CardHeader>
       <CardContent>
         <StyledEasaExtensionsSORA height={height} ref={mapDiv} />
-        <DrawToolbar
-          style={{ position: 'absolute', right: '15px', top: '5px' }}
-          graphicsLayer={graphicsLayer}
-        />
+        <DrawToolbar style={{ position: 'absolute', right: '15px', top: '5px' }} />
       </CardContent>
     </Card>
   );
