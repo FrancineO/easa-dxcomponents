@@ -2,71 +2,73 @@ import { Icon, useTheme } from '@pega/cosmos-react-core';
 import { Button } from '@pega/cosmos-react-core';
 import { CardContent } from '@pega/cosmos-react-core';
 import { Card } from '@pega/cosmos-react-core';
-import { useEffect, useState } from 'react';
-import { View } from '.';
+import { useEffect, useState, useCallback } from 'react';
+import View from './View';
 import SketchViewModel from '@arcgis/core/widgets/Sketch/SketchViewModel';
-import type GraphicsLayer from '@arcgis/core/layers/GraphicsLayer';
-import type Graphic from '@arcgis/core/Graphic';
+import GraphicsLayer from '@arcgis/core/layers/GraphicsLayer';
+import Graphic from '@arcgis/core/Graphic';
 import { createGraphic } from './utils';
 
 interface Props {
   style?: React.CSSProperties;
-  graphicsLayer: GraphicsLayer;
 }
+
+const sketchViewModel = new SketchViewModel({
+  view: View,
+  layer: new GraphicsLayer(),
+  updateOnGraphicClick: true
+});
 
 export const DrawToolbar = (props: Props) => {
   const [selectedTool, setSelectedTool] = useState<string>();
   const [handleCreate, setHandleCreate] = useState<any>();
-  const [sketchViewModel, setSketchViewModel] = useState<SketchViewModel | null>(null);
   const [graphic, setGraphic] = useState<Graphic | null>(null);
+  const [hasGraphic, setHasGraphic] = useState(false);
   const theme = useTheme();
 
+  const onCreate = useCallback((event: any) => {
+    if (event.state === 'start') {
+      setGraphic(null);
+      sketchViewModel.layer.removeAll();
+    }
+    if (event.state === 'complete') {
+      setGraphic(event.graphic);
+      setHasGraphic(true);
+    }
+  }, []);
+
   useEffect(() => {
-    if (handleCreate) return;
+    if (handleCreate) {
+      return;
+    }
+    if (!selectedTool) {
+      sketchViewModel?.cancel();
+      return;
+    }
     View.when(() => {
-      const vm = new SketchViewModel({
-        view: View,
-        layer: props.graphicsLayer,
-        updateOnGraphicClick: true
-      });
-      const hc = vm.on('create', event => {
-        if (event.state === 'start') {
-          setGraphic(null);
-          props.graphicsLayer.removeAll();
-        }
-        if (event.state === 'complete') {
-          setGraphic(event.graphic);
-          vm.create(
-            selectedTool as
-              | 'circle'
-              | 'point'
-              | 'multipoint'
-              | 'polyline'
-              | 'polygon'
-              | 'mesh'
-              | 'rectangle'
-          );
-        }
-      });
+      const hc = sketchViewModel.on('create', onCreate);
       setHandleCreate(hc);
-      setSketchViewModel(vm);
+      View.map.add(sketchViewModel.layer);
     });
-  }, [selectedTool, props.graphicsLayer, handleCreate]);
+  }, [selectedTool, handleCreate, onCreate]);
 
   useEffect(() => {
     if (!graphic) {
-      props.graphicsLayer.removeAll();
+      sketchViewModel.layer.removeAll();
       return;
     }
-    createGraphic(props.graphicsLayer, View, graphic.geometry, true, theme);
-  }, [graphic, props.graphicsLayer, theme]);
+    createGraphic(sketchViewModel.layer, View, graphic.geometry, true, theme);
+  }, [graphic, theme]);
 
   const handleToolClick = (tool: 'circle' | 'polyline' | 'polygon') => {
-    if (!sketchViewModel) return;
-    setSelectedTool(tool);
-    sketchViewModel.create(
-      tool as 'circle' | 'point' | 'multipoint' | 'polyline' | 'polygon' | 'mesh' | 'rectangle'
-    );
+    if (tool === selectedTool) {
+      setSelectedTool(undefined);
+    } else {
+      setSelectedTool(tool);
+      sketchViewModel.create(
+        tool as 'circle' | 'point' | 'multipoint' | 'polyline' | 'polygon' | 'mesh' | 'rectangle'
+      );
+    }
   };
 
   return (
@@ -77,22 +79,37 @@ export const DrawToolbar = (props: Props) => {
           label='Draw path with circle'
           onClick={() => handleToolClick('circle')}
         >
-          <Icon name='circle' />
+          <Icon name='circle' size='s' />
         </Button>
         <Button
           variant={selectedTool === 'polyline' ? 'primary' : 'secondary'}
           label='Draw path with line'
           onClick={() => handleToolClick('polyline')}
         >
-          <Icon name='share-point-up' />
+          <Icon name='share-point-up' size='s' />
         </Button>
         <Button
           variant={selectedTool === 'polygon' ? 'primary' : 'secondary'}
           label='Draw path with polygon'
           onClick={() => handleToolClick('polygon')}
         >
-          <Icon name='rectangle' />
+          <Icon name='rectangle' size='s' />
         </Button>
+        {hasGraphic && (
+          <Button
+            variant='secondary'
+            label='Clear'
+            onClick={() => {
+              sketchViewModel.layer.removeAll();
+              setHasGraphic(false);
+              if (selectedTool) {
+                sketchViewModel.create(selectedTool as 'circle' | 'polyline' | 'polygon');
+              }
+            }}
+          >
+            <Icon name='trash' size='s' />
+          </Button>
+        )}
       </CardContent>
     </Card>
   );
