@@ -3,6 +3,42 @@ import * as webMercatorUtils from '@arcgis/core/geometry/support/webMercatorUtil
 import type GraphicsLayer from '@arcgis/core/layers/GraphicsLayer';
 import type MapView from '@arcgis/core/views/MapView';
 import type { DefaultTheme } from 'styled-components';
+import SimpleLineSymbol from '@arcgis/core/symbols/SimpleLineSymbol';
+import SimpleFillSymbol from '@arcgis/core/symbols/SimpleFillSymbol';
+import Color from '@arcgis/core/Color';
+
+export const getPolylineSymbol = (theme: DefaultTheme) => {
+  return new SimpleLineSymbol({
+    type: 'simple-line',
+    color: theme.base.palette['brand-primary'],
+    width: 3,
+    cap: 'round',
+    join: 'round'
+  });
+};
+
+export const getFillSymbol = (theme: DefaultTheme) => {
+  const color = new Color(theme.base.palette['brand-primary']);
+  color.a = 0.5;
+  return new SimpleFillSymbol({
+    color,
+    style: 'solid',
+    outline: {
+      type: 'simple-line',
+      color: theme.base.palette['brand-primary'],
+      width: 3,
+      cap: 'round',
+      join: 'round'
+    }
+  });
+};
+
+export const getSymbol = (theme: DefaultTheme, geometryType: 'polyline' | 'polygon') => {
+  if (geometryType === 'polyline') {
+    return getPolylineSymbol(theme);
+  }
+  return getFillSymbol(theme);
+};
 
 export const getAllFields = (pConnect: any) => {
   const metadata = pConnect().getRawMetadata();
@@ -42,23 +78,10 @@ export const getAllFields = (pConnect: any) => {
 };
 
 // create a new graphic presenting the polyline that is being drawn on the view
-export const createGraphic = (
-  ptLayer: GraphicsLayer,
-  view: MapView,
-  geometry: any,
-  useSpacialRef: boolean,
-  theme: DefaultTheme
-) => {
+export const createGraphic = (ptLayer: GraphicsLayer, geometry: any, theme: DefaultTheme) => {
   const graphic = new Graphic({
     geometry,
-    symbol: {
-      // @ts-ignore
-      type: 'simple-line',
-      color: theme.base.palette['brand-primary'],
-      width: 3,
-      cap: 'round',
-      join: 'round'
-    }
+    symbol: getSymbol(theme, geometry.type)
   });
   ptLayer.add(graphic);
 };
