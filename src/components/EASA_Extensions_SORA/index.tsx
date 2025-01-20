@@ -12,7 +12,7 @@ import View from './View';
 import FlightVolumeCalculator from './flight-volume-calculator';
 
 type MapProps = {
-  getPConnect?: any;
+  // getPConnect?: any;
   heading?: string;
   height?: string;
   Latitude?: string;
@@ -24,7 +24,7 @@ export const EasaExtensionsSORA = (props: MapProps) => {
   const [flightGeography, setFlightGeography] = useState<__esri.Graphic | null>(null);
 
   const {
-    getPConnect,
+    // getPConnect,
     heading = 'SORA',
     height = '40rem',
     Latitude = '50.9375',
@@ -34,7 +34,7 @@ export const EasaExtensionsSORA = (props: MapProps) => {
 
   const mapDiv = useRef(null);
 
-  const pConnect = getPConnect();
+  // const pConnect = getPConnect();
 
   /**
    * Initialize application
@@ -79,6 +79,7 @@ export const EasaExtensionsSORA = (props: MapProps) => {
         <StyledEasaExtensionsSORA height='100%' ref={mapDiv} />
         <DrawToolbar
           style={{ position: 'absolute', right: '20px', top: '5px' }}
+          cd={1}
           onFlightGeographyChange={setFlightGeography}
         />
       </CardContent>
@@ -91,9 +92,17 @@ export const EasaExtensionsSORA = (props: MapProps) => {
         vO={20}
         tR={2}
         tP={2}
-        thetaMax={25}
+        rollAngle={25}
+        multirotor={false}
         hFG={100}
         hAM={100}
+        simplified={false}
+        cd={1}
+        vWind={10}
+        vZ={10}
+        power={false}
+        cL={0.5}
+        gliding={false}
       />
     </Card>
   );

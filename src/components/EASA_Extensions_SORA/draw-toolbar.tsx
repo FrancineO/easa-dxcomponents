@@ -20,10 +20,18 @@ import * as geometryEngine from '@arcgis/core/geometry/geometryEngine';
 
 registerIcon(Circle, SharePointUp, Rectangle, Trash);
 
-interface Props {
+/**
+ * Props for the DrawToolbar component
+ * @type {Props}
+ * @property {React.CSSProperties} style - The style of the toolbar
+ * @property {number} cd - The diameter of the drone in meters
+ * @property {(graphic: Graphic | null) => void} onFlightGeographyChange - The function to call when the flight geography changes
+ */
+type Props = {
   style?: React.CSSProperties;
+  cd: number;
   onFlightGeographyChange: (graphic: Graphic | null) => void;
-}
+};
 
 const bufferGraphicsLayerId = 'easa-sora-tool-buffer-graphics';
 
@@ -50,8 +58,13 @@ const sketchViewModel = new SketchViewModel({
   }
 });
 
+/**
+ * DrawToolbar component
+ * @param props - The props for the component
+ * @returns The DrawToolbar component
+ */
 export const DrawToolbar = (props: Props) => {
-  const { onFlightGeographyChange } = props;
+  const { onFlightGeographyChange, cd } = props;
   const [selectedTool, setSelectedTool] = useState<'circle' | 'polyline' | 'polygon'>();
   const [handleCreate, setHandleCreate] = useState<any>();
   const [handleUpdate, setHandleUpdate] = useState<any>();
@@ -125,7 +138,7 @@ export const DrawToolbar = (props: Props) => {
 
       const buffer = geometryEngine.buffer(
         graphic.geometry as __esri.Polyline,
-        1000
+        cd * 3 // minimum is 3 times the drone width as per annex
       ) as __esri.Polygon;
       const g = new Graphic({
         geometry: buffer,
@@ -136,7 +149,7 @@ export const DrawToolbar = (props: Props) => {
     } else {
       onFlightGeographyChange(graphic);
     }
-  }, [graphic, selectedTool, onFlightGeographyChange]);
+  }, [graphic, selectedTool, onFlightGeographyChange, cd]);
 
   const handleToolClick = (tool: 'circle' | 'polyline' | 'polygon') => {
     if (tool === selectedTool) {
