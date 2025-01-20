@@ -149,7 +149,7 @@ export const Default: Story = {
     return <EasaExtensionsSORA {...props}></EasaExtensionsSORA>;
   },
   args: {
-    height: '20rem',
+    height: '40rem',
     heading: 'SORA',
     Latitude: '50.9375',
     Longitude: '6.9603',

@@ -1,7 +1,7 @@
 {
   "components-directory-path": "src/components",
   "server-config": {
-    "rulesetName": "DXComponents",
+    "rulesetName": "DXComponentFlightPaths_Branch_SORA_Case",
     "rulesetVersion": "01-01-01",
     "sourceOfComponents": "Server",
     "devBuild": false,

@@ -1,6 +1,4 @@
 import { withConfiguration, Card, Text, CardContent, CardHeader } from '@pega/cosmos-react-core';
-import MapView from '@arcgis/core/views/MapView';
-import GraphicsLayer from '@arcgis/core/layers/GraphicsLayer';
 import Layer from '@arcgis/core/layers/Layer';
 import Point from '@arcgis/core/geometry/Point';
 import PortalItem from '@arcgis/core/portal/PortalItem';
@@ -11,9 +9,10 @@ import StyledEasaExtensionsSORA from './styles';
 import '../create-nonce';
 import { DrawToolbar } from './draw-toolbar';
 import View from './View';
+import FlightVolumeCalculator from './flight-volume-calculator';
 
 type MapProps = {
-  // getPConnect?: any;
+  getPConnect?: any;
   heading?: string;
   height?: string;
   Latitude?: string;
@@ -22,8 +21,10 @@ type MapProps = {
 };
 
 export const EasaExtensionsSORA = (props: MapProps) => {
+  const [flightGeography, setFlightGeography] = useState<__esri.Graphic | null>(null);
+
   const {
-    // getPConnect,
+    getPConnect,
     heading = 'SORA',
     height = '40rem',
     Latitude = '50.9375',
@@ -32,6 +33,8 @@ export const EasaExtensionsSORA = (props: MapProps) => {
   } = props;
 
   const mapDiv = useRef(null);
+
+  const pConnect = getPConnect();
 
   /**
    * Initialize application
@@ -68,14 +71,30 @@ export const EasaExtensionsSORA = (props: MapProps) => {
   }, [Latitude, Longitude, Zoom, height]);
 
   return (
-    <Card>
+    <Card style={{ height }}>
       <CardHeader>
         <Text variant='h2'>{heading}</Text>
       </CardHeader>
-      <CardContent>
-        <StyledEasaExtensionsSORA height={height} ref={mapDiv} />
-        <DrawToolbar style={{ position: 'absolute', right: '15px', top: '5px' }} />
+      <CardContent style={{ height: '100%' }}>
+        <StyledEasaExtensionsSORA height='100%' ref={mapDiv} />
+        <DrawToolbar
+          style={{ position: 'absolute', right: '20px', top: '5px' }}
+          onFlightGeographyChange={setFlightGeography}
+        />
       </CardContent>
+      <FlightVolumeCalculator
+        flightGeography={flightGeography}
+        parachute={false}
+        sGPS={3}
+        sPos={3}
+        sK={1}
+        vO={50}
+        tR={2}
+        tP={2}
+        thetaMax={25}
+        hFG={100}
+        hAM={100}
+      />
     </Card>
   );
 };

@@ -1,43 +1,61 @@
 import Graphic from '@arcgis/core/Graphic';
 import * as webMercatorUtils from '@arcgis/core/geometry/support/webMercatorUtils';
-import type GraphicsLayer from '@arcgis/core/layers/GraphicsLayer';
+import GraphicsLayer from '@arcgis/core/layers/GraphicsLayer';
 import type MapView from '@arcgis/core/views/MapView';
-import type { DefaultTheme } from 'styled-components';
 import SimpleLineSymbol from '@arcgis/core/symbols/SimpleLineSymbol';
 import SimpleFillSymbol from '@arcgis/core/symbols/SimpleFillSymbol';
 import Color from '@arcgis/core/Color';
+import SimpleMarkerSymbol from '@arcgis/core/symbols/SimpleMarkerSymbol';
 
-export const getPolylineSymbol = (theme: DefaultTheme) => {
+const blue = '#3674b4';
+const green = '#92ce5a';
+
+export const getPolylineSymbol = () => {
   return new SimpleLineSymbol({
-    type: 'simple-line',
-    color: theme.base.palette['brand-primary'],
-    width: 3,
+    color: new Color(blue),
+    width: 2,
     cap: 'round',
     join: 'round'
   });
 };
 
-export const getFillSymbol = (theme: DefaultTheme) => {
-  const color = new Color(theme.base.palette['brand-primary']);
+export const getFillSymbol = (withOutline: boolean = true) => {
+  const color = new Color(green);
   color.a = 0.5;
   return new SimpleFillSymbol({
     color,
     style: 'solid',
+    outline: withOutline
+      ? {
+          color: new Color(blue),
+          width: 2,
+          cap: 'round',
+          join: 'round'
+        }
+      : undefined
+  });
+};
+
+export const getPointSymbol = () => {
+  return new SimpleMarkerSymbol({
+    color: new Color('rgba(0, 0, 0, 0)'),
+    size: 10,
+    style: 'circle',
     outline: {
-      type: 'simple-line',
-      color: theme.base.palette['brand-primary'],
-      width: 3,
-      cap: 'round',
-      join: 'round'
+      color: new Color(blue),
+      width: 2
     }
   });
 };
 
-export const getSymbol = (theme: DefaultTheme, geometryType: 'polyline' | 'polygon') => {
+export const getSymbol = (geometryType: 'polyline' | 'polygon' | 'point') => {
   if (geometryType === 'polyline') {
-    return getPolylineSymbol(theme);
+    return getPolylineSymbol();
   }
-  return getFillSymbol(theme);
+  if (geometryType === 'point') {
+    return getPointSymbol();
+  }
+  return getFillSymbol();
 };
 
 export const getAllFields = (pConnect: any) => {
@@ -78,10 +96,10 @@ export const getAllFields = (pConnect: any) => {
 };
 
 // create a new graphic presenting the polyline that is being drawn on the view
-export const createGraphic = (ptLayer: GraphicsLayer, geometry: any, theme: DefaultTheme) => {
+export const createGraphic = (ptLayer: GraphicsLayer, geometry: any) => {
   const graphic = new Graphic({
     geometry,
-    symbol: getSymbol(theme, geometry.type)
+    symbol: getSymbol(geometry.type)
   });
   ptLayer.add(graphic);
 };
