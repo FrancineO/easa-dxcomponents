@@ -42,4 +42,5 @@ export interface PConnFieldProps extends PConnProps {
   placeholder?: string;
   fieldMetadata?: any;
   additionalProps?: any;
+  field?: any;
 }

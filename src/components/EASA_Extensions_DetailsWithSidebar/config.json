@@ -1,0 +1,60 @@
+{
+  "name": "EASA_Extensions_DetailsWithSidePanel",
+  "label": "Details With Side panel",
+  "description": "Configurable left side panel",
+  "organization": "EASA",
+  "version": "1.0.0",
+  "library": "Extensions",
+  "allowedApplications": [],
+  "componentKey": "EASA_Extensions_DetailsWithSidePanel",
+  "type": "Template",
+  "subtype": "DETAILS",
+  "icon": "webwb/SidePanelDetails.svg",
+  "properties": [
+    {
+      "name": "showSidePanelData",
+      "label": "Enable left side panel",
+      "format": "BOOLEAN"
+    },
+    {
+      "name": "sidePanelWidth",
+      "label": "Width of the side panel",
+      "format": "TEXT"
+    },
+    {
+      "name": "sidePanelData",
+      "label": "Side panel",
+      "format": "CONTENTPICKER",
+      "addTypeList": ["Fields", "Views"],
+      "visibility": "$this.showSidePanelData = true",
+      "saveToConfig": true
+    },
+    {
+      "name": "showHighlightedData",
+      "label": "Enable highlighted fields",
+      "format": "BOOLEAN"
+    },
+    {
+      "name": "highlightedData",
+      "label": "Highlighted fields",
+      "format": "CONTENTPICKER",
+      "addTypeList": ["Fields"],
+      "visibility": "$this.showHighlightedData = true",
+      "saveToConfig": true
+    },
+    {
+      "name": "A",
+      "label": "Region A",
+      "format": "CONTENTPICKER",
+      "addTypeList": ["Fields", "Views"],
+      "allowCreatingGroup": true
+    },
+    {
+      "name": "B",
+      "label": "Region B",
+      "format": "CONTENTPICKER",
+      "addTypeList": ["Fields", "Views"],
+      "allowCreatingGroup": true
+    }
+  ]
+}

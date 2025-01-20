@@ -1,0 +1,60 @@
+{
+  "name": "Pega_Extensions_EASAExtensionsCard",
+  "label": "EASA Ext Card",
+  "description": "Layout card template",
+  "organization": "Pega",
+  "version": "01.01.01",
+  "library": "Extensions",
+  "allowedApplications": [],
+  "componentKey": "Pega_Extensions_EASAExtensionsCard",
+  "type": "Template",
+  "subtype": "DETAILS",
+  "icon": "OneColumnDetails.svg",
+  "properties": [
+    {
+      "name": "showSidePanelData",
+      "label": "Enable left side panel",
+      "format": "BOOLEAN"
+    },
+    {
+      "name": "asideWidth",
+      "label": "Width of the side panel",
+      "format": "TEXT"
+    },
+    {
+      "name": "SidePanelData",
+      "label": "Side Panel",
+      "format": "CONTENTPICKER",
+      "addTypeList": ["Fields", "Views"],
+      "visibility": "$this.showSidePanelData = true",
+      "saveToConfig": true
+    },
+    {
+      "name": "showHighlightedData",
+      "label": "Enable highlighted fields",
+      "format": "BOOLEAN"
+    },
+    {
+      "name": "highlightedData",
+      "label": "Highlighted fields",
+      "format": "CONTENTPICKER",
+      "addTypeList": ["Fields"],
+      "visibility": "$this.showHighlightedData = true",
+      "saveToConfig": true
+    },
+    {
+      "name": "A",
+      "label": "Region A",
+      "format": "CONTENTPICKER",
+      "addTypeList": ["Fields", "Views"],
+      "allowCreatingGroup": true
+    },
+    {
+      "name": "B",
+      "label": "Region B",
+      "format": "CONTENTPICKER",
+      "addTypeList": ["Fields", "Views"],
+      "allowCreatingGroup": true
+    }
+  ]
+}

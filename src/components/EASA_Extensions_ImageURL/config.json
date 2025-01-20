@@ -13,9 +13,9 @@
   "properties": [
     {
       "name": "source",
-      "label": "Source",
+      "label": "Overridden source",
       "format": "TEXT",
-      "required": true
+      "required": false
     },
     {
       "name": "altText",
@@ -24,8 +24,19 @@
       "required": true
     },
     {
+      "name": "title",
+      "label": "tooltip",
+      "format": "TEXT",
+      "required": false
+    },
+    {
       "name": "width",
       "label": "Width (px)",
+      "format": "NUMBER"
+    },
+    {
+      "name": "height",
+      "label": "Height (px)",
       "format": "NUMBER"
     },
     {
@@ -48,6 +59,5 @@
       ],
       "defaultValue": "left"
     }
-
   ]
 }

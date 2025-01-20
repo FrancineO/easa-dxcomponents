@@ -1,13 +1,8 @@
-import { useEffect, useRef, useState, type ReactNode } from 'react';
+import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import {
   withConfiguration,
   registerIcon,
-  Text,
-  Card,
-  CardHeader,
   Progress,
-  Button,
-  Icon,
   EmptyState,
   ErrorState,
   Flex
@@ -15,6 +10,7 @@ import {
 import { Task } from './Task';
 import { loadDetails, getFilters } from './utils';
 import { MainCard } from './styles';
+import { StyledCardContent } from './styles';
 import '../create-nonce';
 
 import * as plusIcon from '@pega/cosmos-react-core/lib/components/Icon/icons/plus.icon';
@@ -32,13 +28,12 @@ type CardGalleryProps = {
   detailsDataPage: string;
   detailsViewName: string;
   getPConnect: any;
+  propertyToForward: string;
   addActions: any;
 };
 
 export const EasaExtensionsCardGallery = (props: CardGalleryProps) => {
   const {
-    addActions,
-    heading = '',
     dataPage = '',
     useInDashboard = true,
     numCards,
@@ -47,6 +42,7 @@ export const EasaExtensionsCardGallery = (props: CardGalleryProps) => {
     rendering = 'vertical',
     detailsDataPage = '',
     detailsViewName = '',
+    propertyToForward = '',
     getPConnect
   } = props;
   const [tasks, setTasks] = useState<any>();
@@ -54,14 +50,6 @@ export const EasaExtensionsCardGallery = (props: CardGalleryProps) => {
   const errorMsg = useRef<string>('');
   const isEmpty = useRef<boolean>(false);
   const [loading, setLoading] = useState<boolean>(true);
-
-  const addNewEvent = () => {
-    if (createClassname) {
-      getPConnect().getActionsApi().createWork(createClassname, {
-        openCaseViewAfterCreate: false
-      });
-    }
-  };
 
   const getDetails = (id: string, classname: string) => {
     return loadDetails({
@@ -87,13 +75,13 @@ export const EasaExtensionsCardGallery = (props: CardGalleryProps) => {
               field: 'pyLabel'
             },
             {
-              field: 'Domain'
-            },
-            {
               field: 'LegalName'
             },
             {
               field: 'pxUpdateDateTime'
+            },
+            {
+              field: 'pyID'
             },
             {
               field: 'pyGUID'
@@ -144,7 +132,9 @@ export const EasaExtensionsCardGallery = (props: CardGalleryProps) => {
                 classname: createClassname,
                 insKey: item.pzInsKey,
                 isVisible: true,
-                getPConnect
+                propertyToForward,
+                getPConnect,
+                properties: { ...item }
               });
             });
             let numTasks = tmpTasks.length;
@@ -152,6 +142,7 @@ export const EasaExtensionsCardGallery = (props: CardGalleryProps) => {
               tmpTasks.forEach(async (tmpTask: any) => {
                 const details = await getDetails(tmpTask.id, tmpTask.classname);
                 tmpTask.details = details;
+
                 numTasks -= 1;
                 if (numTasks === 0) {
                   setTasks(tmpTasks);
@@ -276,37 +267,39 @@ export const EasaExtensionsCardGallery = (props: CardGalleryProps) => {
     </Flex>
   );
 
-  let content;
-  if (loading) {
-    content = genState(<Progress placement='block' message='Loading content...' />);
-  } else if (errorMsg.current) {
-    content = genState(<ErrorState message={errorMsg.current} />);
-  } else if (isEmpty.current) {
-    content = genState(<EmptyState message='No items' />);
-  } else {
-    content = (
+  //  let content;
+  //  if (loading) {
+  //    content = genState(<Progress placement='block' message='Loading content...' />);
+  //  } else if (errorMsg.current) {
+  //    content = genState(<ErrorState message={errorMsg.current} />);
+  //  } else if (isEmpty.current) {
+  //    content = genState(<EmptyState message='No items' />);
+  //  } else {
+  //    content = (
+  //      <MainCard rendering={rendering} minWidth={minWidth}>
+  //        {tasks?.map((task: any) => (task.isVisible ? <Task key={task.id} {...task} /> : null))}
+  //      </MainCard>
+  //    );
+  //  }
+
+  const content = useMemo(() => {
+    if (loading) {
+      return genState(<Progress placement='block' message='Loading content...' />);
+    }
+    if (errorMsg.current) {
+      return genState(<ErrorState message={errorMsg.current} />);
+    }
+    if (isEmpty.current) {
+      return genState(<EmptyState message='No items' />);
+    }
+    return (
       <MainCard rendering={rendering} minWidth={minWidth}>
         {tasks?.map((task: any) => (task.isVisible ? <Task key={task.id} {...task} /> : null))}
       </MainCard>
     );
-  }
+  }, [loading, tasks, rendering, minWidth]);
 
-  return (
-    <Card>
-      <CardHeader
-        actions={
-          createClassname ? (
-            <Button variant='simple' label='Create new task' icon compact onClick={addNewEvent}>
-              <Icon name='plus' />
-            </Button>
-          ) : undefined
-        }
-      >
-        <Text variant='h2'>{heading}</Text>
-      </CardHeader>
-      {content}
-    </Card>
-  );
+  return <StyledCardContent>{content}</StyledCardContent>;
 };
 
 export default withConfiguration(EasaExtensionsCardGallery);

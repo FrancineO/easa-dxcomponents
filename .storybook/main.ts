@@ -7,12 +7,17 @@ const config: StorybookConfig = {
   framework: '@storybook/react-webpack5',
   staticDirs: ['./static'],
   stories: ['../src/**/*.mdx', '../src/**/*.stories.@(js|jsx|mjs|ts|tsx)'],
-  addons: ['@storybook/addon-a11y', '@storybook/addon-essentials'],
-  docs: {
-    autodocs: true
-  },
+  addons: [
+    '@storybook/addon-a11y',
+    '@storybook/addon-essentials',
+    '@storybook/addon-mdx-gfm',
+    '@storybook/addon-webpack5-compiler-babel',
+    '@chromatic-com/storybook'
+  ],
+  docs: {},
   typescript: {
-    check: true
+    check: true,
+    reactDocgen: 'react-docgen-typescript'
   }
 };
 

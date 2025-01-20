@@ -1,0 +1,17 @@
+{
+  "uas": {
+    "model": "my-model",
+    "type": "my-type",
+    "weigth": 1,
+    "maxSpeed": 15,
+    "heightOfFlightGeography": 20,
+    "maxAutonomy": 30,
+    "characteristicDimension": 45
+  },
+  "altimetry": 100,
+  "operationType": "BVLOS",
+  "maxWindSpeeed": 20,
+  "maxPitch": 40,
+  "maxSail": 1,
+  "containment": "low"
+}

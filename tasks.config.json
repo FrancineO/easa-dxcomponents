@@ -1,26 +1,26 @@
 {
-    "components-directory-path": "src/components",
-    "server-config": {
-        "rulesetName": "DXComponents",
-        "rulesetVersion": "01-01-01",
-        "sourceOfComponents": "Server",
-        "devBuild": false,
-        "serverType": "infinity",
-        "server": "[EASA_PEGA_URL]",
-        "grantType": "authCode",
-        "redirectUri": "https://localhost:4010/",
-        "cert": "./keys/dxcb.crt",
-        "key": "./keys/dxcb.key",
-        "authService": "pega",
-        "clientId": "[CLIENT_ID]"
-    },
-    "component": {
-        "library": "UID",
-        "type": "",
-        "version": "1.0.0",
-        "subtype": "",
-        "description": "",
-        "icon": ""
-    },
-    "usePromotedWebPack": false
+  "components-directory-path": "src/components",
+  "server-config": {
+    "rulesetName": "DXComponents",
+    "rulesetVersion": "01-01-01",
+    "sourceOfComponents": "Server",
+    "devBuild": false,
+    "serverType": "infinity",
+    "server": "[EASA_PEGA_URL]",
+    "grantType": "authCode",
+    "redirectUri": "https://localhost:4010/",
+    "cert": "./keys/dxcb.crt",
+    "key": "./keys/dxcb.key",
+    "authService": "pega",
+    "clientId": "[CLIENT_ID]"
+  },
+  "component": {
+    "library": "UID",
+    "type": "",
+    "version": "1.0.0",
+    "subtype": "",
+    "description": "",
+    "icon": ""
+  },
+  "usePromotedWebPack": false
 }

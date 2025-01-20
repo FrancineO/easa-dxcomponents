@@ -3,34 +3,51 @@ import {
   Card,
   CardHeader,
   CardContent,
-  Text,
   useTheme,
   Button,
   Icon,
   registerIcon
 } from '@pega/cosmos-react-core';
 import { StyledCardContent } from './styles';
-import * as ChatTyping from '@pega/cosmos-react-core/lib/components/Icon/icons/chat-typing.icon';
+import * as More from '@pega/cosmos-react-core/lib/components/Icon/icons/more.icon';
 
-registerIcon(ChatTyping);
+registerIcon(More);
 
 export type TaskProps = {
-  title: string;
+  propertyToForward: string;
+  properties: any;
   classname: string;
   details?: any;
   getPConnect: any;
 };
 
 export const Task = (props: TaskProps) => {
-  const { title, classname, details, getPConnect } = props;
+  const { propertyToForward, classname, details, properties, getPConnect } = props;
   const theme = useTheme();
+
+  // const addProps = (obj: any, arr: Array<string> | string, val: any) => {
+  //   if (typeof arr === 'string') arr = arr.split('.');
+
+  //   obj[arr[0]] = obj[arr[0]] || {};
+
+  //   const tmpObj = obj[arr[0]];
+
+  //   if (arr.length > 1) {
+  //     arr.shift();
+  //     addProps(tmpObj, arr, val);
+  //   } else obj[arr[0]] = val;
+
+  //   return obj;
+  // };
+
+  // const startingFields = addProps({}, propertyToForward, details.props.pyGUID);
 
   const createCase = () => {
     const options = {
       openCaseViewAfterCreate: true,
       startingFields: {
         pyAddCaseContextPage: {
-          pyGUID: details.props.pyGUID
+          pyGUID: properties[propertyToForward]
         }
       }
     };
@@ -47,11 +64,11 @@ export const Task = (props: TaskProps) => {
         <CardHeader
           actions={
             <Button variant='simple' label='Request a change' icon compact onClick={onClick}>
-              <Icon name='chat-typing' size='s' />
+              <Icon name='more' size='s' />
             </Button>
           }
         >
-          <Text variant='h3'>{title}</Text>
+          {' '}
         </CardHeader>
         <CardContent>
           {details || <Progress placement='inline' message='Loading content...' />}
