@@ -88,7 +88,7 @@ export const EasaExtensionsSORA = (props: MapProps) => {
         sGPS={3}
         sPos={3}
         sK={1}
-        vO={50}
+        vO={20}
         tR={2}
         tP={2}
         thetaMax={25}
