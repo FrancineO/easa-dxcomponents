@@ -81,7 +81,6 @@ export const DrawToolbar = (props: Props) => {
     if (event.state === 'complete') {
       setGraphic(event.graphic);
       setHasGraphic(true);
-      sketchViewModel.update([event.graphic]);
     }
   }, []);
 
@@ -149,9 +148,20 @@ export const DrawToolbar = (props: Props) => {
     } else {
       onFlightGeographyChange(graphic);
     }
+    sketchViewModel.update([graphic]);
   }, [graphic, selectedTool, onFlightGeographyChange, cd]);
 
+  const handleClear = () => {
+    sketchViewModel.layer.removeAll();
+    const l = View.map?.findLayerById(bufferGraphicsLayerId) as GraphicsLayer;
+    l?.removeAll();
+    setGraphic(null);
+    setHasGraphic(false);
+    sketchViewModel.cancel();
+  };
+
   const handleToolClick = (tool: 'circle' | 'polyline' | 'polygon') => {
+    handleClear();
     if (tool === selectedTool) {
       setSelectedTool(undefined);
     } else {
@@ -202,13 +212,8 @@ export const DrawToolbar = (props: Props) => {
             variant='secondary'
             label='Clear'
             onClick={() => {
-              setSelectedTool(undefined);
-              sketchViewModel.layer.removeAll();
-              const l = View.map?.findLayerById(bufferGraphicsLayerId) as GraphicsLayer;
-              l?.removeAll();
-              setGraphic(null);
-              setHasGraphic(false);
-              sketchViewModel.cancel();
+              // setSelectedTool(undefined);
+              handleClear();
               if (selectedTool) {
                 sketchViewModel.create(selectedTool as 'circle' | 'polyline' | 'polygon');
               }
