@@ -1,0 +1,29 @@
+{
+  "components-directory-path": "src/components",
+  "server-config": {
+    "rulesetName": "[RULESET_NAME]",
+    "rulesetVersion": "[RULESET_VERSION]",
+    "sourceOfComponents": "Server",
+    "devBuild": false,
+    "serverType": "infinity",
+    "server": "[SERVER_URL]",
+    "grantType": "passwordCreds",
+    "user": "[USERNAME]",
+    "password": "[PASSWORD]",
+    "redirectUri": "https://localhost:4010/",
+    "cert": "./keys/dxcb.crt",
+    "key": "./keys/dxcb.key",
+    "clientId": "[CLIENT_ID]",
+    "clientSecret": "[CLIENT_SECRET]",
+    "authService": "pega"
+  },
+  "component": {
+    "library": "UID",
+    "type": "",
+    "version": "1.0.0",
+    "subtype": "",
+    "description": "",
+    "icon": ""
+  },
+  "usePromotedWebPack": false
+}
