@@ -1,4 +1,4 @@
-import { useEffect, type FC } from 'react';
+import { useEffect, type FC, useCallback } from 'react';
 import View from './View';
 import GraphicsLayer from '@arcgis/core/layers/GraphicsLayer';
 import * as geometryEngine from '@arcgis/core/geometry/geometryEngine';
@@ -74,32 +74,22 @@ const FlightVolumeCalculator: FC<Props> = props => {
     gliding
   } = props;
 
-  const getContingencyVolume = () => {
+  const getContingencyVolume = useCallback(() => {
     if (!flightGeography) return null;
 
-    // reaction distance
     const sR = vO * tR;
-    // contingency manoeuvres
-    let sCM = 0;
-    // multirotor
-    if (multirotor) {
-      sCM = vO ** 2 / (2 * g * Math.tan((rollAngle * Math.PI) / 180));
-    } else {
-      // fixed wing
-      sCM = vO ** 2 / (g * Math.tan((rollAngle * Math.PI) / 180));
-    }
-    // parachute
-    if (parachute) {
-      sCM = vO * tP;
-    }
+    const sCM = multirotor
+      ? vO ** 2 / (2 * g * Math.tan((rollAngle * Math.PI) / 180))
+      : vO ** 2 / (g * Math.tan((rollAngle * Math.PI) / 180));
 
-    const sCV = sGPS + sPos + sK + sR + sCM;
+    const sCV = sGPS + sPos + sK + sR + (parachute ? vO * tP : sCM);
 
     const buffer = geometryEngine.buffer(flightGeography.geometry, sCV);
     const sCVPolygon = geometryEngine.difference(
       buffer,
       flightGeography.geometry
     ) as __esri.Polygon;
+
     return new Graphic({
       geometry: sCVPolygon,
       symbol: new SimpleFillSymbol({
@@ -107,101 +97,101 @@ const FlightVolumeCalculator: FC<Props> = props => {
         outline: { color: 'rgb(238, 191, 82)', width: 2 }
       })
     });
-  };
+  }, [flightGeography, sGPS, sPos, sK, vO, tR, tP, parachute, rollAngle, multirotor]);
 
-  const getGroundRiskVolume = (contingencyVolume: __esri.Geometry) => {
-    if (!flightGeography) return null;
-    const hR = vO * 0.7 * tR;
-    let hCM = 0;
-    // multirotor
-    if (multirotor) {
-      hCM = vO ** 2 / (2 * g);
-    } else {
-      // fixed wing
-      hCM = vO ** 2 / g;
-    }
+  const getGroundRiskVolume = useCallback(
+    (contingencyVolume: __esri.Geometry) => {
+      if (!flightGeography) return null;
+      const hR = vO * 0.7 * tR;
+      let hCM = 0;
 
-    // parachute
-    if (parachute) {
-      hCM = vO * tP * 0.7;
-    }
-
-    const hCV = hFG + hAM + hR + hCM;
-
-    let sGRB = 0;
-    // simplified
-    if (simplified) {
-      sGRB = hCV + cd / 2;
-    } else {
-      // ballistic
-      // sGRB equals (VO times the square root of (2 times hCV) divided by g) plus 1/2 of the drone diameter
-      sGRB = (vO * Math.sqrt(2 * hCV)) / g + cd / 2;
-    }
-
-    // parachute
-    if (parachute) {
-      sGRB = vO * tP + vWind * (hCV / vZ);
-    }
-
-    // fixed wing
-    if (!multirotor && !power) {
-      if (gliding) {
-        sGRB = (cL / cd) * hCV;
+      if (multirotor) {
+        hCM = vO ** 2 / (2 * g);
       } else {
-        // use simplified calculation
-        sGRB = hCV + cd / 2;
+        hCM = vO ** 2 / g;
       }
-    }
 
-    const flightPlusCVBuffer = geometryEngine.union([flightGeography.geometry, contingencyVolume]);
-
-    const grBuffer = geometryEngine.buffer(flightPlusCVBuffer, sGRB);
-    const grPolygon = geometryEngine.difference(grBuffer, flightPlusCVBuffer) as __esri.Polygon;
-    return new Graphic({
-      geometry: grPolygon,
-      symbol: new SimpleFillSymbol({
-        color: 'rgba(181, 45, 62, 0.5)',
-        outline: { color: 'rgb(181, 45, 62)', width: 2 }
-      })
-    });
-  };
-
-  const getAdjacentArea = (
-    contingencyVolume: __esri.Geometry,
-    groundRiskVolume: __esri.Geometry
-  ) => {
-    if (!flightGeography) return null;
-    let adjacentBufferDistance = 5000;
-    const threeMinRange = (vO * 3) / 60;
-
-    if (threeMinRange > 5000) {
-      if (threeMinRange > 35000) {
-        adjacentBufferDistance = 35000;
-      } else {
-        adjacentBufferDistance = threeMinRange;
+      if (parachute) {
+        hCM = vO * tP * 0.7;
       }
-    }
 
-    const flightPlusGroundRisk = geometryEngine.union([
-      flightGeography.geometry,
-      contingencyVolume,
-      groundRiskVolume
-    ]);
+      const hCV = hFG + hAM + hR + hCM;
+      let sGRB = simplified ? hCV + cd / 2 : (vO * Math.sqrt(2 * hCV)) / g + cd / 2;
 
-    const adjacentBuffer = geometryEngine.buffer(flightPlusGroundRisk, adjacentBufferDistance);
+      if (parachute) {
+        sGRB = vO * tP + vWind * (hCV / vZ);
+      }
 
-    const adjacentArea = geometryEngine.difference(
-      adjacentBuffer,
-      flightPlusGroundRisk
-    ) as __esri.Polygon;
-    return new Graphic({
-      geometry: adjacentArea,
-      symbol: new SimpleFillSymbol({
-        color: 'rgba(98,128,177, 0.5)',
-        outline: { color: 'rgb(98,128,177)', width: 2 }
-      })
-    });
-  };
+      if (!multirotor && !power) {
+        sGRB = gliding ? (cL / cd) * hCV : hCV + cd / 2;
+      }
+
+      const flightPlusCVBuffer = geometryEngine.union([
+        flightGeography.geometry,
+        contingencyVolume
+      ]);
+      const grBuffer = geometryEngine.buffer(flightPlusCVBuffer, sGRB);
+      const grPolygon = geometryEngine.difference(grBuffer, flightPlusCVBuffer) as __esri.Polygon;
+
+      return new Graphic({
+        geometry: grPolygon,
+        symbol: new SimpleFillSymbol({
+          color: 'rgba(181, 45, 62, 0.5)',
+          outline: { color: 'rgb(181, 45, 62)', width: 2 }
+        })
+      });
+    },
+    [
+      flightGeography,
+      vO,
+      tR,
+      tP,
+      parachute,
+      multirotor,
+      hFG,
+      hAM,
+      simplified,
+      cd,
+      vWind,
+      vZ,
+      power,
+      gliding,
+      cL
+    ]
+  );
+
+  const getAdjacentArea = useCallback(
+    (contingencyVolume: __esri.Geometry, groundRiskVolume: __esri.Geometry) => {
+      if (!flightGeography) return null;
+      let adjacentBufferDistance = 5000;
+      const threeMinRange = (vO * 3) / 60;
+
+      if (threeMinRange > 5000) {
+        adjacentBufferDistance = threeMinRange > 35000 ? 35000 : threeMinRange;
+      }
+
+      const flightPlusGroundRisk = geometryEngine.union([
+        flightGeography.geometry,
+        contingencyVolume,
+        groundRiskVolume
+      ]);
+
+      const adjacentBuffer = geometryEngine.buffer(flightPlusGroundRisk, adjacentBufferDistance);
+      const adjacentArea = geometryEngine.difference(
+        adjacentBuffer,
+        flightPlusGroundRisk
+      ) as __esri.Polygon;
+
+      return new Graphic({
+        geometry: adjacentArea,
+        symbol: new SimpleFillSymbol({
+          color: 'rgba(98,128,177, 0.5)',
+          outline: { color: 'rgb(98,128,177)', width: 2 }
+        })
+      });
+    },
+    [flightGeography, vO]
+  );
 
   useEffect(() => {
     let layer: GraphicsLayer = View.map?.findLayerById('flight-volumes') as GraphicsLayer;
@@ -230,7 +220,22 @@ const FlightVolumeCalculator: FC<Props> = props => {
     } else {
       layer.removeAll();
     }
-  }, [flightGeography, vO, tR, tP, parachute, rollAngle, sGPS, sPos, sK, hFG, hAM]);
+  }, [
+    flightGeography,
+    vO,
+    tR,
+    tP,
+    parachute,
+    rollAngle,
+    sGPS,
+    sPos,
+    sK,
+    hFG,
+    hAM,
+    getContingencyVolume,
+    getGroundRiskVolume,
+    getAdjacentArea
+  ]);
 
   return <div />;
 };
