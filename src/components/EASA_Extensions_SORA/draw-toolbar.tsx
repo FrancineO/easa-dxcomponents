@@ -1,8 +1,8 @@
-import { Icon } from '@pega/cosmos-react-core';
+import { Icon, throttle } from '@pega/cosmos-react-core';
 import { Button } from '@pega/cosmos-react-core';
 import { CardContent } from '@pega/cosmos-react-core';
 import { Card } from '@pega/cosmos-react-core';
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import View from './View';
 import SketchViewModel from '@arcgis/core/widgets/Sketch/SketchViewModel';
 import GraphicsLayer from '@arcgis/core/layers/GraphicsLayer';
@@ -31,6 +31,7 @@ type Props = {
   style?: React.CSSProperties;
   cd: number;
   onFlightGeographyChange: (graphic: Graphic | null) => void;
+  onMouseOverVertex: (mousePoint: __esri.MapViewScreenPoint | null) => void;
 };
 
 const bufferGraphicsLayerId = 'easa-sora-tool-buffer-graphics';
@@ -64,12 +65,20 @@ const sketchViewModel = new SketchViewModel({
  * @returns The DrawToolbar component
  */
 export const DrawToolbar = (props: Props) => {
-  const { onFlightGeographyChange, cd } = props;
+  const { onFlightGeographyChange, cd, onMouseOverVertex } = props;
   const [selectedTool, setSelectedTool] = useState<'circle' | 'polyline' | 'polygon'>();
   const [handleCreate, setHandleCreate] = useState<any>();
   const [handleUpdate, setHandleUpdate] = useState<any>();
   const [graphic, setGraphic] = useState<Graphic | null>(null);
   const [hasGraphic, setHasGraphic] = useState(false);
+
+  // Store the callback in a ref to maintain a stable reference
+  const onMouseOverVertexRef = useRef(onMouseOverVertex);
+
+  // Update ref when prop changes
+  useEffect(() => {
+    onMouseOverVertexRef.current = onMouseOverVertex;
+  }, [onMouseOverVertex]);
 
   const onCreate = useCallback((event: any) => {
     if (event.state === 'start') {
@@ -85,7 +94,10 @@ export const DrawToolbar = (props: Props) => {
   }, []);
 
   const onUpdate = useCallback((event: __esri.SketchUpdateEvent) => {
-    if (event.state === 'complete') {
+    if (
+      event.state === 'complete' ||
+      (event.state === 'active' && event.toolEventInfo.type === 'vertex-remove')
+    ) {
       if (event.aborted) return;
 
       const g = new Graphic({
@@ -150,6 +162,39 @@ export const DrawToolbar = (props: Props) => {
     }
     sketchViewModel.update([graphic]);
   }, [graphic, selectedTool, onFlightGeographyChange, cd]);
+
+  const handleMouseMove = useCallback(async (mousePoint: { x: number; y: number } | null) => {
+    if (!mousePoint) return;
+
+    const vertexLv = View.allLayerViews.find(lv => lv.layer.title === 'SVM Internal');
+    if (!vertexLv) {
+      onMouseOverVertexRef.current(null);
+      return;
+    }
+
+    const result = await View.hitTest(mousePoint, { include: [vertexLv.layer] });
+    if (result.results.length > 0) {
+      const graphicHit = result.results[0] as __esri.GraphicHit;
+      const g = graphicHit.graphic;
+      if (g && (g.symbol as SimpleMarkerSymbol).size === 10) {
+        onMouseOverVertexRef.current({ x: mousePoint.x + 14, y: mousePoint.y + 14 });
+      }
+    } else {
+      onMouseOverVertexRef.current(null);
+    }
+  }, []);
+
+  useEffect(() => {
+    const throttledSetMouseMove = throttle((event: __esri.MapViewScreenPoint) => {
+      handleMouseMove({ x: event.x, y: event.y });
+    }, 50);
+
+    const handle = View.on('pointer-move', throttledSetMouseMove);
+
+    return () => {
+      handle.remove();
+    };
+  }, [handleMouseMove]);
 
   const handleClear = () => {
     sketchViewModel.layer.removeAll();

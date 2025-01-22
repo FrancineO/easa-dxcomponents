@@ -1,4 +1,11 @@
-import { withConfiguration, Card, Text, CardContent, CardHeader } from '@pega/cosmos-react-core';
+import {
+  withConfiguration,
+  Card,
+  Text,
+  CardContent,
+  CardHeader,
+  Popover
+} from '@pega/cosmos-react-core';
 import Layer from '@arcgis/core/layers/Layer';
 import Point from '@arcgis/core/geometry/Point';
 import PortalItem from '@arcgis/core/portal/PortalItem';
@@ -33,6 +40,8 @@ export const EasaExtensionsSORA = (props: MapProps) => {
   } = props;
 
   const mapDiv = useRef(null);
+  const tooltipElement = useRef<HTMLDivElement | null>(null);
+  const [mousePoint, setMousePoint] = useState<__esri.MapViewScreenPoint | null>(null);
 
   const pConnect = getPConnect();
 
@@ -76,6 +85,21 @@ export const EasaExtensionsSORA = (props: MapProps) => {
     console.log(caseInfo);
   }
 
+  const setMouseOverVertex = (mp: { x: number; y: number } | null) => {
+    setMousePoint(mp);
+    if (tooltipElement.current) {
+      if (mp) {
+        tooltipElement.current.style.left = `${mp.x}px`;
+        tooltipElement.current.style.top = `${mp.y}px`;
+        tooltipElement.current.style.position = 'absolute';
+        tooltipElement.current.style.display = 'block';
+        tooltipElement.current.style.pointerEvents = 'none';
+      } else {
+        tooltipElement.current.style.display = 'none';
+      }
+    }
+  };
+
   return (
     <Card style={{ height }}>
       <CardHeader>
@@ -83,10 +107,35 @@ export const EasaExtensionsSORA = (props: MapProps) => {
       </CardHeader>
       <CardContent style={{ height: '100%' }}>
         <StyledEasaExtensionsSORA height='100%' ref={mapDiv} />
+        {mousePoint && (
+          <>
+            <div ref={tooltipElement} />
+            <Popover
+              style={{ pointerEvents: 'none', borderRadius: '4px', padding: '4px' }}
+              target={tooltipElement.current}
+              strategy='fixed'
+              arrow
+            >
+              <div
+                style={{
+                  gap: '0.25rem',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center'
+                }}
+              >
+                <Text style={{ fontSize: '10px' }}>Right click to remove vertex</Text>
+                <Text style={{ fontSize: '10px' }}>or</Text>
+                <Text style={{ fontSize: '10px' }}>Drag to move vertex</Text>
+              </div>
+            </Popover>
+          </>
+        )}
         <DrawToolbar
           style={{ position: 'absolute', right: '20px', top: '5px' }}
           cd={1}
           onFlightGeographyChange={setFlightGeography}
+          onMouseOverVertex={v => setMouseOverVertex(v)}
         />
       </CardContent>
       <FlightVolumeCalculator
