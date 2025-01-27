@@ -59,6 +59,8 @@ export const EasaExtensionsSORA = (props: MapProps) => {
 
     // eslint-disable-next-line no-console
     console.log('maxDimensionProperty', maxDimensionProperty);
+    // eslint-disable-next-line no-console
+    console.log('cruiseSpeedProperty', cruiseSpeedProperty);
 
     // if (pConnect) {
     //   const value = pConnect?.getValue(maxDimensionProperty);
@@ -91,7 +93,7 @@ export const EasaExtensionsSORA = (props: MapProps) => {
     return () => {
       View.destroy();
     };
-  }, [Latitude, Longitude, Zoom, height, maxDimensionProperty, pConnect]);
+  }, [Latitude, Longitude, Zoom, height, maxDimensionProperty, cruiseSpeedProperty, pConnect]);
 
   if (pConnect?.getCaseInfo) {
     const caseInfo = pConnect?.getCaseInfo();
