@@ -3,8 +3,8 @@ import {
   Card,
   Text,
   CardContent,
-  CardHeader,
-  Popover
+  Popover,
+  Modal
 } from '@pega/cosmos-react-core';
 import Layer from '@arcgis/core/layers/Layer';
 import Point from '@arcgis/core/geometry/Point';
@@ -17,6 +17,7 @@ import '../create-nonce';
 import { DrawToolbar } from './draw-toolbar';
 import View from './View';
 import FlightVolumeCalculator from './flight-volume-calculator';
+import SearchTool from './search-tool';
 
 type MapProps = {
   getPConnect?: any;
@@ -25,6 +26,8 @@ type MapProps = {
   Latitude?: string;
   Longitude?: string;
   Zoom?: string;
+  maxDimensionProperty?: number;
+  cruiseSpeedProperty?: number;
 };
 
 export const EasaExtensionsSORA = (props: MapProps) => {
@@ -33,10 +36,12 @@ export const EasaExtensionsSORA = (props: MapProps) => {
   const {
     getPConnect,
     heading = 'SORA',
-    height = '40rem',
+    height = '30rem',
     Latitude = '50.9375',
     Longitude = '6.9603',
-    Zoom = '8'
+    Zoom = '8',
+    maxDimensionProperty = -1,
+    cruiseSpeedProperty = -1
   } = props;
 
   const mapDiv = useRef(null);
@@ -51,6 +56,15 @@ export const EasaExtensionsSORA = (props: MapProps) => {
   useEffect(() => {
     // const tmpFields: any = getAllFields(getPConnect);
     // console.log(tmpFields);
+
+    // eslint-disable-next-line no-console
+    console.log('maxDimensionProperty', maxDimensionProperty);
+
+    // if (pConnect) {
+    //   const value = pConnect?.getValue(maxDimensionProperty);
+    //   // eslint-disable-next-line no-console
+    //   console.log('maxDimensionProperty', maxDimensionProperty, 'parsedValue', value);
+    // }
 
     let map: Map;
 
@@ -77,7 +91,7 @@ export const EasaExtensionsSORA = (props: MapProps) => {
     return () => {
       View.destroy();
     };
-  }, [Latitude, Longitude, Zoom, height]);
+  }, [Latitude, Longitude, Zoom, height, maxDimensionProperty, pConnect]);
 
   if (pConnect?.getCaseInfo) {
     const caseInfo = pConnect?.getCaseInfo();
@@ -100,15 +114,27 @@ export const EasaExtensionsSORA = (props: MapProps) => {
     }
   };
 
+  const propertiesValid = () => {
+    return maxDimensionProperty !== -1;
+  };
+
   return (
     <Card style={{ height }}>
-      <CardHeader>
-        <Text variant='h2'>{heading}</Text>
-      </CardHeader>
       <CardContent style={{ height: '100%' }}>
-        <StyledEasaExtensionsSORA height='100%' ref={mapDiv} />
+        <div style={{ height: '10%', display: 'flex', justifyContent: 'space-between' }}>
+          <Text variant='h2'>{heading}</Text>
+          <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+            <SearchTool />
+            <DrawToolbar
+              cd={1}
+              onFlightGeographyChange={setFlightGeography}
+              onMouseOverVertex={v => setMouseOverVertex(v)}
+            />
+          </div>
+        </div>
+        <StyledEasaExtensionsSORA height='90%' ref={mapDiv} />
         {mousePoint && (
-          <>
+          <div>
             <div ref={tooltipElement} />
             <Popover
               style={{ pointerEvents: 'none', borderRadius: '4px', padding: '4px' }}
@@ -129,36 +155,48 @@ export const EasaExtensionsSORA = (props: MapProps) => {
                 <Text style={{ fontSize: '10px' }}>Drag to move vertex</Text>
               </div>
             </Popover>
-          </>
+          </div>
         )}
-        <DrawToolbar
-          style={{ position: 'absolute', right: '20px', top: '5px' }}
-          cd={1}
-          onFlightGeographyChange={setFlightGeography}
-          onMouseOverVertex={v => setMouseOverVertex(v)}
-        />
       </CardContent>
-      <FlightVolumeCalculator
-        flightGeography={flightGeography}
-        parachute={false}
-        sGPS={3}
-        sPos={3}
-        sK={1}
-        vO={20}
-        tR={2}
-        tP={2}
-        rollAngle={25}
-        multirotor={false}
-        hFG={100}
-        hAM={100}
-        simplified={false}
-        cd={1}
-        vWind={10}
-        vZ={10}
-        power={false}
-        cL={0.5}
-        gliding={false}
-      />
+      {propertiesValid() && (
+        <FlightVolumeCalculator
+          flightGeography={flightGeography}
+          parachute={false}
+          sGPS={3}
+          sPos={3}
+          sK={1}
+          vO={cruiseSpeedProperty}
+          tR={2}
+          tP={2}
+          rollAngle={25}
+          multirotor={false}
+          hFG={100}
+          hAM={100}
+          simplified={false}
+          cd={maxDimensionProperty}
+          vWind={10}
+          vZ={10}
+          power={false}
+          cL={0.5}
+          gliding={false}
+        />
+      )}
+      {!propertiesValid() && (
+        <div
+          style={{
+            height: '100%',
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center'
+          }}
+        >
+          <Modal heading='Drone properties are not valid'>
+            <Text style={{ color: 'red', fontSize: '14px', fontWeight: 'bold' }} variant='h2'>
+              Drone properties are not valid
+            </Text>
+          </Modal>
+        </div>
+      )}
     </Card>
   );
 };

@@ -39,20 +39,26 @@
       "name": "height",
       "label": "Height of the map",
       "format": "TEXT",
-      "defaultValue": "40rem"
+      "defaultValue": "30rem"
     },
     {
-      "name": "A",
-      "label": "Region A",
-      "format": "CONTENTPICKER",
-      "addTypeList": ["Fields"]
+      "label": "Drone Maximum Dimension Property",
+      "name": "maxDimensionProperty",
+      "format": "PROPERTY"
+    },
+    {
+      "label": "Drone Cruise Speed Property",
+      "name": "cruiseSpeedProperty",
+      "format": "PROPERTY"
     }
   ],
   "defaultConfig": {
-    "heading": "Map",
+    "heading": "Flight Plan",
     "Latitude": "50.9375",
     "Longitude": "6.9603",
     "Zoom": "8",
-    "height": "40rem"
+    "height": "30rem",
+    "maxDimensionProperty": 1,
+    "cruiseSpeedProperty": 10
   }
 }

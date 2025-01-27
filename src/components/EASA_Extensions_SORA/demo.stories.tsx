@@ -6,7 +6,6 @@ type configInfo = {
   value?: string;
   componentType?: string;
   label?: string;
-  heading?: string;
 };
 
 type info = {
@@ -140,6 +139,9 @@ export const Default: Story = {
           setValue: () => {
             /* nothing */
           },
+          getValue: () => {
+            /* nothing */
+          },
           resolveConfigProps: (f: any) => {
             return { value: f.values };
           }
@@ -149,10 +151,11 @@ export const Default: Story = {
     return <EasaExtensionsSORA {...props}></EasaExtensionsSORA>;
   },
   args: {
-    height: '40rem',
-    heading: 'SORA',
+    height: '30rem',
     Latitude: '50.9375',
     Longitude: '6.9603',
-    Zoom: '8'
+    Zoom: '8',
+    maxDimensionProperty: 3,
+    cruiseSpeedProperty: 2
   }
 };
