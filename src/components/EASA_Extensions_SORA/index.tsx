@@ -10,7 +10,7 @@ import Layer from '@arcgis/core/layers/Layer';
 import Point from '@arcgis/core/geometry/Point';
 import PortalItem from '@arcgis/core/portal/PortalItem';
 import Map from '@arcgis/core/Map';
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import StyledEasaExtensionsSORA from './styles';
 // import { getAllFields, createGraphic } from './utils';
 import '../create-nonce';
@@ -93,7 +93,7 @@ export const EasaExtensionsSORA = (props: MapProps) => {
     return () => {
       View.destroy();
     };
-  }, [Latitude, Longitude, Zoom, height, maxDimensionProperty, cruiseSpeedProperty, pConnect]);
+  }, [Latitude, Longitude, Zoom, height, maxDimensionProperty, cruiseSpeedProperty]);
 
   if (pConnect?.getCaseInfo) {
     const caseInfo = pConnect?.getCaseInfo();
@@ -119,6 +119,39 @@ export const EasaExtensionsSORA = (props: MapProps) => {
   const propertiesValid = () => {
     return maxDimensionProperty !== -1;
   };
+
+  const setFlightVolumeMaxPopulationDensity = useCallback(() => {
+    if (!flightGeography || !PCore?.getRestClient || !pConnect) return null;
+
+    const caseId = pConnect?.getValue('.pyID');
+
+    // eslint-disable-next-line no-console
+    console.log('Setting data for caseId', caseId);
+
+    if (!caseId) {
+      // eslint-disable-next-line no-console
+      console.warn("Could not get caseId '.pyID'");
+      return;
+    }
+
+    PCore.getRestClient().invokeRestApi('updateDataObject', {
+      queryPayload: {
+        data_view_ID: 'D_MapOutputSavable'
+      },
+      body: {
+        data: {
+          pyGUID: caseId,
+          IntrinsicGroundRisk: '100',
+          MaxPopulationVolume: 2000,
+          AveragePopulationDensityInAdjacentArea: 1000
+        }
+      }
+    });
+  }, [flightGeography, pConnect]);
+
+  useEffect(() => {
+    setFlightVolumeMaxPopulationDensity();
+  }, [flightGeography, setFlightVolumeMaxPopulationDensity]);
 
   return (
     <Card style={{ height }}>
@@ -167,7 +200,7 @@ export const EasaExtensionsSORA = (props: MapProps) => {
           sGPS={3}
           sPos={3}
           sK={1}
-          vO={cruiseSpeedProperty}
+          vO={8} // TODO: set to cruiseSpeedProperty
           tR={2}
           tP={2}
           rollAngle={25}

@@ -4,6 +4,7 @@ import SearchViewModel from '@arcgis/core/widgets/Search/SearchViewModel';
 import View from './View';
 import useDebouncedEffect from './hooks/useDebouncedEffect';
 import type { SearchResult } from '@pega/cosmos-react-core/lib/components/SearchInput/SearchInput';
+import * as reactiveUtils from '@arcgis/core/core/reactiveUtils';
 
 const SearchTool = () => {
   const [searchString, setSearchString] = useState('');
@@ -24,18 +25,20 @@ const SearchTool = () => {
   };
 
   useEffect(() => {
-    View.when(() => {
-      setSearchViewModel(
-        new SearchViewModel({
-          view: View,
-          includeDefaultSources: true,
-          resultGraphicEnabled: false,
-          maxSuggestions: 4,
-          popupEnabled: false,
-          minSuggestCharacters: 1
-        })
-      );
-    });
+    reactiveUtils
+      .whenOnce(() => View.ready)
+      .then(() => {
+        setSearchViewModel(
+          new SearchViewModel({
+            view: View,
+            includeDefaultSources: true,
+            resultGraphicEnabled: false,
+            maxSuggestions: 4,
+            popupEnabled: false,
+            minSuggestCharacters: 1
+          })
+        );
+      });
   }, []);
 
   useDebouncedEffect(

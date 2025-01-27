@@ -17,6 +17,7 @@ import * as SharePointUp from '@pega/cosmos-react-core/lib/components/Icon/icons
 import * as Rectangle from '@pega/cosmos-react-core/lib/components/Icon/icons/rectangle.icon';
 import * as Trash from '@pega/cosmos-react-core/lib/components/Icon/icons/trash.icon';
 import * as geometryEngine from '@arcgis/core/geometry/geometryEngine';
+import * as reactiveUtils from '@arcgis/core/core/reactiveUtils';
 
 registerIcon(Circle, SharePointUp, Rectangle, Trash);
 
@@ -121,17 +122,20 @@ export const DrawToolbar = (props: Props) => {
       sketchViewModel?.cancel();
       return;
     }
-    View.when(() => {
-      const l = new GraphicsLayer({ id: bufferGraphicsLayerId });
-      View.map?.add(l);
 
-      const hc = sketchViewModel.on('create', onCreate);
-      setHandleCreate(hc);
-      const hu = sketchViewModel.on('update', onUpdate);
-      setHandleUpdate(hu);
+    reactiveUtils
+      .whenOnce(() => View.ready)
+      .then(() => {
+        const l = new GraphicsLayer({ id: bufferGraphicsLayerId });
+        View.map?.add(l);
 
-      View.map?.add(sketchViewModel.layer);
-    });
+        const hc = sketchViewModel.on('create', onCreate);
+        setHandleCreate(hc);
+        const hu = sketchViewModel.on('update', onUpdate);
+        setHandleUpdate(hu);
+
+        View.map?.add(sketchViewModel.layer);
+      });
   }, [selectedTool, handleCreate, onCreate, handleUpdate, onUpdate]);
 
   useEffect(() => {
@@ -185,14 +189,29 @@ export const DrawToolbar = (props: Props) => {
   }, []);
 
   useEffect(() => {
-    const throttledSetMouseMove = throttle((event: __esri.MapViewScreenPoint) => {
-      handleMouseMove({ x: event.x, y: event.y });
-    }, 50);
+    let mounted = true;
 
-    const handle = View.on('pointer-move', throttledSetMouseMove);
+    reactiveUtils
+      .whenOnce(() => View.ready)
+      .then(() => {
+        if (!mounted) return;
+
+        const throttledSetMouseMove = throttle((event: __esri.ViewPointerMoveEvent) => {
+          if (!mounted || !View?.ready) return;
+          handleMouseMove({ x: event.x, y: event.y });
+        }, 50);
+
+        const handle = reactiveUtils.on(() => View, 'pointer-move', throttledSetMouseMove);
+
+        return () => {
+          mounted = false;
+          handle?.remove();
+          (throttledSetMouseMove as any).cancel?.();
+        };
+      });
 
     return () => {
-      handle.remove();
+      mounted = false;
     };
   }, [handleMouseMove]);
 
