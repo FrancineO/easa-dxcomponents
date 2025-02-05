@@ -164,6 +164,10 @@ export const EasaExtensionsSORA = (props: ComponentProps) => {
             {
               name: 'Average population density in adjacent area',
               value: populationDensity?.avgOperationalGroundRiskPopDensity
+            },
+            {
+              name: 'Intrinsic ground risk',
+              value: groundRisk
             }
           ]}
         />
