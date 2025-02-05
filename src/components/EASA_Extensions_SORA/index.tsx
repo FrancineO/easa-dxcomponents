@@ -25,6 +25,8 @@ import { useGetPopulationDensity } from './hooks/useGetPopulationDensity';
 import useCalculateFlightVolume from './hooks/useCalculateFlightVolume';
 import type { ComponentProps } from './types';
 import useUpdatePegaProps from './hooks/useUpdatePegaProps';
+import useDebouncedEffect from './hooks/useDebouncedEffect';
+import useGetPrintRequest from './hooks/useGetPrintRequest';
 
 export const EasaExtensionsSORA = (props: ComponentProps) => {
   const { getPConnect, heading, height, Latitude, Longitude, Zoom, cd, agolToken } = props;
@@ -86,10 +88,14 @@ export const EasaExtensionsSORA = (props: ComponentProps) => {
 
   const { flightVolume, calculateVolume } = useCalculateFlightVolume({ ...props, flightGeography });
 
-  // Call calculateVolume when flightGeography changes
-  useEffect(() => {
-    calculateVolume();
-  }, [flightGeography, calculateVolume]); // Safe to include calculateVolume now
+  // Replace the existing useEffect with useDebouncedEffect
+  useDebouncedEffect(
+    () => {
+      calculateVolume();
+    },
+    300,
+    [flightGeography, calculateVolume]
+  );
 
   const { populationDensity, calculateDensities } = useGetPopulationDensity(
     flightVolume
@@ -102,12 +108,19 @@ export const EasaExtensionsSORA = (props: ComponentProps) => {
       : null
   );
 
+  const { printRequest, getPrintRequest } = useGetPrintRequest();
+
+  useEffect(() => {
+    if (!flightVolume) return;
+    getPrintRequest();
+  }, [flightVolume, getPrintRequest]);
+
   // Call calculateDensities when flightVolume changes
   useEffect(() => {
     calculateDensities();
   }, [flightVolume, calculateDensities]); // Safe to include calculateDensities now
 
-  const updatePegaProps = useUpdatePegaProps(pConnect, populationDensity);
+  const updatePegaProps = useUpdatePegaProps(pConnect, populationDensity, printRequest);
 
   // Call updatePegaProps when density values change
   useEffect(() => {

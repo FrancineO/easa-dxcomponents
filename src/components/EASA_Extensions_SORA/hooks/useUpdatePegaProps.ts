@@ -1,28 +1,38 @@
 import { useCallback, useRef } from 'react';
+import type { PopulationDensity } from '../types';
 
-const useUpdatePegaProps = (pConnect: any, populationDensity: PopulationDensity | null) => {
+const useUpdatePegaProps = (
+  pConnect: any,
+  populationDensity: PopulationDensity | null,
+  printRequest: any
+) => {
   const paramsRef = useRef({
     pConnect,
-    populationDensity
+    populationDensity,
+    printRequest
   });
   const updateInProgress = useRef(false);
 
   // Update the ref when params change
   paramsRef.current = {
     pConnect,
-    populationDensity
+    populationDensity,
+    printRequest
   };
 
   // Empty dependency array since we're using ref
-
   return useCallback(async () => {
+    const currentParams = paramsRef.current;
+    const { populationDensity: pD, printRequest: pR, pConnect: pC } = currentParams;
+    if (!pD?.maxPopDensityAdjacentArea || !pD?.avgOperationalGroundRiskPopDensity || !pR) return;
+
     // Prevent multiple simultaneous updates
     if (updateInProgress.current) return;
-    if (!pConnect?.getValue || !pConnect) return;
+    if (!pC.getValue || !pConnect) return;
 
     try {
       updateInProgress.current = true;
-      const caseId = pConnect.getValue('.pyID');
+      const caseId = pC.getValue('.pyID');
 
       if (!caseId) {
         // eslint-disable-next-line no-console
@@ -37,9 +47,9 @@ const useUpdatePegaProps = (pConnect: any, populationDensity: PopulationDensity 
         body: {
           data: {
             pyGUID: caseId,
-            MaxPopulationVolume: populationDensity?.maxPopDensityAdjacentArea,
-            AveragePopulationDensityInAdjacentArea:
-              populationDensity?.avgOperationalGroundRiskPopDensity
+            MaxPopulationVolume: pD.maxPopDensityAdjacentArea,
+            AveragePopulationDensityInAdjacentArea: pD.avgOperationalGroundRiskPopDensity,
+            MapImageJson: JSON.stringify(pR)
           }
         }
       });
