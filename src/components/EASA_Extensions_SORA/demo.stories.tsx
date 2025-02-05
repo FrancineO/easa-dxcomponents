@@ -151,11 +151,30 @@ export const Default: Story = {
     return <EasaExtensionsSORA {...props}></EasaExtensionsSORA>;
   },
   args: {
-    height: '30rem',
+    heading: 'SORA',
+    height: '40rem',
     Latitude: '50.9375',
     Longitude: '6.9603',
     Zoom: '8',
-    maxDimensionProperty: 3,
-    cruiseSpeedProperty: 2
+    sGPS: 3,
+    sPos: 3,
+    sK: 3,
+    vO: 10,
+    tR: 2,
+    tP: 2,
+    parachute: true,
+    multirotor: true,
+    rollAngle: 25,
+    hFG: 100,
+    hAM: 3,
+    simplified: true,
+    cd: 1,
+    vWind: 10,
+    vZ: 10,
+    power: true,
+    cL: 0.5,
+    gliding: true,
+    agolToken:
+      'mzFcMRqhxzPAoRJavp2MJnT86fp9vdIuHnlcY6yRjycMNMkD4n52uRAbbfniWAIwKiNzdnbm2oAVukqobdLQLOLnG_hh-AkRR3yI8Z17EQ_5whJu4wOBI4wKx3s56FtBivWQtP32UwFauQSpqxWXg73ECgEGtgW3pY61BsurnrE.'
   }
 };

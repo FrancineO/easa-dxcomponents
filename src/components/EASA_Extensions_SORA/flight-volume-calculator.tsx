@@ -1,4 +1,4 @@
-import { useEffect, type FC, useCallback } from 'react';
+import { useEffect, type FC, useCallback, useState } from 'react';
 import View from './View';
 import GraphicsLayer from '@arcgis/core/layers/GraphicsLayer';
 import * as geometryEngine from '@arcgis/core/geometry/geometryEngine';
@@ -47,6 +47,14 @@ interface Props {
   power: boolean; // has power
   cL: number; // lift coefficient
   gliding: boolean; // gliding
+  onVolumeChange: (
+    flightVolume: {
+      contingencyVolume: __esri.Graphic | null;
+      groundRiskVolume: __esri.Graphic | null;
+      adjacentArea: __esri.Graphic | null;
+      flightGeography: __esri.Graphic | null;
+    } | null
+  ) => void;
 }
 // gravity
 const g = 9.81;
@@ -71,8 +79,13 @@ const FlightVolumeCalculator: FC<Props> = props => {
     vZ,
     power,
     cL,
-    gliding
+    gliding,
+    onVolumeChange
   } = props;
+
+  const [contingencyVolume, setContingencyVolume] = useState<__esri.Graphic | null>(null);
+  const [groundRiskVolume, setGroundRiskVolume] = useState<__esri.Graphic | null>(null);
+  const [adjacentArea, setAdjacentArea] = useState<__esri.Graphic | null>(null);
 
   const getContingencyVolume = useCallback(() => {
     if (!flightGeography) return null;
@@ -100,7 +113,7 @@ const FlightVolumeCalculator: FC<Props> = props => {
   }, [flightGeography, sGPS, sPos, sK, vO, tR, tP, parachute, rollAngle, multirotor]);
 
   const getGroundRiskVolume = useCallback(
-    (contingencyVolume: __esri.Geometry) => {
+    (cv: __esri.Geometry) => {
       if (!flightGeography) return null;
       const hR = vO * 0.7 * tR;
       let hCM = 0;
@@ -126,10 +139,7 @@ const FlightVolumeCalculator: FC<Props> = props => {
         sGRB = gliding ? (cL / cd) * hCV : hCV + cd / 2;
       }
 
-      const flightPlusCVBuffer = geometryEngine.union([
-        flightGeography.geometry,
-        contingencyVolume
-      ]);
+      const flightPlusCVBuffer = geometryEngine.union([flightGeography.geometry, cv]);
       const grBuffer = geometryEngine.buffer(flightPlusCVBuffer, sGRB);
       const grPolygon = geometryEngine.difference(grBuffer, flightPlusCVBuffer) as __esri.Polygon;
 
@@ -161,7 +171,7 @@ const FlightVolumeCalculator: FC<Props> = props => {
   );
 
   const getAdjacentArea = useCallback(
-    (contingencyVolume: __esri.Geometry, groundRiskVolume: __esri.Geometry) => {
+    (cv: __esri.Geometry, grVolume: __esri.Geometry) => {
       if (!flightGeography) return null;
       let adjacentBufferDistance = 5000;
       const threeMinRange = (vO * 3) / 60;
@@ -170,20 +180,13 @@ const FlightVolumeCalculator: FC<Props> = props => {
         adjacentBufferDistance = threeMinRange > 35000 ? 35000 : threeMinRange;
       }
 
-      const flightPlusGroundRisk = geometryEngine.union([
-        flightGeography.geometry,
-        contingencyVolume,
-        groundRiskVolume
-      ]);
+      const flightPlusGroundRisk = geometryEngine.union([flightGeography.geometry, cv, grVolume]);
 
       const adjacentBuffer = geometryEngine.buffer(flightPlusGroundRisk, adjacentBufferDistance);
-      const adjacentArea = geometryEngine.difference(
-        adjacentBuffer,
-        flightPlusGroundRisk
-      ) as __esri.Polygon;
+      const aa = geometryEngine.difference(adjacentBuffer, flightPlusGroundRisk) as __esri.Polygon;
 
       return new Graphic({
-        geometry: adjacentArea,
+        geometry: aa,
         symbol: new SimpleFillSymbol({
           color: 'rgba(98,128,177, 0.5)',
           outline: { color: 'rgb(98,128,177)', width: 2 }
@@ -204,21 +207,28 @@ const FlightVolumeCalculator: FC<Props> = props => {
       layer.removeAll();
 
       // add contingency volume
-      const contingencyVolume = getContingencyVolume();
-      if (!contingencyVolume) return;
-      layer.add(contingencyVolume);
+      const cv = getContingencyVolume();
+      if (!cv) return;
+      layer.add(cv);
 
       // add ground risk volume
-      const grVolume = getGroundRiskVolume(contingencyVolume.geometry);
+      const grVolume = getGroundRiskVolume(cv.geometry);
       if (!grVolume) return;
       layer.add(grVolume);
 
       // add adjacent area volume
-      const adjacentArea = getAdjacentArea(contingencyVolume.geometry, grVolume.geometry);
-      if (!adjacentArea) return;
-      layer.add(adjacentArea);
+      const aa = getAdjacentArea(cv.geometry, grVolume.geometry);
+      if (!aa) return;
+      layer.add(aa);
+
+      setContingencyVolume(cv);
+      setGroundRiskVolume(grVolume);
+      setAdjacentArea(aa);
     } else {
       layer.removeAll();
+      setContingencyVolume(null);
+      setGroundRiskVolume(null);
+      setAdjacentArea(null);
     }
   }, [
     flightGeography,
@@ -236,6 +246,17 @@ const FlightVolumeCalculator: FC<Props> = props => {
     getGroundRiskVolume,
     getAdjacentArea
   ]);
+
+  useEffect(() => {
+    if (contingencyVolume && groundRiskVolume && adjacentArea && flightGeography) {
+      onVolumeChange({
+        contingencyVolume,
+        groundRiskVolume,
+        adjacentArea,
+        flightGeography
+      });
+    }
+  }, [contingencyVolume, groundRiskVolume, adjacentArea, flightGeography, onVolumeChange]);
 
   return <div />;
 };

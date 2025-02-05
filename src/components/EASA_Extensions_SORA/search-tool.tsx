@@ -1,5 +1,5 @@
 import { SearchInput } from '@pega/cosmos-react-core';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import SearchViewModel from '@arcgis/core/widgets/Search/SearchViewModel';
 import View from './View';
 import useDebouncedEffect from './hooks/useDebouncedEffect';
@@ -9,42 +9,54 @@ import * as reactiveUtils from '@arcgis/core/core/reactiveUtils';
 const SearchTool = () => {
   const [searchString, setSearchString] = useState('');
   const [loading, setLoading] = useState(false);
-
   const [activeSearchResult, setActiveSearchResult] =
     useState<__esri.SearchViewModelSearchResult | null>();
   const [searchViewModel, setSearchViewModel] = useState<SearchViewModel>();
   const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
   const [locatorResults, setLocatorResults] = useState<__esri.SearchViewModelSuggestResult[]>([]);
 
-  const mapResults = (results: __esri.SearchViewModelSuggestResult[]): SearchResult[] => {
-    return results.map(result => ({
-      primary: result.text,
-      secondary: [],
-      id: result.key
-    }));
-  };
+  const mapResults = useCallback(
+    (results: __esri.SearchViewModelSuggestResult[]): SearchResult[] => {
+      return results.map(result => ({
+        primary: result.text,
+        secondary: [],
+        id: result.key
+      }));
+    },
+    []
+  );
 
   useEffect(() => {
+    let mounted = true;
+
     reactiveUtils
       .whenOnce(() => View.ready)
       .then(() => {
-        setSearchViewModel(
-          new SearchViewModel({
-            view: View,
-            includeDefaultSources: true,
-            resultGraphicEnabled: false,
-            maxSuggestions: 4,
-            popupEnabled: false,
-            minSuggestCharacters: 1
-          })
-        );
+        if (mounted) {
+          setSearchViewModel(
+            new SearchViewModel({
+              view: View,
+              includeDefaultSources: true,
+              resultGraphicEnabled: false,
+              maxSuggestions: 4,
+              popupEnabled: false,
+              minSuggestCharacters: 1
+            })
+          );
+        }
       });
+
+    return () => {
+      mounted = false;
+    };
   }, []);
 
   useDebouncedEffect(
     () => {
-      if (!searchViewModel) return;
-      if (activeSearchResult?.name === searchString) return;
+      if (!searchViewModel || !searchString || activeSearchResult?.name === searchString) {
+        setLoading(false);
+        return;
+      }
 
       setSearchResults([]);
       setLocatorResults([]);
@@ -52,8 +64,10 @@ const SearchTool = () => {
       searchViewModel
         .suggest(searchString)
         .then((res: __esri.SearchViewModelSuggestResponse) => {
-          setSearchResults(mapResults(res.results[0].results));
-          setLocatorResults(res.results[0].results);
+          if (res.results[0]?.results) {
+            setSearchResults(mapResults(res.results[0].results));
+            setLocatorResults(res.results[0].results);
+          }
           setLoading(false);
         })
         .catch(() => {
@@ -61,14 +75,29 @@ const SearchTool = () => {
         });
     },
     500,
-    [searchString]
+    [searchString, searchViewModel, activeSearchResult]
+  );
+
+  const handleSearchResult = useCallback(
+    (index: number) => {
+      if (!searchViewModel || !locatorResults[index]) return;
+
+      searchViewModel.search(locatorResults[index]).then(res => {
+        const result = res?.results[0]?.results[0];
+        if (result) {
+          setActiveSearchResult(result);
+          setSearchResults([]);
+          setSearchString(locatorResults[index].text);
+        }
+      });
+    },
+    [locatorResults, searchViewModel]
   );
 
   useEffect(() => {
-    if (activeSearchResult) {
-      const mapPoint = activeSearchResult.feature.geometry as __esri.Point;
+    if (activeSearchResult?.feature?.geometry) {
       View.goTo({
-        target: mapPoint,
+        target: activeSearchResult.feature.geometry as __esri.Point,
         duration: 1000
       });
     }
@@ -81,13 +110,7 @@ const SearchTool = () => {
       value={searchString}
       searchResults={searchResults?.map((result, index) => ({
         ...result,
-        onClick: () => {
-          searchViewModel?.search(locatorResults[index]).then(res => {
-            setActiveSearchResult(res?.results[0]?.results[0]);
-            setSearchResults([]);
-            setSearchString(locatorResults[index].text);
-          });
-        }
+        onClick: () => handleSearchResult(index)
       }))}
       onSearchChange={(v: string) => {
         setLoading(v?.length > 0);

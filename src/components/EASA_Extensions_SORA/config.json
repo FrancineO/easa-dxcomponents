@@ -39,17 +39,102 @@
       "name": "height",
       "label": "Height of the map",
       "format": "TEXT",
-      "defaultValue": "30rem"
+      "defaultValue": "40rem"
     },
     {
-      "label": "Drone Maximum Dimension Property",
-      "name": "maxDimensionProperty",
+      "name": "sGPS",
+      "label": "GPS position error (meters)",
       "format": "PROPERTY"
     },
     {
-      "label": "Drone Cruise Speed Property",
-      "name": "cruiseSpeedProperty",
+      "name": "sPos",
+      "label": "Position holding error (meters)",
       "format": "PROPERTY"
+    },
+    {
+      "name": "sK",
+      "label": "Map error (meters)",
+      "format": "PROPERTY"
+    },
+    {
+      "name": "vO",
+      "label": "Operating speed (m/s)",
+      "format": "PROPERTY"
+    },
+    {
+      "name": "tR",
+      "label": "Reaction time (s)",
+      "format": "PROPERTY"
+    },
+    {
+      "name": "tP",
+      "label": "Parachute deployment (s)",
+      "format": "PROPERTY"
+    },
+    {
+      "name": "parachute",
+      "label": "Whether flight is terminated with parachute",
+      "format": "PROPERTY"
+    },
+    {
+      "name": "multirotor",
+      "label": "Whether drone is multirotor",
+      "format": "PROPERTY"
+    },
+    {
+      "name": "rollAngle",
+      "label": "Roll angle in degrees",
+      "format": "PROPERTY"
+    },
+    {
+      "name": "hFG",
+      "label": "Flight geography height in meters",
+      "format": "PROPERTY"
+    },
+    {
+      "name": "hAM",
+      "label": "Airspace management height in meters",
+      "format": "PROPERTY"
+    },
+    {
+      "name": "simplified",
+      "label": "Whether to use simplified calculation",
+      "format": "PROPERTY"
+    },
+    {
+      "name": "cd",
+      "label": "Drone diameter in meters",
+      "format": "PROPERTY"
+    },
+    {
+      "name": "vWind",
+      "label": "Wind speed (m/s)",
+      "format": "PROPERTY"
+    },
+    {
+      "name": "vZ",
+      "label": "Rate of decent with parachute open (m/s)",
+      "format": "PROPERTY"
+    },
+    {
+      "name": "power",
+      "label": "Whether drone has power",
+      "format": "PROPERTY"
+    },
+    {
+      "name": "cL",
+      "label": "Lift coefficient",
+      "format": "PROPERTY"
+    },
+    {
+      "name": "gliding",
+      "label": "Whether the drone is gliding",
+      "format": "PROPERTY"
+    },
+    {
+      "label": "Agol Token",
+      "name": "agolToken",
+      "format": "TEXT"
     }
   ],
   "defaultConfig": {
@@ -57,8 +142,25 @@
     "Latitude": "50.9375",
     "Longitude": "6.9603",
     "Zoom": "8",
-    "height": "30rem",
-    "maxDimensionProperty": 1,
-    "cruiseSpeedProperty": 10
+    "height": "40rem",
+    "sGPS": 3,
+    "sPos": 3,
+    "sK": 3,
+    "vO": 10,
+    "tR": 2,
+    "tP": 2,
+    "parachute": true,
+    "multirotor": true,
+    "rollAngle": 25,
+    "hFG": 100,
+    "hAM": 3,
+    "simplified": true,
+    "cd": 1,
+    "vWind": 10,
+    "vZ": 10,
+    "power": true,
+    "cL": 0.5,
+    "gliding": true,
+    "agolToken": "mzFcMRqhxzPAoRJavp2MJnT86fp9vdIuHnlcY6yRjycMNMkD4n52uRAbbfniWAIwcJvOrFZPH8C_SP83gjBjxrV_sWf3RPNCjViDUmYVp7JvtqEydYhZ44rqgr31kl76Gi6-n6nx--QmMACz79SCOnfiQnL_H17j1s6ou-8RX8mWvUPH0Xz3cduYS6dohl6x"
   }
 }

@@ -3,84 +3,76 @@ import {
   Card,
   Text,
   CardContent,
-  Popover,
-  Modal
+  FieldValueList
 } from '@pega/cosmos-react-core';
 import Layer from '@arcgis/core/layers/Layer';
 import Point from '@arcgis/core/geometry/Point';
 import PortalItem from '@arcgis/core/portal/PortalItem';
 import Map from '@arcgis/core/Map';
+import Basemap from '@arcgis/core/Basemap';
+import IdentityManager from '@arcgis/core/identity/IdentityManager';
+import ImageryLayer from '@arcgis/core/layers/ImageryLayer';
+import * as rendererJsonUtils from '@arcgis/core/renderers/support/jsonUtils.js';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import StyledEasaExtensionsSORA from './styles';
-// import { getAllFields, createGraphic } from './utils';
 import '../create-nonce';
 import { DrawToolbar } from './draw-toolbar';
 import View from './View';
-import FlightVolumeCalculator from './flight-volume-calculator';
 import SearchTool from './search-tool';
+// import populationDensityRenderer, { landuseRenderer } from './renderers';
+import populationDensityRenderer from './renderers';
+import { useGetPopulationDensity } from './hooks/useGetPopulationDensity';
+import useCalculateFlightVolume from './hooks/useCalculateFlightVolume';
+import type { ComponentProps } from './types';
+import useUpdatePegaProps from './hooks/useUpdatePegaProps';
 
-type MapProps = {
-  getPConnect?: any;
-  heading?: string;
-  height?: string;
-  Latitude?: string;
-  Longitude?: string;
-  Zoom?: string;
-  maxDimensionProperty?: number;
-  cruiseSpeedProperty?: number;
-};
-
-export const EasaExtensionsSORA = (props: MapProps) => {
-  const [flightGeography, setFlightGeography] = useState<__esri.Graphic | null>(null);
-
-  const {
-    getPConnect,
-    heading = 'SORA',
-    height = '30rem',
-    Latitude = '50.9375',
-    Longitude = '6.9603',
-    Zoom = '8',
-    maxDimensionProperty = -1,
-    cruiseSpeedProperty = -1
-  } = props;
+export const EasaExtensionsSORA = (props: ComponentProps) => {
+  const { getPConnect, heading, height, Latitude, Longitude, Zoom, cd, agolToken } = props;
 
   const mapDiv = useRef(null);
-  const tooltipElement = useRef<HTMLDivElement | null>(null);
-  const [mousePoint, setMousePoint] = useState<__esri.MapViewScreenPoint | null>(null);
+  const [flightGeography, setFlightGeography] = useState<__esri.Graphic | null>(null);
 
   const pConnect = getPConnect();
 
-  /**
-   * Initialize application
-   */
-  useEffect(() => {
-    // const tmpFields: any = getAllFields(getPConnect);
-    // console.log(tmpFields);
-
-    // eslint-disable-next-line no-console
-    console.log('maxDimensionProperty', maxDimensionProperty);
-    // eslint-disable-next-line no-console
-    console.log('cruiseSpeedProperty', cruiseSpeedProperty);
-
-    // if (pConnect) {
-    //   const value = pConnect?.getValue(maxDimensionProperty);
-    //   // eslint-disable-next-line no-console
-    //   console.log('maxDimensionProperty', maxDimensionProperty, 'parsedValue', value);
-    // }
-
-    let map: Map;
+  const createMap = useCallback(() => {
+    if (View?.map) return;
 
     if (mapDiv.current) {
-      map = new Map({
-        basemap: 'gray-vector'
+      IdentityManager.registerToken({
+        token: agolToken,
+        server: 'https://easa.maps.arcgis.com/'
       });
+
+      const basemap = new Basemap({
+        portalItem: new PortalItem({
+          id: '979c6cc89af9449cbeb5342a439c6a76',
+          portal: {
+            url: 'https://arcgis.com/'
+          }
+        })
+      });
+
+      const map = new Map({
+        basemap
+      });
+
+      // TODO: send to backend IntrinsicGroundRisk and MapImageJSON
+      // TODO: react to properties and recalculate the pop density etc.
 
       Layer.fromPortalItem({
         portalItem: new PortalItem({
-          id: '448c4a8b91b6481cb59330dceaa89e66'
+          id: '0bfa97c0648449069cf45586578459c5',
+          portal: {
+            url: 'https://easa.maps.arcgis.com/'
+          }
         })
       }).then(layer => {
-        map.add(layer, 0);
+        const imageryLayer = layer as ImageryLayer;
+        imageryLayer.renderer = rendererJsonUtils.fromJSON(
+          populationDensityRenderer
+        ) as __esri.ClassBreaksRenderer;
+        imageryLayer.id = 'PopulationDensity';
+        map.add(imageryLayer, 0);
       });
 
       View.container = mapDiv.current;
@@ -90,68 +82,41 @@ export const EasaExtensionsSORA = (props: MapProps) => {
 
       View.focus();
     }
-    return () => {
-      View.destroy();
-    };
-  }, [Latitude, Longitude, Zoom, height, maxDimensionProperty, cruiseSpeedProperty]);
+  }, [Latitude, Longitude, Zoom, agolToken]);
 
-  if (pConnect?.getCaseInfo) {
-    const caseInfo = pConnect?.getCaseInfo();
-    // eslint-disable-next-line no-console
-    console.log(caseInfo);
-  }
+  const { flightVolume, calculateVolume } = useCalculateFlightVolume({ ...props, flightGeography });
 
-  const setMouseOverVertex = (mp: { x: number; y: number } | null) => {
-    setMousePoint(mp);
-    if (tooltipElement.current) {
-      if (mp) {
-        tooltipElement.current.style.left = `${mp.x}px`;
-        tooltipElement.current.style.top = `${mp.y}px`;
-        tooltipElement.current.style.position = 'absolute';
-        tooltipElement.current.style.display = 'block';
-        tooltipElement.current.style.pointerEvents = 'none';
-      } else {
-        tooltipElement.current.style.display = 'none';
-      }
-    }
-  };
+  // Call calculateVolume when flightGeography changes
+  useEffect(() => {
+    calculateVolume();
+  }, [flightGeography, calculateVolume]); // Safe to include calculateVolume now
 
-  const propertiesValid = () => {
-    return maxDimensionProperty !== -1;
-  };
-
-  const setFlightVolumeMaxPopulationDensity = useCallback(() => {
-    if (!flightGeography || !PCore?.getRestClient || !pConnect) return null;
-
-    const caseId = pConnect?.getValue('.pyID');
-
-    // eslint-disable-next-line no-console
-    console.log('Setting data for caseId', caseId);
-
-    if (!caseId) {
-      // eslint-disable-next-line no-console
-      console.warn("Could not get caseId '.pyID'");
-      return;
-    }
-
-    PCore.getRestClient().invokeRestApi('updateDataObject', {
-      queryPayload: {
-        data_view_ID: 'D_MapOutputSavable'
-      },
-      body: {
-        data: {
-          pyGUID: caseId,
-          IntrinsicGroundRisk: '100',
-          MaxPopulationVolume: 2000,
-          AveragePopulationDensityInAdjacentArea: 1000
+  const { populationDensity, calculateDensities } = useGetPopulationDensity(
+    flightVolume
+      ? {
+          contingencyVolume: flightVolume.contingencyVolume,
+          groundRiskVolume: flightVolume.groundRiskVolume,
+          adjacentArea: flightVolume.adjacentArea,
+          flightGeography
         }
-      }
-    });
-  }, [flightGeography, pConnect]);
+      : null
+  );
+
+  // Call calculateDensities when flightVolume changes
+  useEffect(() => {
+    calculateDensities();
+  }, [flightVolume, calculateDensities]); // Safe to include calculateDensities now
+
+  const updatePegaProps = useUpdatePegaProps(pConnect, populationDensity);
+
+  // Call updatePegaProps when density values change
+  useEffect(() => {
+    updatePegaProps();
+  }, [populationDensity, updatePegaProps]); // Safe to include updatePegaProps now
 
   useEffect(() => {
-    setFlightVolumeMaxPopulationDensity();
-  }, [flightGeography, setFlightVolumeMaxPopulationDensity]);
+    createMap();
+  }, [createMap]);
 
   return (
     <Card style={{ height }}>
@@ -160,78 +125,25 @@ export const EasaExtensionsSORA = (props: MapProps) => {
           <Text variant='h2'>{heading}</Text>
           <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
             <SearchTool />
-            <DrawToolbar
-              cd={1}
-              onFlightGeographyChange={setFlightGeography}
-              onMouseOverVertex={v => setMouseOverVertex(v)}
-            />
+            <DrawToolbar cd={cd} onFlightGeographyChange={setFlightGeography} />
           </div>
         </div>
-        <StyledEasaExtensionsSORA height='90%' ref={mapDiv} />
-        {mousePoint && (
-          <div>
-            <div ref={tooltipElement} />
-            <Popover
-              style={{ pointerEvents: 'none', borderRadius: '4px', padding: '4px' }}
-              target={tooltipElement.current}
-              strategy='fixed'
-              arrow
-            >
-              <div
-                style={{
-                  gap: '0.25rem',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  alignItems: 'center'
-                }}
-              >
-                <Text style={{ fontSize: '10px' }}>Right click to remove vertex</Text>
-                <Text style={{ fontSize: '10px' }}>or</Text>
-                <Text style={{ fontSize: '10px' }}>Drag to move vertex</Text>
-              </div>
-            </Popover>
-          </div>
-        )}
-      </CardContent>
-      {propertiesValid() && (
-        <FlightVolumeCalculator
-          flightGeography={flightGeography}
-          parachute={false}
-          sGPS={3}
-          sPos={3}
-          sK={1}
-          vO={8} // TODO: set to cruiseSpeedProperty
-          tR={2}
-          tP={2}
-          rollAngle={25}
-          multirotor={false}
-          hFG={100}
-          hAM={100}
-          simplified={false}
-          cd={maxDimensionProperty}
-          vWind={10}
-          vZ={10}
-          power={false}
-          cL={0.5}
-          gliding={false}
+        <StyledEasaExtensionsSORA height='70%' ref={mapDiv} />
+        <FieldValueList
+          style={{ height: '20%', marginTop: '0.25rem' }}
+          variant='stacked'
+          fields={[
+            {
+              name: 'Max. population in op. volume + ground risk buffer',
+              value: populationDensity?.maxPopDensityAdjacentArea
+            },
+            {
+              name: 'Average population density in adjacent area',
+              value: populationDensity?.avgOperationalGroundRiskPopDensity
+            }
+          ]}
         />
-      )}
-      {!propertiesValid() && (
-        <div
-          style={{
-            height: '100%',
-            display: 'flex',
-            justifyContent: 'center',
-            alignItems: 'center'
-          }}
-        >
-          <Modal heading='Drone properties are not valid'>
-            <Text style={{ color: 'red', fontSize: '14px', fontWeight: 'bold' }} variant='h2'>
-              Drone properties are not valid
-            </Text>
-          </Modal>
-        </div>
-      )}
+      </CardContent>
     </Card>
   );
 };
