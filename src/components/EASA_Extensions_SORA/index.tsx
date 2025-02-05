@@ -27,9 +27,10 @@ import type { ComponentProps } from './types';
 import useUpdatePegaProps from './hooks/useUpdatePegaProps';
 import useDebouncedEffect from './hooks/useDebouncedEffect';
 import useGetPrintRequest from './hooks/useGetPrintRequest';
+import useGetIntrinsicGroundRisk from './hooks/useGetIntrinsicGroundRisk';
 
 export const EasaExtensionsSORA = (props: ComponentProps) => {
-  const { getPConnect, heading, height, Latitude, Longitude, Zoom, cd, agolToken } = props;
+  const { getPConnect, heading, height, Latitude, Longitude, Zoom, cd, vO, agolToken } = props;
 
   const mapDiv = useRef(null);
   const [flightGeography, setFlightGeography] = useState<__esri.Graphic | null>(null);
@@ -108,6 +109,12 @@ export const EasaExtensionsSORA = (props: ComponentProps) => {
       : null
   );
 
+  const { groundRisk, calculateIntrinsicGroundRisk } = useGetIntrinsicGroundRisk({
+    populationDensity,
+    cd,
+    vO
+  });
+
   const { printRequest, getPrintRequest } = useGetPrintRequest();
 
   useEffect(() => {
@@ -120,12 +127,16 @@ export const EasaExtensionsSORA = (props: ComponentProps) => {
     calculateDensities();
   }, [flightVolume, calculateDensities]); // Safe to include calculateDensities now
 
-  const updatePegaProps = useUpdatePegaProps(pConnect, populationDensity, printRequest);
+  useEffect(() => {
+    calculateIntrinsicGroundRisk();
+  }, [populationDensity, cd, vO, calculateIntrinsicGroundRisk]);
+
+  const updatePegaProps = useUpdatePegaProps(pConnect, populationDensity, printRequest, groundRisk);
 
   // Call updatePegaProps when density values change
   useEffect(() => {
     updatePegaProps();
-  }, [populationDensity, updatePegaProps]); // Safe to include updatePegaProps now
+  }, [populationDensity, groundRisk, updatePegaProps]); // Safe to include updatePegaProps now
 
   useEffect(() => {
     createMap();

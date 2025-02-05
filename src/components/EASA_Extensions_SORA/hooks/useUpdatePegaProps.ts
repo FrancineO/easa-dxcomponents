@@ -4,12 +4,14 @@ import type { PopulationDensity } from '../types';
 const useUpdatePegaProps = (
   pConnect: any,
   populationDensity: PopulationDensity | null,
-  printRequest: any
+  printRequest: any,
+  groundRisk: 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | null
 ) => {
   const paramsRef = useRef({
     pConnect,
     populationDensity,
-    printRequest
+    printRequest,
+    groundRisk
   });
   const updateInProgress = useRef(false);
 
@@ -17,18 +19,27 @@ const useUpdatePegaProps = (
   paramsRef.current = {
     pConnect,
     populationDensity,
-    printRequest
+    printRequest,
+    groundRisk
   };
 
   // Empty dependency array since we're using ref
   return useCallback(async () => {
     const currentParams = paramsRef.current;
-    const { populationDensity: pD, printRequest: pR, pConnect: pC } = currentParams;
-    if (!pD?.maxPopDensityAdjacentArea || !pD?.avgOperationalGroundRiskPopDensity || !pR) return;
+    const { populationDensity: pD, printRequest: pR, pConnect: pC, groundRisk: gR } = currentParams;
+    if (!pD?.maxPopDensityAdjacentArea || !pD?.avgOperationalGroundRiskPopDensity || !pR || !gR)
+      return;
 
     // Prevent multiple simultaneous updates
     if (updateInProgress.current) return;
     if (!pC.getValue || !pConnect) return;
+
+    // eslint-disable-next-line no-console
+    console.log('groundRisk', gR);
+    // eslint-disable-next-line no-console
+    console.log('populationDensity', pD);
+    // eslint-disable-next-line no-console
+    console.log('printRequest', pR);
 
     try {
       updateInProgress.current = true;
@@ -49,7 +60,8 @@ const useUpdatePegaProps = (
             pyGUID: caseId,
             MaxPopulationVolume: pD.maxPopDensityAdjacentArea,
             AveragePopulationDensityInAdjacentArea: pD.avgOperationalGroundRiskPopDensity,
-            MapImageJson: JSON.stringify(pR)
+            MapImageJSON: JSON.stringify(pR),
+            IntrinsicGroundRisk: gR
           }
         }
       });

@@ -11,7 +11,7 @@ const useGetPrintRequest = () => {
     if (esriConfig.request?.interceptors) {
       esriConfig.request.interceptors = [];
       esriConfig.request?.interceptors?.push({
-        urls: 'https://www.arcgis.com/sharing/rest/portals/self/printService',
+        urls: 'https://utility.arcgisonline.com/arcgis/rest/services/Utilities/PrintingTools/GPServer/Export%20Web%20Map%20Task/execute',
         before: params => {
           setPrintRequest(params);
           // return params;
@@ -20,7 +20,8 @@ const useGetPrintRequest = () => {
     }
 
     const pvm = new PrintViewModel({
-      printServiceUrl: 'https://www.arcgis.com/sharing/rest/portals/self/printService',
+      printServiceUrl:
+        'https://utility.arcgisonline.com/arcgis/rest/services/Utilities/PrintingTools/GPServer/Export%20Web%20Map%20Task/execute',
       view: View
     });
 
