@@ -167,6 +167,7 @@ export const DrawToolbar = (props: Props) => {
     setGraphic(null);
     setHasGraphic(false);
     sketchViewModel.cancel();
+    onFlightGeographyChange(null);
   };
 
   const handleToolClick = (tool: 'circle' | 'polyline' | 'polygon') => {

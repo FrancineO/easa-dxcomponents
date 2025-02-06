@@ -134,14 +134,69 @@
     {
       "label": "Agol Token",
       "name": "agolToken",
-      "format": "TEXT"
+      "format": "TEXT",
+      "defaultValue": "mzFcMRqhxzPAoRJavp2MJnT86fp9vdIuHnlcY6yRjycMNMkD4n52uRAbbfniWAIwcJvOrFZPH8C_SP83gjBjxrV_sWf3RPNCjViDUmYVp7JvtqEydYhZ44rqgr31kl76Gi6-n6nx--QmMACz79SCOnfiQnL_H17j1s6ou-8RX8mWvUPH0Xz3cduYS6dohl6x"
+    },
+    {
+      "name": "agolUrl",
+      "label": "Agol Url",
+      "format": "TEXT",
+      "defaultValue": "https://easa.maps.arcgis.com/"
+    },
+    {
+      "name": "popDensityPortalItemId",
+      "label": "Population density portal item id",
+      "format": "TEXT",
+      "defaultValue": "0bfa97c0648449069cf45586578459c5"
+    },
+    {
+      "name": "basemapPortalItemId",
+      "label": "Basemap portal item id",
+      "format": "TEXT",
+      "defaultValue": "979c6cc89af9449cbeb5342a439c6a76"
+    },
+    {
+      "name": "landusePortalItemId",
+      "label": "Landuse portal item id",
+      "format": "TEXT",
+      "defaultValue": "0bfa97c0648449069cf45586578459c5"
+    },
+    {
+      "name": "printServiceUrl",
+      "label": "Print service url",
+      "format": "TEXT",
+      "defaultValue": "https://utility.arcgisonline.com/arcgis/rest/services/Utilities/PrintingTools/GPServer/Export%20Web%20Map%20Task"
+    },
+    {
+      "name": "printDpi",
+      "label": "Print dpi",
+      "format": "TEXT",
+      "defaultValue": "300"
+    },
+    {
+      "name": "printFormat",
+      "label": "Print format",
+      "format": "TEXT",
+      "defaultValue": "jpg"
+    },
+    {
+      "name": "printWidth",
+      "label": "Print width",
+      "format": "TEXT",
+      "defaultValue": "1000"
+    },
+    {
+      "name": "printHeight",
+      "label": "Print height",
+      "format": "TEXT",
+      "defaultValue": "300"
     }
   ],
   "defaultConfig": {
     "heading": "Flight Plan",
-    "Latitude": "50.9375",
-    "Longitude": "6.9603",
-    "Zoom": "8",
+    "latitude": 50.9375,
+    "longitude": 6.9603,
+    "zoom": 8,
     "height": "40rem",
     "sGPS": 3,
     "sPos": 3,
@@ -161,6 +216,15 @@
     "power": true,
     "cL": 0.5,
     "gliding": true,
-    "agolToken": "mzFcMRqhxzPAoRJavp2MJnT86fp9vdIuHnlcY6yRjycMNMkD4n52uRAbbfniWAIwcJvOrFZPH8C_SP83gjBjxrV_sWf3RPNCjViDUmYVp7JvtqEydYhZ44rqgr31kl76Gi6-n6nx--QmMACz79SCOnfiQnL_H17j1s6ou-8RX8mWvUPH0Xz3cduYS6dohl6x"
+    "agolToken": "mzFcMRqhxzPAoRJavp2MJnT86fp9vdIuHnlcY6yRjycMNMkD4n52uRAbbfniWAIwcJvOrFZPH8C_SP83gjBjxrV_sWf3RPNCjViDUmYVp7JvtqEydYhZ44rqgr31kl76Gi6-n6nx--QmMACz79SCOnfiQnL_H17j1s6ou-8RX8mWvUPH0Xz3cduYS6dohl6x",
+    "agolUrl": "https://easa.maps.arcgis.com/",
+    "printServiceUrl": "https://utility.arcgisonline.com/arcgis/rest/services/Utilities/PrintingTools/GPServer/Export%20Web%20Map%20Task",
+    "printWidth": 1000,
+    "printHeight": 300,
+    "printFormat": "jpg",
+    "printDpi": 300,
+    "popDensityPortalItemId": "0bfa97c0648449069cf45586578459c5",
+    "basemapPortalItemId": "979c6cc89af9449cbeb5342a439c6a76",
+    "landusePortalItemId": "0bfa97c0648449069cf45586578459c5"
   }
 }

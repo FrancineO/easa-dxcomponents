@@ -4,18 +4,33 @@ import View from '../View';
 import PrintTemplate from '@arcgis/core/rest/support/PrintTemplate';
 import PrintViewModel from '@arcgis/core/widgets/Print/PrintViewModel';
 
-const useGetPrintRequest = () => {
+const useGetPrintRequest = (
+  printServiceUrl: string,
+  printWidth: number,
+  printHeight: number,
+  printFormat: string,
+  printDpi: number
+) => {
   const [printRequest, setPrintRequest] = useState<any>(null);
-
-  // TODO: put url, width, height, and format as params to the component
 
   const getPrintRequest = useCallback(() => {
     if (esriConfig.request?.interceptors) {
       esriConfig.request.interceptors = [];
       esriConfig.request?.interceptors?.push({
-        urls: 'https://utility.arcgisonline.com/arcgis/rest/services/Utilities/PrintingTools/GPServer/Export%20Web%20Map%20Task',
+        urls: printServiceUrl,
         before: params => {
-          setPrintRequest(params);
+          // hide SVM Internal layer
+          const webMap = JSON.parse(params.requestOptions.query.Web_Map_as_JSON);
+          const svmInternal = webMap?.operationalLayers?.find(
+            (ol: { title: string }) => ol.title === 'SVM Internal'
+          );
+          if (svmInternal) {
+            svmInternal.visibility = false;
+            svmInternal.opacity = 0;
+          }
+          params.requestOptions.query.Web_Map_as_JSON = JSON.stringify(webMap);
+
+          setPrintRequest({ ...params });
 
           // for testing
           // const url = params.url;
@@ -41,23 +56,30 @@ const useGetPrintRequest = () => {
     }
 
     const pvm = new PrintViewModel({
-      printServiceUrl:
-        'https://utility.arcgisonline.com/arcgis/rest/services/Utilities/PrintingTools/GPServer/Export%20Web%20Map%20Task',
+      printServiceUrl,
       view: View
     });
 
-    // pvm.load().then(() => {
-    const width = View.width;
-    const height = View.height;
-    const ratio = width / height;
     pvm.print(
       new PrintTemplate({
-        format: 'jpg',
+        format: printFormat as
+          | 'png8'
+          | 'png32'
+          | 'jpg'
+          | 'tiff'
+          | 'pdf'
+          | 'gif'
+          | 'svg'
+          | 'svgz'
+          | 'aix'
+          | 'eps',
         layout: 'map-only',
-        exportOptions: { width: 300 * ratio, height: 300 }
+        exportOptions: { width: View.width, height: View.height, dpi: printDpi },
+        scalePreserved: false,
+        attributionVisible: false
+        // outScale: View.scale
       })
     );
-    // });
   }, []);
 
   return {

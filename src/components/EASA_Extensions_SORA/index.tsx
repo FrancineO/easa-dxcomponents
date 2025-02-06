@@ -28,17 +28,35 @@ import useUpdatePegaProps from './hooks/useUpdatePegaProps';
 import useDebouncedEffect from './hooks/useDebouncedEffect';
 import useGetPrintRequest from './hooks/useGetPrintRequest';
 import useGetIntrinsicGroundRisk from './hooks/useGetIntrinsicGroundRisk';
+import useMapExtent from './hooks/useMapExtent';
+// IRLi9g31pindstu7
 
 export const EasaExtensionsSORA = (props: ComponentProps) => {
-  const { getPConnect, heading, height, Latitude, Longitude, Zoom, cd, vO, agolToken } = props;
+  const {
+    getPConnect,
+    heading,
+    height,
+    latitude,
+    longitude,
+    zoom,
+    cd,
+    vO,
+    agolToken,
+    agolUrl,
+    printServiceUrl,
+    printWidth,
+    printHeight,
+    printFormat,
+    printDpi,
+    popDensityPortalItemId,
+    basemapPortalItemId
+    // landusePortalItemId
+  } = props;
 
   const mapDiv = useRef(null);
   const [flightGeography, setFlightGeography] = useState<__esri.Graphic | null>(null);
 
   const pConnect = getPConnect();
-
-  // TODO: react to properties and recalculate the pop density etc.
-  // TODO: put portalItemIds, portal urls as a params to the component
 
   const createMap = useCallback(() => {
     if (View?.map) return;
@@ -46,14 +64,14 @@ export const EasaExtensionsSORA = (props: ComponentProps) => {
     if (mapDiv.current) {
       IdentityManager.registerToken({
         token: agolToken,
-        server: 'https://easa.maps.arcgis.com/'
+        server: agolUrl
       });
 
       const basemap = new Basemap({
         portalItem: new PortalItem({
-          id: '979c6cc89af9449cbeb5342a439c6a76',
+          id: basemapPortalItemId,
           portal: {
-            url: 'https://arcgis.com/'
+            url: agolUrl
           }
         })
       });
@@ -64,9 +82,9 @@ export const EasaExtensionsSORA = (props: ComponentProps) => {
 
       Layer.fromPortalItem({
         portalItem: new PortalItem({
-          id: '0bfa97c0648449069cf45586578459c5',
+          id: popDensityPortalItemId,
           portal: {
-            url: 'https://easa.maps.arcgis.com/'
+            url: agolUrl
           }
         })
       }).then(layer => {
@@ -80,12 +98,12 @@ export const EasaExtensionsSORA = (props: ComponentProps) => {
 
       View.container = mapDiv.current;
       View.map = map;
-      View.center = new Point({ latitude: parseFloat(Latitude), longitude: parseFloat(Longitude) });
-      View.zoom = parseFloat(Zoom);
+      View.center = new Point({ latitude, longitude });
+      View.zoom = zoom;
 
       View.focus();
     }
-  }, [Latitude, Longitude, Zoom, agolToken]);
+  }, [latitude, longitude, zoom, agolToken, agolUrl, basemapPortalItemId, popDensityPortalItemId]);
 
   const { flightVolume, calculateVolume } = useCalculateFlightVolume({ ...props, flightGeography });
 
@@ -95,7 +113,7 @@ export const EasaExtensionsSORA = (props: ComponentProps) => {
       calculateVolume();
     },
     300,
-    [flightGeography, calculateVolume]
+    [flightGeography, props, calculateVolume]
   );
 
   const { populationDensity, calculateDensities } = useGetPopulationDensity(
@@ -115,12 +133,28 @@ export const EasaExtensionsSORA = (props: ComponentProps) => {
     vO
   });
 
-  const { printRequest, getPrintRequest } = useGetPrintRequest();
+  const { printRequest, getPrintRequest } = useGetPrintRequest(
+    printServiceUrl,
+    printWidth,
+    printHeight,
+    printFormat,
+    printDpi
+  );
 
-  useEffect(() => {
+  const handleExtentChange = useCallback(() => {
     if (!flightVolume) return;
     getPrintRequest();
   }, [flightVolume, getPrintRequest]);
+
+  useEffect(() => {
+    if (!View?.extent) return;
+    handleExtentChange();
+  }, [handleExtentChange]);
+
+  useMapExtent(() => {
+    if (!View?.extent) return;
+    handleExtentChange();
+  });
 
   // Call calculateDensities when flightVolume changes
   useEffect(() => {
@@ -136,43 +170,49 @@ export const EasaExtensionsSORA = (props: ComponentProps) => {
   // Call updatePegaProps when density values change
   useEffect(() => {
     updatePegaProps();
-  }, [populationDensity, groundRisk, updatePegaProps]); // Safe to include updatePegaProps now
+  }, [populationDensity, groundRisk, printRequest, updatePegaProps]); // Added printRequest to dependencies
 
   useEffect(() => {
+    if (!agolToken) return;
     createMap();
-  }, [createMap]);
+  }, [createMap, agolToken]);
 
   return (
-    <Card style={{ height }}>
-      <CardContent style={{ height: '100%' }}>
-        <div style={{ height: '10%', display: 'flex', justifyContent: 'space-between' }}>
-          <Text variant='h2'>{heading}</Text>
-          <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
-            <SearchTool />
-            <DrawToolbar cd={cd} onFlightGeographyChange={setFlightGeography} />
-          </div>
-        </div>
-        <StyledEasaExtensionsSORA height='70%' ref={mapDiv} />
-        <FieldValueList
-          style={{ height: '20%', marginTop: '0.25rem' }}
-          variant='stacked'
-          fields={[
-            {
-              name: 'Max. population in op. volume + ground risk buffer',
-              value: populationDensity?.maxPopDensityAdjacentArea
-            },
-            {
-              name: 'Average population density in adjacent area',
-              value: populationDensity?.avgOperationalGroundRiskPopDensity
-            },
-            {
-              name: 'Intrinsic ground risk',
-              value: groundRisk
-            }
-          ]}
-        />
-      </CardContent>
-    </Card>
+    <>
+      {agolToken && (
+        <Card style={{ height }}>
+          <CardContent style={{ height: '100%' }}>
+            <div style={{ height: '10%', display: 'flex', justifyContent: 'space-between' }}>
+              <Text variant='h2'>{heading}</Text>
+              <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+                <SearchTool />
+                <DrawToolbar cd={cd} onFlightGeographyChange={setFlightGeography} />
+              </div>
+            </div>
+            <StyledEasaExtensionsSORA height='70%' ref={mapDiv} />
+            <FieldValueList
+              style={{ height: '20%', marginTop: '0.25rem' }}
+              variant='stacked'
+              fields={[
+                {
+                  name: 'Max. population in op. volume + ground risk buffer',
+                  value: populationDensity?.maxPopDensityAdjacentArea
+                },
+                {
+                  name: 'Average population density in adjacent area',
+                  value: populationDensity?.avgOperationalGroundRiskPopDensity
+                },
+                {
+                  name: 'Intrinsic ground risk',
+                  value: groundRisk
+                }
+              ]}
+            />
+          </CardContent>
+        </Card>
+      )}
+      {!agolToken && <Text variant='h2'>No agol token!</Text>}
+    </>
   );
 };
 export default withConfiguration(EasaExtensionsSORA);

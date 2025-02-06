@@ -153,9 +153,9 @@ export const Default: Story = {
   args: {
     heading: 'SORA',
     height: '40rem',
-    Latitude: '50.9375',
-    Longitude: '6.9603',
-    Zoom: '8',
+    latitude: 50.9375,
+    longitude: 6.9603,
+    zoom: 8,
     sGPS: 3,
     sPos: 3,
     sK: 3,
@@ -175,6 +175,16 @@ export const Default: Story = {
     cL: 0.5,
     gliding: true,
     agolToken:
-      'mzFcMRqhxzPAoRJavp2MJnT86fp9vdIuHnlcY6yRjycMNMkD4n52uRAbbfniWAIwKiNzdnbm2oAVukqobdLQLOLnG_hh-AkRR3yI8Z17EQ_5whJu4wOBI4wKx3s56FtBivWQtP32UwFauQSpqxWXg73ECgEGtgW3pY61BsurnrE.'
+      'mzFcMRqhxzPAoRJavp2MJnT86fp9vdIuHnlcY6yRjycMNMkD4n52uRAbbfniWAIwKiNzdnbm2oAVukqobdLQLOLnG_hh-AkRR3yI8Z17EQ_5whJu4wOBI4wKx3s56FtBivWQtP32UwFauQSpqxWXg73ECgEGtgW3pY61BsurnrE.',
+    agolUrl: 'https://easa.maps.arcgis.com/',
+    printServiceUrl:
+      'https://utility.arcgisonline.com/arcgis/rest/services/Utilities/PrintingTools/GPServer/Export%20Web%20Map%20Task',
+    printWidth: 1000,
+    printHeight: 300,
+    printFormat: 'jpg',
+    printDpi: 300,
+    popDensityPortalItemId: '0bfa97c0648449069cf45586578459c5',
+    basemapPortalItemId: '979c6cc89af9449cbeb5342a439c6a76',
+    landusePortalItemId: '0bfa97c0648449069cf45586578459c5'
   }
 };
