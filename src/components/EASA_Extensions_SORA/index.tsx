@@ -37,6 +37,9 @@ export const EasaExtensionsSORA = (props: ComponentProps) => {
 
   const pConnect = getPConnect();
 
+  // TODO: react to properties and recalculate the pop density etc.
+  // TODO: put portalItemIds, portal urls as a params to the component
+
   const createMap = useCallback(() => {
     if (View?.map) return;
 
@@ -58,9 +61,6 @@ export const EasaExtensionsSORA = (props: ComponentProps) => {
       const map = new Map({
         basemap
       });
-
-      // TODO: send to backend IntrinsicGroundRisk and MapImageJSON
-      // TODO: react to properties and recalculate the pop density etc.
 
       Layer.fromPortalItem({
         portalItem: new PortalItem({
