@@ -185,6 +185,6 @@ export const Default: Story = {
     printDpi: 300,
     popDensityPortalItemId: '0bfa97c0648449069cf45586578459c5',
     basemapPortalItemId: '979c6cc89af9449cbeb5342a439c6a76',
-    landusePortalItemId: '0bfa97c0648449069cf45586578459c5'
+    landusePortalItemId: '87919279e9394adb9ba4f3f8009e1360'
   }
 };

@@ -28,21 +28,16 @@ export const EasaExtensionsSORA = (props: ComponentProps) => {
     height,
     cd,
     vO,
-    agolToken,
     printServiceUrl,
     printWidth,
     printHeight,
     printFormat,
     printDpi
-    // landusePortalItemId
   } = props;
 
   const [flightGeography, setFlightGeography] = useState<__esri.Graphic | null>(null);
 
   const pConnect = getPConnect();
-
-  // const agolToken =
-  //  'mzFcMRqhxzPAoRJavp2MJnT86fp9vdIuHnlcY6yRjycMNMkD4n52uRAbbfniWAIwcJvOrFZPH8C_SP83gjBjxrV_sWf3RPNCjViDUmYVp7JvtqEydYhZ44rqgr31kl76Gi6-n6nx--QmMACz79SCOnfiQnL_H17j1s6ou-8RX8mWvUPH0Xz3cduYS6dohl6x';
 
   const { flightVolume, calculateVolume } = useCalculateFlightVolume({ ...props, flightGeography });
 
@@ -118,41 +113,36 @@ export const EasaExtensionsSORA = (props: ComponentProps) => {
   }, [populationDensity, groundRisk, printRequest, updatePegaProps]);
 
   return (
-    <>
-      {agolToken && (
-        <Card style={{ height }}>
-          <CardContent style={{ height: '100%' }}>
-            <div style={{ height: '10%', display: 'flex', justifyContent: 'space-between' }}>
-              <Text variant='h2'>{heading}</Text>
-              <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
-                <SearchTool />
-                <DrawToolbar cd={cd} onFlightGeographyChange={setFlightGeography} />
-              </div>
-            </div>
-            <SoraMap style={{ height: '70%' }} mapProps={props} />
-            <FieldValueList
-              style={{ height: '20%', marginTop: '0.25rem' }}
-              variant='stacked'
-              fields={[
-                {
-                  name: 'Max. population in op. volume + ground risk buffer',
-                  value: populationDensity?.maxPopDensityAdjacentArea
-                },
-                {
-                  name: 'Average population density in adjacent area',
-                  value: populationDensity?.avgOperationalGroundRiskPopDensity
-                },
-                {
-                  name: 'Intrinsic ground risk',
-                  value: groundRisk
-                }
-              ]}
-            />
-          </CardContent>
-        </Card>
-      )}
-      {!agolToken && <Text variant='h2'>No agol token!</Text>}
-    </>
+    <Card style={{ height }}>
+      <CardContent style={{ height: '100%' }}>
+        <div style={{ height: '10%', display: 'flex', justifyContent: 'space-between' }}>
+          <Text variant='h2'>{heading}</Text>
+          <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+            <SearchTool />
+            <DrawToolbar cd={cd} onFlightGeographyChange={setFlightGeography} />
+          </div>
+        </div>
+        <SoraMap style={{ height: '70%' }} mapProps={props} />
+        <FieldValueList
+          style={{ height: '20%', marginTop: '0.25rem' }}
+          variant='stacked'
+          fields={[
+            {
+              name: 'Max. population in op. volume + ground risk buffer',
+              value: populationDensity?.maxPopDensityAdjacentArea
+            },
+            {
+              name: 'Average population density in adjacent area',
+              value: populationDensity?.avgOperationalGroundRiskPopDensity
+            },
+            {
+              name: 'Intrinsic ground risk',
+              value: groundRisk
+            }
+          ]}
+        />
+      </CardContent>
+    </Card>
   );
 };
 export default withConfiguration(EasaExtensionsSORA);

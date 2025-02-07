@@ -235,117 +235,168 @@ export default {
 // Yes
 
 export const landuseRenderer = {
-  type: 'uniqueValue',
-  field: 'value',
-  defaultSymbol: {
-    type: 'esriSFS',
-    color: [255, 0, 0, 0],
-    style: 'esriSFSSolid'
+  authoringInfo: {
+    classificationMethod: 'esriClassifyManual',
+    colorRamp: {
+      type: 'algorithmic',
+      algorithm: 'esriHSVAlgorithm',
+      fromColor: [245, 245, 0, 255],
+      toColor: [255, 0, 0, 255]
+    }
   },
-  uniqueValueInfos: [
+  type: 'classBreaks',
+  classBreakInfos: [
     {
-      value: 1130,
+      label: 'Urban vegetation',
+      classMaxValue: 1130,
       symbol: {
         type: 'esriSFS',
-        color: [80, 80, 80, 255],
+        color: [0, 117, 22, 255],
+        outline: {
+          type: 'esriSLS',
+          color: [0, 0, 0, 0],
+          width: 0,
+          style: 'esriSLSSolid'
+        },
         style: 'esriSFSSolid'
       }
     },
     {
-      value: 1210,
+      label: 'Industrial or commercial units',
+      classMaxValue: 1210,
       symbol: {
         type: 'esriSFS',
-        color: [80, 80, 80, 255],
+        color: [207, 205, 204, 255],
+        outline: {
+          type: 'esriSLS',
+          color: [0, 0, 0, 0],
+          width: 0,
+          style: 'esriSLSSolid'
+        },
         style: 'esriSFSSolid'
       }
     },
     {
-      value: 1222,
+      label: 'Major stations',
+      classMaxValue: 1222,
       symbol: {
         type: 'esriSFS',
-        color: [80, 80, 80, 255],
+        color: [105, 105, 105, 255],
+        outline: {
+          type: 'esriSLS',
+          color: [0, 0, 0, 0],
+          width: 0,
+          style: 'esriSLSSolid'
+        },
         style: 'esriSFSSolid'
       }
     },
     {
-      value: 1230,
+      label: 'Port areas',
+      classMaxValue: 1230,
       symbol: {
         type: 'esriSFS',
-        color: [80, 80, 80, 255],
+        color: [127, 215, 250, 255],
+        outline: {
+          type: 'esriSLS',
+          color: [0, 0, 0, 0],
+          width: 0,
+          style: 'esriSLSSolid'
+        },
         style: 'esriSFSSolid'
       }
     },
     {
-      value: 1241,
+      label: 'Airport terminals',
+      classMaxValue: 1242,
       symbol: {
         type: 'esriSFS',
-        color: [80, 80, 80, 255],
+        color: [150, 150, 150, 255],
+        outline: {
+          type: 'esriSLS',
+          color: [0, 0, 0, 0],
+          width: 0,
+          style: 'esriSLSSolid'
+        },
         style: 'esriSFSSolid'
       }
     },
     {
-      value: 1242,
+      label: 'Construction sites',
+      classMaxValue: 1330,
       symbol: {
         type: 'esriSFS',
-        color: [80, 80, 80, 255],
+        color: [249, 139, 0, 255],
+        outline: {
+          type: 'esriSLS',
+          color: [0, 0, 0, 255],
+          width: 0,
+          style: 'esriSLSSolid'
+        },
         style: 'esriSFSSolid'
       }
     },
     {
-      value: 1310,
+      label: 'Green urban areas',
+      classMaxValue: 1410,
       symbol: {
         type: 'esriSFS',
-        color: [80, 80, 80, 255],
+        color: [101, 224, 111, 255],
+        outline: {
+          type: 'esriSLS',
+          color: [0, 0, 0, 0],
+          width: 0,
+          style: 'esriSLSSolid'
+        },
         style: 'esriSFSSolid'
       }
     },
     {
-      value: 1320,
+      label: 'Sport and leisure green',
+      classMaxValue: 1421,
       symbol: {
         type: 'esriSFS',
-        color: [80, 80, 80, 255],
+        color: [56, 255, 66, 255],
+        outline: {
+          type: 'esriSLS',
+          color: [0, 0, 0, 0],
+          width: 0,
+          style: 'esriSLSSolid'
+        },
         style: 'esriSFSSolid'
       }
     },
     {
-      value: 1330,
+      label: 'Sport and leisure built-up',
+      classMaxValue: 1422,
       symbol: {
         type: 'esriSFS',
-        color: [80, 80, 80, 255],
+        color: [168, 168, 168, 255],
+        outline: {
+          type: 'esriSLS',
+          color: [0, 0, 0, 0],
+          width: 0,
+          style: 'esriSLSSolid'
+        },
         style: 'esriSFSSolid'
       }
     },
     {
-      value: 1410,
+      label: 'Beaches, dunes and sand plains',
+      classMaxValue: 3310,
       symbol: {
         type: 'esriSFS',
-        color: [80, 80, 80, 255],
-        style: 'esriSFSSolid'
-      }
-    },
-    {
-      value: 1421,
-      symbol: {
-        type: 'esriSFS',
-        color: [80, 80, 80, 255],
-        style: 'esriSFSSolid'
-      }
-    },
-    {
-      value: 1422,
-      symbol: {
-        type: 'esriSFS',
-        color: [80, 80, 80, 255],
-        style: 'esriSFSSolid'
-      }
-    },
-    {
-      value: 3310,
-      symbol: {
-        type: 'esriSFS',
-        color: [80, 80, 80, 255],
+        color: [176, 150, 65, 255],
+        outline: {
+          type: 'esriSLS',
+          color: [0, 0, 0, 0],
+          width: 0,
+          style: 'esriSLSSolid'
+        },
         style: 'esriSFSSolid'
       }
     }
-  ]
+  ],
+  field: 'value',
+  minValue: 0
 };

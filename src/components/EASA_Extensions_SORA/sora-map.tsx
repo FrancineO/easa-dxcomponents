@@ -8,9 +8,10 @@ import Basemap from '@arcgis/core/Basemap';
 import PortalItem from '@arcgis/core/portal/PortalItem';
 import Map from '@arcgis/core/Map';
 import Point from '@arcgis/core/geometry/Point';
-import populationDensityRenderer from './renderers';
+import populationDensityRenderer, { landuseRenderer } from './renderers';
 import Layer from '@arcgis/core/layers/Layer';
 import * as rendererJsonUtils from '@arcgis/core/renderers/support/jsonUtils.js';
+import { Text } from '@pega/cosmos-react-core';
 
 type Props = {
   style: React.CSSProperties;
@@ -26,9 +27,14 @@ const SoraMap = (props: Props) => {
     agolUrl,
     agolToken,
     popDensityPortalItemId,
-    basemapPortalItemId
+    basemapPortalItemId,
+    landusePortalItemId
   } = mapProps;
   const mapDiv = useRef(null);
+
+  // for publishing
+    // const agolToken =
+    //   'mzFcMRqhxzPAoRJavp2MJnT86fp9vdIuHnlcY6yRjycMNMkD4n52uRAbbfniWAIwcJvOrFZPH8C_SP83gjBjxrV_sWf3RPNCjViDUmYVp7JvtqEydYhZ44rqgr31kl76Gi6-n6nx--QmMACz79SCOnfiQnL_H17j1s6ou-8RX8mWvUPH0Xz3cduYS6dohl6x';
 
   const createMap = useCallback(() => {
     if (View?.map) return;
@@ -67,6 +73,22 @@ const SoraMap = (props: Props) => {
         map.add(imageryLayer, 0);
       });
 
+      Layer.fromPortalItem({
+        portalItem: new PortalItem({
+          id: landusePortalItemId,
+          portal: {
+            url: agolUrl
+          }
+        })
+      }).then(layer => {
+        const imageryLayer = layer as ImageryLayer;
+        imageryLayer.renderer = rendererJsonUtils.fromJSON(
+          landuseRenderer
+        ) as __esri.ClassBreaksRenderer;
+        imageryLayer.id = 'Landuse';
+        map.add(imageryLayer, 0);
+      });
+
       View.container = mapDiv.current;
       View.map = map;
       View.center = new Point({ latitude, longitude });
@@ -74,14 +96,31 @@ const SoraMap = (props: Props) => {
 
       View.focus();
     }
-  }, [latitude, longitude, zoom, agolToken, agolUrl, basemapPortalItemId, popDensityPortalItemId]);
+  }, [
+    latitude,
+    longitude,
+    zoom,
+    agolToken,
+    agolUrl,
+    basemapPortalItemId,
+    popDensityPortalItemId,
+    landusePortalItemId
+  ]);
 
   useEffect(() => {
     if (!agolToken) return;
     createMap();
   }, [createMap, agolToken]);
 
-  return <StyledSORAMap style={style} ref={mapDiv} />;
+  return (
+    <>
+      {agolToken ? (
+        <StyledSORAMap style={style} ref={mapDiv} />
+      ) : (
+        <Text>No agol token</Text>
+      )}
+    </>
+  );
 };
 
 export default SoraMap;
