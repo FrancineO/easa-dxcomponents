@@ -1,20 +1,23 @@
+export type MapProps = {
+  latitude: number;
+  longitude: number;
+  zoom: number;
+  agolUrl: string;
+  agolToken: string;
+  popDensityPortalItemId: string;
+  basemapPortalItemId: string;
+  landusePortalItemId: string;
+};
+
 export type ComponentProps = {
   getPConnect?: any;
   heading: string;
   height: string;
-  latitude: number;
-  longitude: number;
-  zoom: number;
-  agolToken: string;
-  agolUrl: string;
   printServiceUrl: string;
   printWidth: number;
   printHeight: number;
   printFormat: string;
   printDpi: number;
-  popDensityPortalItemId: string;
-  basemapPortalItemId: string;
-  landusePortalItemId: string;
   sGPS: number;
   sPos: number;
   sK: number;
@@ -33,7 +36,7 @@ export type ComponentProps = {
   power: boolean;
   cL: number;
   gliding: boolean;
-};
+} & MapProps;
 
 export type FlightVolumeParams = {
   flightGeography: __esri.Graphic | null;

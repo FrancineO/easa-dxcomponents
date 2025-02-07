@@ -18,21 +18,23 @@
       "defaultValue": "Map"
     },
     {
-      "name": "Latitude",
+      "name": "latitude",
       "label": "Latitude",
-      "format": "TEXT",
+      "format": "NUMBER",
+      "numberOfDecimals": 4,
       "defaultValue": "50.9375"
     },
     {
-      "name": "Longitude",
+      "name": "longitude",
       "label": "Longitude",
-      "format": "TEXT",
+      "format": "NUMBER",
+      "numberOfDecimals": 4,
       "defaultValue": "6.9603"
     },
     {
-      "name": "Zoom",
+      "name": "zoom",
       "label": "Zoom",
-      "format": "TEXT",
+      "format": "NUMBER",
       "defaultValue": "8"
     },
     {
@@ -134,8 +136,7 @@
     {
       "label": "Agol Token",
       "name": "agolToken",
-      "format": "TEXT",
-      "defaultValue": "mzFcMRqhxzPAoRJavp2MJnT86fp9vdIuHnlcY6yRjycMNMkD4n52uRAbbfniWAIwcJvOrFZPH8C_SP83gjBjxrV_sWf3RPNCjViDUmYVp7JvtqEydYhZ44rqgr31kl76Gi6-n6nx--QmMACz79SCOnfiQnL_H17j1s6ou-8RX8mWvUPH0Xz3cduYS6dohl6x"
+      "format": "PROPERTY"
     },
     {
       "name": "agolUrl",
@@ -170,7 +171,7 @@
     {
       "name": "printDpi",
       "label": "Print dpi",
-      "format": "TEXT",
+      "format": "NUMBER",
       "defaultValue": "300"
     },
     {
@@ -182,13 +183,13 @@
     {
       "name": "printWidth",
       "label": "Print width",
-      "format": "TEXT",
+      "format": "NUMBER",
       "defaultValue": "1000"
     },
     {
       "name": "printHeight",
       "label": "Print height",
-      "format": "TEXT",
+      "format": "NUMBER",
       "defaultValue": "300"
     }
   ],

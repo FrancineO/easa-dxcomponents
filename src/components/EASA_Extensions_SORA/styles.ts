@@ -1,10 +1,10 @@
 import styled, { css } from 'styled-components';
 
-export default styled.div(({ height }: { height: string }) => {
+export default styled.div(() => {
   return css`
     /* stylelint-disable unit-allowed-list, no-duplicate-selectors, selector-type-no-unknown, font-family-no-missing-generic-family-keyword */
-    height: ${height};
     width: 100%;
+    height: 100%;
 
     body {
       --esri-calcite-theme-name: 'light';

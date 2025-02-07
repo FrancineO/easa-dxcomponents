@@ -5,22 +5,10 @@ import {
   CardContent,
   FieldValueList
 } from '@pega/cosmos-react-core';
-import Layer from '@arcgis/core/layers/Layer';
-import Point from '@arcgis/core/geometry/Point';
-import PortalItem from '@arcgis/core/portal/PortalItem';
-import Map from '@arcgis/core/Map';
-import Basemap from '@arcgis/core/Basemap';
-import IdentityManager from '@arcgis/core/identity/IdentityManager';
-import ImageryLayer from '@arcgis/core/layers/ImageryLayer';
-import * as rendererJsonUtils from '@arcgis/core/renderers/support/jsonUtils.js';
-import { useCallback, useEffect, useRef, useState } from 'react';
-import StyledEasaExtensionsSORA from './styles';
+import { useCallback, useEffect, useState } from 'react';
 import '../create-nonce';
 import { DrawToolbar } from './draw-toolbar';
-import View from './View';
 import SearchTool from './search-tool';
-// import populationDensityRenderer, { landuseRenderer } from './renderers';
-import populationDensityRenderer from './renderers';
 import { useGetPopulationDensity } from './hooks/useGetPopulationDensity';
 import useCalculateFlightVolume from './hooks/useCalculateFlightVolume';
 import type { ComponentProps } from './types';
@@ -29,81 +17,32 @@ import useDebouncedEffect from './hooks/useDebouncedEffect';
 import useGetPrintRequest from './hooks/useGetPrintRequest';
 import useGetIntrinsicGroundRisk from './hooks/useGetIntrinsicGroundRisk';
 import useMapExtent from './hooks/useMapExtent';
+import SoraMap from './sora-map';
 // IRLi9g31pindstu7
+// mzFcMRqhxzPAoRJavp2MJnT86fp9vdIuHnlcY6yRjycMNMkD4n52uRAbbfniWAIwcJvOrFZPH8C_SP83gjBjxrV_sWf3RPNCjViDUmYVp7JvtqEydYhZ44rqgr31kl76Gi6-n6nx--QmMACz79SCOnfiQnL_H17j1s6ou-8RX8mWvUPH0Xz3cduYS6dohl6x
 
 export const EasaExtensionsSORA = (props: ComponentProps) => {
   const {
     getPConnect,
     heading,
     height,
-    latitude,
-    longitude,
-    zoom,
     cd,
     vO,
     agolToken,
-    agolUrl,
     printServiceUrl,
     printWidth,
     printHeight,
     printFormat,
-    printDpi,
-    popDensityPortalItemId,
-    basemapPortalItemId
+    printDpi
     // landusePortalItemId
   } = props;
 
-  const mapDiv = useRef(null);
   const [flightGeography, setFlightGeography] = useState<__esri.Graphic | null>(null);
 
   const pConnect = getPConnect();
 
-  const createMap = useCallback(() => {
-    if (View?.map) return;
-
-    if (mapDiv.current) {
-      IdentityManager.registerToken({
-        token: agolToken,
-        server: agolUrl
-      });
-
-      const basemap = new Basemap({
-        portalItem: new PortalItem({
-          id: basemapPortalItemId,
-          portal: {
-            url: agolUrl
-          }
-        })
-      });
-
-      const map = new Map({
-        basemap
-      });
-
-      Layer.fromPortalItem({
-        portalItem: new PortalItem({
-          id: popDensityPortalItemId,
-          portal: {
-            url: agolUrl
-          }
-        })
-      }).then(layer => {
-        const imageryLayer = layer as ImageryLayer;
-        imageryLayer.renderer = rendererJsonUtils.fromJSON(
-          populationDensityRenderer
-        ) as __esri.ClassBreaksRenderer;
-        imageryLayer.id = 'PopulationDensity';
-        map.add(imageryLayer, 0);
-      });
-
-      View.container = mapDiv.current;
-      View.map = map;
-      View.center = new Point({ latitude, longitude });
-      View.zoom = zoom;
-
-      View.focus();
-    }
-  }, [latitude, longitude, zoom, agolToken, agolUrl, basemapPortalItemId, popDensityPortalItemId]);
+  // const agolToken =
+  //  'mzFcMRqhxzPAoRJavp2MJnT86fp9vdIuHnlcY6yRjycMNMkD4n52uRAbbfniWAIwcJvOrFZPH8C_SP83gjBjxrV_sWf3RPNCjViDUmYVp7JvtqEydYhZ44rqgr31kl76Gi6-n6nx--QmMACz79SCOnfiQnL_H17j1s6ou-8RX8mWvUPH0Xz3cduYS6dohl6x';
 
   const { flightVolume, calculateVolume } = useCalculateFlightVolume({ ...props, flightGeography });
 
@@ -116,23 +55,24 @@ export const EasaExtensionsSORA = (props: ComponentProps) => {
     [flightGeography, props, calculateVolume]
   );
 
+  // Set up the hook for population density
   const { populationDensity, calculateDensities } = useGetPopulationDensity(
     flightVolume
       ? {
-          contingencyVolume: flightVolume.contingencyVolume,
-          groundRiskVolume: flightVolume.groundRiskVolume,
-          adjacentArea: flightVolume.adjacentArea,
+          ...flightVolume,
           flightGeography
         }
       : null
   );
 
+  // Set up the hook for ground risk
   const { groundRisk, calculateIntrinsicGroundRisk } = useGetIntrinsicGroundRisk({
     populationDensity,
     cd,
     vO
   });
 
+  // Set up the hook for print request
   const { printRequest, getPrintRequest } = useGetPrintRequest(
     printServiceUrl,
     printWidth,
@@ -141,41 +81,41 @@ export const EasaExtensionsSORA = (props: ComponentProps) => {
     printDpi
   );
 
+  // Set up the callback for extent change
   const handleExtentChange = useCallback(() => {
     if (!flightVolume) return;
     getPrintRequest();
   }, [flightVolume, getPrintRequest]);
 
+  // Set up the effect for extent change
   useEffect(() => {
-    if (!View?.extent) return;
+    // if (!View?.extent) return;
     handleExtentChange();
   }, [handleExtentChange]);
 
+  // Set up the effect for map extent
   useMapExtent(() => {
-    if (!View?.extent) return;
+    // if (!View?.extent) return;
     handleExtentChange();
   });
 
   // Call calculateDensities when flightVolume changes
   useEffect(() => {
     calculateDensities();
-  }, [flightVolume, calculateDensities]); // Safe to include calculateDensities now
+  }, [flightVolume, calculateDensities]);
 
+  // Call calculateIntrinsicGroundRisk when populationDensity, cd, or vO changes
   useEffect(() => {
     calculateIntrinsicGroundRisk();
   }, [populationDensity, cd, vO, calculateIntrinsicGroundRisk]);
 
+  // Set up the hook for updating Pega props
   const updatePegaProps = useUpdatePegaProps(pConnect, populationDensity, printRequest, groundRisk);
 
   // Call updatePegaProps when density values change
   useEffect(() => {
     updatePegaProps();
-  }, [populationDensity, groundRisk, printRequest, updatePegaProps]); // Added printRequest to dependencies
-
-  useEffect(() => {
-    if (!agolToken) return;
-    createMap();
-  }, [createMap, agolToken]);
+  }, [populationDensity, groundRisk, printRequest, updatePegaProps]);
 
   return (
     <>
@@ -189,7 +129,7 @@ export const EasaExtensionsSORA = (props: ComponentProps) => {
                 <DrawToolbar cd={cd} onFlightGeographyChange={setFlightGeography} />
               </div>
             </div>
-            <StyledEasaExtensionsSORA height='70%' ref={mapDiv} />
+            <SoraMap style={{ height: '70%' }} mapProps={props} />
             <FieldValueList
               style={{ height: '20%', marginTop: '0.25rem' }}
               variant='stacked'

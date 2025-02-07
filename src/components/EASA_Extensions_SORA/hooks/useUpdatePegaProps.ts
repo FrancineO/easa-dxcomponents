@@ -25,6 +25,7 @@ const useUpdatePegaProps = (
 
   // Empty dependency array since we're using ref
   return useCallback(async () => {
+    // TODO: might have to call D_MapOutputSavable with all null values to clear the state
     const currentParams = paramsRef.current;
     const { populationDensity: pD, printRequest: pR, pConnect: pC, groundRisk: gR } = currentParams;
     if (!pD?.maxPopDensityAdjacentArea || !pD?.avgOperationalGroundRiskPopDensity || !pR || !gR)
