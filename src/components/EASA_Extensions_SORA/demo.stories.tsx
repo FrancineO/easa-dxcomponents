@@ -153,14 +153,15 @@ export const Default: Story = {
   args: {
     heading: 'SORA',
     height: '40rem',
-    latitude: 50.9375,
-    longitude: 6.9603,
+    latitude: 38.7223,
+    longitude: -9.1393,
     zoom: 8,
     sGPS: 3,
     sPos: 3,
     sK: 3,
     vO: 10,
     tR: 2,
+
     tP: 2,
     parachute: true,
     multirotor: true,
@@ -185,6 +186,7 @@ export const Default: Story = {
     printDpi: 300,
     popDensityPortalItemId: '0bfa97c0648449069cf45586578459c5',
     basemapPortalItemId: '979c6cc89af9449cbeb5342a439c6a76',
-    landusePortalItemId: '87919279e9394adb9ba4f3f8009e1360'
+    landusePortalItemId: '87919279e9394adb9ba4f3f8009e1360',
+    geozonePortalItemId: 'e632deb3526647aaa864e2b89e92c738'
   }
 };

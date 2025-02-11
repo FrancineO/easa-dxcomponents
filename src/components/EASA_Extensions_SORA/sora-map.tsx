@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef } from 'react';
 import StyledSORAMap from './styles';
 import type ImageryLayer from '@arcgis/core/layers/ImageryLayer';
-import type { MapProps } from './types';
+import { LayerId, type MapProps } from './types';
 import View from './View';
 import IdentityManager from '@arcgis/core/identity/IdentityManager';
 import Basemap from '@arcgis/core/Basemap';
@@ -10,6 +10,7 @@ import Map from '@arcgis/core/Map';
 import Point from '@arcgis/core/geometry/Point';
 import populationDensityRenderer, { landuseRenderer } from './renderers';
 import Layer from '@arcgis/core/layers/Layer';
+import FeatureLayer from '@arcgis/core/layers/FeatureLayer';
 import * as rendererJsonUtils from '@arcgis/core/renderers/support/jsonUtils.js';
 import { Text } from '@pega/cosmos-react-core';
 
@@ -28,13 +29,17 @@ const SoraMap = (props: Props) => {
     agolToken,
     popDensityPortalItemId,
     basemapPortalItemId,
-    landusePortalItemId
+    landusePortalItemId,
+    geozonePortalItemId
   } = mapProps;
   const mapDiv = useRef(null);
 
   // for publishing
-    // const agolToken =
-    //   'mzFcMRqhxzPAoRJavp2MJnT86fp9vdIuHnlcY6yRjycMNMkD4n52uRAbbfniWAIwcJvOrFZPH8C_SP83gjBjxrV_sWf3RPNCjViDUmYVp7JvtqEydYhZ44rqgr31kl76Gi6-n6nx--QmMACz79SCOnfiQnL_H17j1s6ou-8RX8mWvUPH0Xz3cduYS6dohl6x';
+  // const agolToken =
+  //   'mzFcMRqhxzPAoRJavp2MJnT86fp9vdIuHnlcY6yRjycMNMkD4n52uRAbbfniWAIwcJvOrFZPH8C_SP83gjBjxrV_sWf3RPNCjViDUmYVp7JvtqEydYhZ44rqgr31kl76Gi6-n6nx--QmMACz79SCOnfiQnL_H17j1s6ou-8RX8mWvUPH0Xz3cduYS6dohl6x';
+
+  // from Piotr
+  // mzFcMRqhxzPAoRJavp2MJtFI_Vj3noDUjaUFIsUu5ObcYgL0WG9UdlYwuGUrlGEGnxW94bF1MSabQrDWr6yPabIUywOWxBzUSX9zKknGn2fv_nxxjna_xNVe1B0BpqVvxhthxkuRO5ZxlJnGpNIAEMASjUxX6vgyk6UndXNCLBFkS
 
   const createMap = useCallback(() => {
     if (View?.map) return;
@@ -69,7 +74,7 @@ const SoraMap = (props: Props) => {
         imageryLayer.renderer = rendererJsonUtils.fromJSON(
           populationDensityRenderer
         ) as __esri.ClassBreaksRenderer;
-        imageryLayer.id = 'PopulationDensity';
+        imageryLayer.id = LayerId.populationDensity;
         map.add(imageryLayer, 0);
       });
 
@@ -85,8 +90,40 @@ const SoraMap = (props: Props) => {
         imageryLayer.renderer = rendererJsonUtils.fromJSON(
           landuseRenderer
         ) as __esri.ClassBreaksRenderer;
-        imageryLayer.id = 'Landuse';
+        imageryLayer.id = LayerId.landuse;
+        imageryLayer.opacity = 0.5;
         map.add(imageryLayer, 0);
+      });
+
+      Layer.fromPortalItem({
+        portalItem: new PortalItem({
+          id: landusePortalItemId,
+          portal: {
+            url: agolUrl
+          }
+        })
+      }).then(layer => {
+        const imageryLayer = layer as ImageryLayer;
+        imageryLayer.renderer = rendererJsonUtils.fromJSON(
+          landuseRenderer
+        ) as __esri.ClassBreaksRenderer;
+        imageryLayer.id = LayerId.landuseHighlight;
+        imageryLayer.visible = false;
+        map.add(imageryLayer, 0);
+      });
+
+      Layer.fromPortalItem({
+        portalItem: new PortalItem({
+          id: geozonePortalItemId,
+          portal: {
+            url: agolUrl
+          }
+        })
+      }).then(layer => {
+        const geozonesLayer = layer as FeatureLayer;
+        geozonesLayer.id = LayerId.geozones;
+        geozonesLayer.popupEnabled = false;
+        map.add(geozonesLayer, 0);
       });
 
       View.container = mapDiv.current;
@@ -104,7 +141,8 @@ const SoraMap = (props: Props) => {
     agolUrl,
     basemapPortalItemId,
     popDensityPortalItemId,
-    landusePortalItemId
+    landusePortalItemId,
+    geozonePortalItemId
   ]);
 
   useEffect(() => {
@@ -115,7 +153,9 @@ const SoraMap = (props: Props) => {
   return (
     <>
       {agolToken ? (
-        <StyledSORAMap style={style} ref={mapDiv} />
+        <div style={style}>
+          <StyledSORAMap ref={mapDiv} />
+        </div>
       ) : (
         <Text>No agol token</Text>
       )}

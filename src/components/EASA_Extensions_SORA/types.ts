@@ -7,6 +7,7 @@ export type MapProps = {
   popDensityPortalItemId: string;
   basemapPortalItemId: string;
   landusePortalItemId: string;
+  geozonePortalItemId: string;
 };
 
 export type ComponentProps = {
@@ -53,3 +54,21 @@ export type PopulationDensity = {
   maxPopDensityAdjacentArea: number | null;
   avgOperationalGroundRiskPopDensity: number | null;
 };
+
+export enum LayerGroupType {
+  populationDensity = 'PopulationDensity',
+  geozones = 'Geozones'
+}
+
+export type LayerGroup = {
+  type: LayerGroupType;
+  ids: LayerId[];
+  label: string;
+};
+
+export enum LayerId {
+  populationDensity = 'PopulationDensity',
+  geozones = 'Geozones',
+  landuse = 'Landuse',
+  landuseHighlight = 'LanduseHighlight'
+}

@@ -61,7 +61,7 @@ const useUpdatePegaProps = (
             pyGUID: caseId,
             MaxPopulationVolume: pD.maxPopDensityAdjacentArea,
             AveragePopulationDensityInAdjacentArea: pD.avgOperationalGroundRiskPopDensity,
-            MapImageJSON: pR,
+            MapImageJSON: JSON.stringify(pR),
             IntrinsicGroundRisk: gR
           }
         }

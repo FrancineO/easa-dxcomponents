@@ -234,6 +234,45 @@ export default {
 
 // Yes
 
+export const landuseColors: Record<number, Array<number>> = {
+  1130: [200, 157, 236, 255],
+  1210: [200, 157, 236, 255],
+  1222: [200, 157, 236, 255],
+  1230: [200, 157, 236, 255],
+  1242: [152, 118, 198, 255],
+  1330: [152, 118, 198, 255],
+  1410: [200, 157, 236, 255],
+  1421: [224, 176, 255, 255],
+  1422: [75, 0, 130, 255],
+  3310: [75, 0, 130, 255]
+};
+
+export const landusePopDensityLookup: Record<number, number> = {
+  1130: 10000,
+  1210: 10000,
+  1222: 10000,
+  1230: 10000,
+  1242: 20000,
+  1330: 20000,
+  1410: 10000,
+  1421: 5000,
+  1422: 50000,
+  3310: 50000
+};
+
+export const landUseLabels: Record<number, string> = {
+  1130: 'Urban vegetation',
+  1210: 'Industrial or commercial units',
+  1222: 'Major stations',
+  1230: 'Port areas',
+  1242: 'Airport terminals',
+  1330: 'Construction sites',
+  1410: 'Green urban areas',
+  1421: 'Sport and leisure green',
+  1422: 'Sport and leisure built-up',
+  3310: 'Beaches, dunes and sand plains'
+};
+
 export const landuseRenderer = {
   authoringInfo: {
     classificationMethod: 'esriClassifyManual',
@@ -247,152 +286,92 @@ export const landuseRenderer = {
   type: 'classBreaks',
   classBreakInfos: [
     {
-      label: 'Urban vegetation',
+      label: `${landUseLabels[1130]} - ${landusePopDensityLookup[1130]}`,
       classMaxValue: 1130,
       symbol: {
         type: 'esriSFS',
-        color: [0, 117, 22, 255],
-        outline: {
-          type: 'esriSLS',
-          color: [0, 0, 0, 0],
-          width: 0,
-          style: 'esriSLSSolid'
-        },
+        color: landuseColors[1130],
         style: 'esriSFSSolid'
       }
     },
     {
-      label: 'Industrial or commercial units',
+      label: `${landUseLabels[1210]} - ${landusePopDensityLookup[1210]}`,
       classMaxValue: 1210,
       symbol: {
         type: 'esriSFS',
-        color: [207, 205, 204, 255],
-        outline: {
-          type: 'esriSLS',
-          color: [0, 0, 0, 0],
-          width: 0,
-          style: 'esriSLSSolid'
-        },
+        color: landuseColors[1210],
         style: 'esriSFSSolid'
       }
     },
     {
-      label: 'Major stations',
+      label: `${landUseLabels[1222]} - ${landusePopDensityLookup[1222]}`,
       classMaxValue: 1222,
       symbol: {
         type: 'esriSFS',
-        color: [105, 105, 105, 255],
-        outline: {
-          type: 'esriSLS',
-          color: [0, 0, 0, 0],
-          width: 0,
-          style: 'esriSLSSolid'
-        },
+        color: landuseColors[1222],
         style: 'esriSFSSolid'
       }
     },
     {
-      label: 'Port areas',
+      label: `${landUseLabels[1230]} - ${landusePopDensityLookup[1230]}`,
       classMaxValue: 1230,
       symbol: {
         type: 'esriSFS',
-        color: [127, 215, 250, 255],
-        outline: {
-          type: 'esriSLS',
-          color: [0, 0, 0, 0],
-          width: 0,
-          style: 'esriSLSSolid'
-        },
+        color: landuseColors[1230],
         style: 'esriSFSSolid'
       }
     },
     {
-      label: 'Airport terminals',
+      label: `${landUseLabels[1242]} - ${landusePopDensityLookup[1242]}`,
       classMaxValue: 1242,
       symbol: {
         type: 'esriSFS',
-        color: [150, 150, 150, 255],
-        outline: {
-          type: 'esriSLS',
-          color: [0, 0, 0, 0],
-          width: 0,
-          style: 'esriSLSSolid'
-        },
+        color: landuseColors[1242],
         style: 'esriSFSSolid'
       }
     },
     {
-      label: 'Construction sites',
+      label: `${landUseLabels[1330]} - ${landusePopDensityLookup[1330]}`,
       classMaxValue: 1330,
       symbol: {
         type: 'esriSFS',
-        color: [249, 139, 0, 255],
-        outline: {
-          type: 'esriSLS',
-          color: [0, 0, 0, 255],
-          width: 0,
-          style: 'esriSLSSolid'
-        },
+        color: landuseColors[1330],
         style: 'esriSFSSolid'
       }
     },
     {
-      label: 'Green urban areas',
+      label: `${landUseLabels[1410]} - ${landusePopDensityLookup[1410]}`,
       classMaxValue: 1410,
       symbol: {
         type: 'esriSFS',
-        color: [101, 224, 111, 255],
-        outline: {
-          type: 'esriSLS',
-          color: [0, 0, 0, 0],
-          width: 0,
-          style: 'esriSLSSolid'
-        },
+        color: landuseColors[1410],
         style: 'esriSFSSolid'
       }
     },
     {
-      label: 'Sport and leisure green',
+      label: `${landUseLabels[1421]} - ${landusePopDensityLookup[1421]}`,
       classMaxValue: 1421,
       symbol: {
         type: 'esriSFS',
-        color: [56, 255, 66, 255],
-        outline: {
-          type: 'esriSLS',
-          color: [0, 0, 0, 0],
-          width: 0,
-          style: 'esriSLSSolid'
-        },
+        color: landuseColors[1421],
         style: 'esriSFSSolid'
       }
     },
     {
-      label: 'Sport and leisure built-up',
+      label: `${landUseLabels[1422]} - ${landusePopDensityLookup[1422]}`,
       classMaxValue: 1422,
       symbol: {
         type: 'esriSFS',
-        color: [168, 168, 168, 255],
-        outline: {
-          type: 'esriSLS',
-          color: [0, 0, 0, 0],
-          width: 0,
-          style: 'esriSLSSolid'
-        },
+        color: landuseColors[1422],
         style: 'esriSFSSolid'
       }
     },
     {
-      label: 'Beaches, dunes and sand plains',
+      label: `${landUseLabels[3310]} - ${landusePopDensityLookup[3310]}`,
       classMaxValue: 3310,
       symbol: {
         type: 'esriSFS',
-        color: [176, 150, 65, 255],
-        outline: {
-          type: 'esriSLS',
-          color: [0, 0, 0, 0],
-          width: 0,
-          style: 'esriSLSSolid'
-        },
+        color: landuseColors[3310],
         style: 'esriSFSSolid'
       }
     }
@@ -400,3 +379,11 @@ export const landuseRenderer = {
   field: 'value',
   minValue: 0
 };
+
+// export const getLanduseHighlightRendererJson = () => {
+//   const landuseHighlightRendererCopy = { ...landuseRenderer };
+//   landuseHighlightRendererCopy.classBreakInfos.forEach(info => {
+//     info.symbol.color = [0, 255, 255, 255];
+//   });
+//   return landuseHighlightRendererCopy;
+// };
