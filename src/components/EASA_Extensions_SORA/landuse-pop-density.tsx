@@ -1,4 +1,4 @@
-import { Card, CardContent, Text, Alert, Status } from '@pega/cosmos-react-core';
+import { Card, CardContent, Text, Alert } from '@pega/cosmos-react-core';
 import { landusePopDensityLookup, landUseLabels, landuseColors } from './renderers';
 
 const LandusePopDensity = ({

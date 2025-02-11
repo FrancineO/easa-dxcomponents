@@ -132,6 +132,7 @@ export const useGetPopulationDensity = (flightVolume: FlightVolume | null) => {
     // Reset states if no params
     if (!currentFlightVolume) {
       setPopulationDensity(null);
+      setIntersectingLanduseClasses([]);
       return;
     }
 
