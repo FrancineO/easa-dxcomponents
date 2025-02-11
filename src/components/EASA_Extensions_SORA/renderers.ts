@@ -380,6 +380,44 @@ export const landuseRenderer = {
   minValue: 0
 };
 
+export const geozones = [
+  {
+    value: 'restricted',
+    label: 'Restricted',
+    color: [255, 255, 0, 150]
+  },
+  {
+    value: 'open',
+    label: 'Open',
+    color: [0, 255, 0, 150]
+  },
+  {
+    value: 'U-space',
+    label: 'U-space',
+    color: [0, 0, 255, 150]
+  },
+  {
+    value: 'prohibited',
+    label: 'Prohibited',
+    color: [255, 0, 0, 150]
+  }
+];
+
+export const geozoneRenderer = {
+  type: 'uniqueValue',
+  field1: 'Restriction',
+  uniqueValueInfos: geozones.map(zone => ({
+    symbol: {
+      type: 'esriSFS',
+      color: zone.color,
+      style: 'esriSFSSolid'
+    },
+    value: zone.value,
+    label: zone.label
+  })),
+  fieldDelimiter: ','
+};
+
 // export const getLanduseHighlightRendererJson = () => {
 //   const landuseHighlightRendererCopy = { ...landuseRenderer };
 //   landuseHighlightRendererCopy.classBreakInfos.forEach(info => {

@@ -99,6 +99,7 @@ const LandusePopDensity = ({
                     minWidth: '20px',
                     minHeight: '20px',
                     backgroundColor: `rgba(${group.color.join(',')})`,
+                    border: `1px solid rgba(${group.color.join(',')})`,
                     marginRight: '0.5rem'
                   }}
                 />

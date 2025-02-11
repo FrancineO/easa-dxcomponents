@@ -8,7 +8,7 @@ import Basemap from '@arcgis/core/Basemap';
 import PortalItem from '@arcgis/core/portal/PortalItem';
 import Map from '@arcgis/core/Map';
 import Point from '@arcgis/core/geometry/Point';
-import populationDensityRenderer, { landuseRenderer } from './renderers';
+import populationDensityRenderer, { geozoneRenderer, landuseRenderer } from './renderers';
 import Layer from '@arcgis/core/layers/Layer';
 import FeatureLayer from '@arcgis/core/layers/FeatureLayer';
 import * as rendererJsonUtils from '@arcgis/core/renderers/support/jsonUtils.js';
@@ -123,6 +123,9 @@ const SoraMap = (props: Props) => {
         const geozonesLayer = layer as FeatureLayer;
         geozonesLayer.id = LayerId.geozones;
         geozonesLayer.popupEnabled = false;
+        geozonesLayer.renderer = rendererJsonUtils.fromJSON(
+          geozoneRenderer
+        ) as __esri.UniqueValueRenderer;
         map.add(geozonesLayer, 0);
       });
 

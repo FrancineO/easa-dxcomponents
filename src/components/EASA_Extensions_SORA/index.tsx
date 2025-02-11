@@ -21,6 +21,9 @@ import SoraMap from './sora-map';
 import useApplySpatialFilter from './hooks/useApplySpatialFilter';
 import LayerList from './layer-list';
 import LandusePopDensity from './landuse-pop-density';
+import Geozones from './geozones';
+import useGetIntersectingGeozones from './hooks/useGetIntersectingGeozones';
+
 // IRLi9g31pindstu7
 // mzFcMRqhxzPAoRJavp2MJnT86fp9vdIuHnlcY6yRjycMNMkD4n52uRAbbfniWAIwcJvOrFZPH8C_SP83gjBjxrV_sWf3RPNCjViDUmYVp7JvtqEydYhZ44rqgr31kl76Gi6-n6nx--QmMACz79SCOnfiQnL_H17j1s6ou-8RX8mWvUPH0Xz3cduYS6dohl6x
 
@@ -80,6 +83,10 @@ export const EasaExtensionsSORA = (props: ComponentProps) => {
         : null
     );
 
+  // Set up the hook to get the intersecting geozones
+  const { intersectingGeozones, queryIntersectingGeozones } =
+    useGetIntersectingGeozones(flightVolume);
+
   // Set up the hook for ground risk
   const { groundRisk, calculateIntrinsicGroundRisk } = useGetIntrinsicGroundRisk({
     populationDensity,
@@ -132,6 +139,10 @@ export const EasaExtensionsSORA = (props: ComponentProps) => {
     calculateIntrinsicGroundRisk();
   }, [populationDensity, cd, vO, calculateIntrinsicGroundRisk]);
 
+  useEffect(() => {
+    queryIntersectingGeozones();
+  }, [flightVolume, queryIntersectingGeozones]);
+
   // Set up the hook for updating Pega props
   const updatePegaProps = useUpdatePegaProps(pConnect, populationDensity, printRequest, groundRisk);
 
@@ -180,7 +191,10 @@ export const EasaExtensionsSORA = (props: ComponentProps) => {
               }
             ]}
           />
-          <LandusePopDensity intersectingLanduseClasses={intersectingLanduseClasses} />
+          <div style={{ display: 'flex', gap: '2rem' }}>
+            <LandusePopDensity intersectingLanduseClasses={intersectingLanduseClasses} />
+            <Geozones intersectingGeozones={intersectingGeozones} />
+          </div>
         </div>
       </CardContent>
     </Card>
