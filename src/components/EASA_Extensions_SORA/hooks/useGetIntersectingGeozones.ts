@@ -13,8 +13,10 @@ const useGetIntersectingGeozones = (flightVolume: FlightVolume | null) => {
       !flightVolume.adjacentArea ||
       !flightVolume.contingencyVolume ||
       !flightVolume.groundRiskVolume
-    )
+    ) {
+      setIntersectingGeozones([]);
       return;
+    }
 
     const geometry = geometryEngine.union([
       flightVolume.adjacentArea?.geometry,
