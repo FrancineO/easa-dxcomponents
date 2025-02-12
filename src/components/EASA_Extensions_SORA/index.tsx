@@ -20,10 +20,11 @@ import useMapExtent from './hooks/useMapExtent';
 import SoraMap from './sora-map';
 import useApplySpatialFilter from './hooks/useApplySpatialFilter';
 import LayerList from './layer-list';
-import LandusePopDensity from './landuse-pop-density';
+import LandusePopDensityLegend from './landuse-pop-density-legend';
 import Geozones from './geozones';
 import useGetIntersectingGeozones from './hooks/useGetIntersectingGeozones';
 import FlightVolumeLegend from './flight-volume/flight-volume-legend';
+import PopDensityLegend from './pop-density-legend';
 
 // IRLi9g31pindstu7
 // mzFcMRqhxzPAoRJavp2MJnT86fp9vdIuHnlcY6yRjycMNMkD4n52uRAbbfniWAIwcJvOrFZPH8C_SP83gjBjxrV_sWf3RPNCjViDUmYVp7JvtqEydYhZ44rqgr31kl76Gi6-n6nx--QmMACz79SCOnfiQnL_H17j1s6ou-8RX8mWvUPH0Xz3cduYS6dohl6x
@@ -158,7 +159,6 @@ export const EasaExtensionsSORA = (props: ComponentProps) => {
       <CardContent style={{ height: '100%' }}>
         <div
           style={{
-            height: '10%',
             display: 'flex',
             alignItems: 'flex-end',
             flexDirection: 'column'
@@ -176,7 +176,6 @@ export const EasaExtensionsSORA = (props: ComponentProps) => {
           style={{
             display: 'flex',
             justifyContent: 'space-between',
-            height: '20%',
             marginTop: '0.25rem'
           }}
         >
@@ -202,7 +201,8 @@ export const EasaExtensionsSORA = (props: ComponentProps) => {
           />
           <div style={{ display: 'flex', gap: '2rem' }}>
             <FlightVolumeLegend flightVolume={flightVolume} />
-            <LandusePopDensity intersectingLanduseClasses={intersectingLanduseClasses} />
+            <PopDensityLegend />
+            <LandusePopDensityLegend intersectingLanduseClasses={intersectingLanduseClasses} />
             <Geozones intersectingGeozones={intersectingGeozones} />
           </div>
         </div>

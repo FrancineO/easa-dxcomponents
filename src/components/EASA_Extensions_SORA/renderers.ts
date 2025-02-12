@@ -1,238 +1,31 @@
+export const populationDensityColors = {
+  noValue: [0, 0, 0, 0],
+  low: [198, 219, 239, 255], // Light blue
+  medium: [107, 174, 214, 255], // Medium blue
+  high: [33, 113, 181, 255], // Dark blue
+  extreme: [8, 48, 107, 255] // Darkest blue
+};
+export const populationDensityClassbreaks = [
+  { value: 0, color: populationDensityColors.noValue, label: 'No data' },
+  { value: 0.01, color: populationDensityColors.noValue, label: 'No data' },
+  { value: 25, color: populationDensityColors.low, label: '0 - 25' },
+  { value: 100, color: populationDensityColors.medium, label: '25 - 100' },
+  { value: 500, color: populationDensityColors.high, label: '100 - 500' },
+  { value: 8000, color: populationDensityColors.extreme, label: '500 - 8000' }
+];
+
 export const populationDensityRenderer = {
-  authoringInfo: {
-    classificationMethod: 'esriClassifyNaturalBreaks',
-    colorRamp: {
-      type: 'algorithmic',
-      algorithm: 'esriHSVAlgorithm',
-      fromColor: [245, 245, 0, 255],
-      toColor: [255, 0, 0, 255]
-    }
-  },
   type: 'classBreaks',
-  classBreakInfos: [
-    {
-      label: '0 - 0',
-      classMaxValue: 0,
-      symbol: {
-        type: 'esriSFS',
-        color: [0, 0, 0, 0],
-        outline: {
-          type: 'esriSLS',
-          color: [0, 0, 0, 0],
-          width: 0,
-          style: 'esriSLSSolid'
-        },
-        style: 'esriSFSSolid'
-      }
+  classBreakInfos: populationDensityClassbreaks.map(breakInfo => ({
+    classMaxValue: breakInfo.value,
+    symbol: {
+      type: 'esriSFS',
+      color: breakInfo.color,
+      style: 'esriSFSSolid'
     },
-    {
-      label: '0 - 98.971',
-      classMaxValue: 98.970703,
-      symbol: {
-        type: 'esriSFS',
-        color: [248, 186, 0, 255],
-        outline: {
-          type: 'esriSLS',
-          color: [0, 0, 0, 255],
-          width: 0,
-          style: 'esriSLSSolid'
-        },
-        style: 'esriSFSSolid'
-      }
-    },
-    {
-      label: '98.971 - 240.357',
-      classMaxValue: 240.357422,
-      symbol: {
-        type: 'esriSFS',
-        color: [250, 125, 0, 255],
-        outline: {
-          type: 'esriSLS',
-          color: [0, 0, 0, 255],
-          width: 0,
-          style: 'esriSLSSolid'
-        },
-        style: 'esriSFSSolid'
-      }
-    }
-  ]
+    label: breakInfo.label
+  }))
 };
-
-export default {
-  authoringInfo: {
-    classificationMethod: 'esriClassifyNaturalBreaks',
-    colorRamp: {
-      type: 'algorithmic',
-      algorithm: 'esriHSVAlgorithm',
-      fromColor: [245, 245, 0, 255],
-      toColor: [255, 0, 0, 255]
-    }
-  },
-  type: 'classBreaks',
-  classBreakInfos: [
-    {
-      label: '0 - 0',
-      classMaxValue: 0,
-      symbol: {
-        type: 'esriSFS',
-        color: [0, 0, 0, 0],
-        outline: {
-          type: 'esriSLS',
-          color: [0, 0, 0, 0],
-          width: 0,
-          style: 'esriSLSSolid'
-        },
-        style: 'esriSFSSolid'
-      }
-    },
-    {
-      label: '0 - 98.971',
-      classMaxValue: 98.970703,
-      symbol: {
-        type: 'esriSFS',
-        color: [248, 186, 0, 255],
-        outline: {
-          type: 'esriSLS',
-          color: [0, 0, 0, 255],
-          width: 0,
-          style: 'esriSLSSolid'
-        },
-        style: 'esriSFSSolid'
-      }
-    },
-    {
-      label: '98.971 - 240.357',
-      classMaxValue: 240.357422,
-      symbol: {
-        type: 'esriSFS',
-        color: [250, 125, 0, 255],
-        outline: {
-          type: 'esriSLS',
-          color: [0, 0, 0, 255],
-          width: 0,
-          style: 'esriSLSSolid'
-        },
-        style: 'esriSFSSolid'
-      }
-    },
-    {
-      label: '240.357 - 466.576',
-      classMaxValue: 466.576172,
-      symbol: {
-        type: 'esriSFS',
-        color: [253, 63, 0, 255],
-        outline: {
-          type: 'esriSLS',
-          color: [0, 0, 0, 255],
-          width: 0,
-          style: 'esriSLSSolid'
-        },
-        style: 'esriSFSSolid'
-      }
-    },
-    {
-      label: '466.576 - 7,239',
-      classMaxValue: 7239,
-      symbol: {
-        type: 'esriSFS',
-        color: [255, 0, 0, 255],
-        outline: {
-          type: 'esriSLS',
-          color: [0, 0, 0, 255],
-          width: 0,
-          style: 'esriSLSSolid'
-        },
-        style: 'esriSFSSolid'
-      }
-    }
-  ],
-  field: 'value',
-  minValue: 0
-};
-
-// Class code
-
-// Class label
-
-// Density potentially higher than shown on the map
-
-// 1130
-
-// Urban vegetation
-
-// Yes
-
-// 1210
-
-// Industrial or commercial units
-
-// Yes
-
-// 1222
-
-// Major stations
-
-// Yes
-
-// 1230
-
-// Port areas
-
-// Yes
-
-// 1241
-
-// Airport areas
-
-// Yes
-
-// 1242
-
-// Airport terminals
-
-// Yes
-
-// 1310
-
-// Mineral extraction sites
-
-// Yes
-
-// 1320
-
-// Dump sites
-
-// Yes
-
-// 1330
-
-// Construction sites
-
-// Yes
-
-// 1410
-
-// Green urban areas
-
-// Yes
-
-// 1421
-
-// Sport and leisure green
-
-// Yes
-
-// 1422
-
-// Sport and leisure built-up
-
-// Yes
-
-// 3310
-
-// Beaches, dunes and sand plains
-
-// Yes
 
 export const landuseColors: Record<number, Array<number>> = {
   1130: [200, 157, 236, 255],

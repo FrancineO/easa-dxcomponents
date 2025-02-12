@@ -1,7 +1,7 @@
 import { Card, CardContent, Text, Alert } from '@pega/cosmos-react-core';
 import { landusePopDensityLookup, landUseLabels, landuseColors } from './renderers';
 
-const LandusePopDensity = ({
+const LandusePopDensityLegend = ({
   intersectingLanduseClasses
 }: {
   intersectingLanduseClasses: number[];
@@ -139,4 +139,4 @@ const LandusePopDensity = ({
   );
 };
 
-export default LandusePopDensity;
+export default LandusePopDensityLegend;
