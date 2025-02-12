@@ -156,7 +156,14 @@ export const EasaExtensionsSORA = (props: ComponentProps) => {
   return (
     <Card style={{ height: '100%' }}>
       <CardContent style={{ height: '100%' }}>
-        <div style={{ height: '10%', display: 'flex', justifyContent: 'space-between' }}>
+        <div
+          style={{
+            height: '10%',
+            display: 'flex',
+            alignItems: 'flex-end',
+            flexDirection: 'column'
+          }}
+        >
           {/* <Text variant='h2'>{heading}</Text> */}
           <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
             <LayerList />
