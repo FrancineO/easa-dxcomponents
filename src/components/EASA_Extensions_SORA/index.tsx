@@ -147,8 +147,9 @@ export const EasaExtensionsSORA = (props: ComponentProps) => {
 
   // Call calculatePopDensities when flightVolume changes
   useEffect(() => {
+    if (!layersAdded) return;
     calculatePopDensities();
-  }, [flightVolume, calculatePopDensities]);
+  }, [flightVolume, layersAdded, calculatePopDensities]);
 
   // call applyFlightVolume when flightVolume changes
   useEffect(() => {
