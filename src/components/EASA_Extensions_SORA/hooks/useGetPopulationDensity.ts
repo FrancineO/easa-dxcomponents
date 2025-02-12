@@ -118,7 +118,7 @@ export const useGetPopulationDensity = (flightVolume: FlightVolume | null) => {
     []
   );
 
-  const calculateDensities = useCallback(async () => {
+  const calculatePopDensities = useCallback(async () => {
     // Use the ref instead of the params dependency
     const currentFlightVolume = flightVolumeRef.current;
 
@@ -187,7 +187,7 @@ export const useGetPopulationDensity = (flightVolume: FlightVolume | null) => {
   return {
     populationDensity,
     intersectingLanduseClasses,
-    calculateDensities
+    calculatePopDensities
   };
 };
 

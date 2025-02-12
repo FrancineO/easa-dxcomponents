@@ -17,10 +17,11 @@ import { Text } from '@pega/cosmos-react-core';
 type Props = {
   style: React.CSSProperties;
   mapProps: MapProps;
+  onLayersAdded: () => void;
 };
 
 const SoraMap = (props: Props) => {
-  const { style, mapProps } = props;
+  const { style, mapProps, onLayersAdded } = props;
   const {
     latitude,
     longitude,
@@ -40,6 +41,86 @@ const SoraMap = (props: Props) => {
 
   // from Piotr
   // mzFcMRqhxzPAoRJavp2MJtFI_Vj3noDUjaUFIsUu5ObcYgL0WG9UdlYwuGUrlGEGnxW94bF1MSabQrDWr6yPabIUywOWxBzUSX9zKknGn2fv_nxxjna_xNVe1B0BpqVvxhthxkuRO5ZxlJnGpNIAEMASjUxX6vgyk6UndXNCLBFkS
+
+  const applyRenderer = useCallback(
+    (layer: __esri.ImageryLayer | FeatureLayer) => {
+      if (layer.portalItem.id === popDensityPortalItemId) {
+        layer.id = LayerId.populationDensity;
+        layer.renderer = rendererJsonUtils.fromJSON(
+          populationDensityRenderer
+        ) as __esri.ClassBreaksRenderer;
+      }
+      if (layer.portalItem.id === landusePortalItemId) {
+        const landuseLayer = View.map?.findLayerById(LayerId.landuse);
+
+        layer.id = landuseLayer ? LayerId.landuseHighlight : LayerId.landuse;
+        layer.visible = !landuseLayer;
+        layer.renderer = rendererJsonUtils.fromJSON(landuseRenderer) as __esri.ClassBreaksRenderer;
+        layer.opacity = landuseLayer ? 1 : 0.5;
+      }
+      if (layer.portalItem.id === geozonePortalItemId) {
+        layer.id = LayerId.geozones;
+        layer.renderer = rendererJsonUtils.fromJSON(geozoneRenderer) as __esri.UniqueValueRenderer;
+      }
+    },
+    [popDensityPortalItemId, landusePortalItemId, geozonePortalItemId]
+  );
+
+  const addLayers = useCallback(
+    (map: Map) => {
+      const promises: Promise<__esri.Layer>[] = [];
+      promises.push(
+        Layer.fromPortalItem({
+          portalItem: new PortalItem({
+            id: popDensityPortalItemId,
+            portal: {
+              url: agolUrl
+            }
+          })
+        }),
+        Layer.fromPortalItem({
+          portalItem: new PortalItem({
+            id: landusePortalItemId,
+            portal: {
+              url: agolUrl
+            }
+          })
+        }),
+        Layer.fromPortalItem({
+          portalItem: new PortalItem({
+            id: landusePortalItemId,
+            portal: {
+              url: agolUrl
+            }
+          })
+        }),
+        Layer.fromPortalItem({
+          portalItem: new PortalItem({
+            id: geozonePortalItemId,
+            portal: {
+              url: agolUrl
+            }
+          })
+        })
+      );
+
+      Promise.all(promises).then(layers => {
+        layers.forEach(layer => {
+          applyRenderer(layer as ImageryLayer | FeatureLayer);
+          map.add(layer, 0);
+        });
+        onLayersAdded();
+      });
+    },
+    [
+      popDensityPortalItemId,
+      landusePortalItemId,
+      geozonePortalItemId,
+      applyRenderer,
+      agolUrl,
+      onLayersAdded
+    ]
+  );
 
   const createMap = useCallback(() => {
     if (View?.map) return;
@@ -62,72 +143,7 @@ const SoraMap = (props: Props) => {
         basemap
       });
 
-      Layer.fromPortalItem({
-        portalItem: new PortalItem({
-          id: popDensityPortalItemId,
-          portal: {
-            url: agolUrl
-          }
-        })
-      }).then(layer => {
-        const imageryLayer = layer as ImageryLayer;
-        imageryLayer.renderer = rendererJsonUtils.fromJSON(
-          populationDensityRenderer
-        ) as __esri.ClassBreaksRenderer;
-        imageryLayer.id = LayerId.populationDensity;
-        map.add(imageryLayer, 0);
-      });
-
-      Layer.fromPortalItem({
-        portalItem: new PortalItem({
-          id: landusePortalItemId,
-          portal: {
-            url: agolUrl
-          }
-        })
-      }).then(layer => {
-        const imageryLayer = layer as ImageryLayer;
-        imageryLayer.renderer = rendererJsonUtils.fromJSON(
-          landuseRenderer
-        ) as __esri.ClassBreaksRenderer;
-        imageryLayer.id = LayerId.landuse;
-        imageryLayer.opacity = 0.5;
-        map.add(imageryLayer, 0);
-      });
-
-      Layer.fromPortalItem({
-        portalItem: new PortalItem({
-          id: landusePortalItemId,
-          portal: {
-            url: agolUrl
-          }
-        })
-      }).then(layer => {
-        const imageryLayer = layer as ImageryLayer;
-        imageryLayer.renderer = rendererJsonUtils.fromJSON(
-          landuseRenderer
-        ) as __esri.ClassBreaksRenderer;
-        imageryLayer.id = LayerId.landuseHighlight;
-        imageryLayer.visible = false;
-        map.add(imageryLayer, 0);
-      });
-
-      Layer.fromPortalItem({
-        portalItem: new PortalItem({
-          id: geozonePortalItemId,
-          portal: {
-            url: agolUrl
-          }
-        })
-      }).then(layer => {
-        const geozonesLayer = layer as FeatureLayer;
-        geozonesLayer.id = LayerId.geozones;
-        geozonesLayer.popupEnabled = false;
-        geozonesLayer.renderer = rendererJsonUtils.fromJSON(
-          geozoneRenderer
-        ) as __esri.UniqueValueRenderer;
-        map.add(geozonesLayer, 0);
-      });
+      addLayers(map);
 
       View.container = mapDiv.current;
       View.map = map;
@@ -136,17 +152,7 @@ const SoraMap = (props: Props) => {
 
       View.focus();
     }
-  }, [
-    latitude,
-    longitude,
-    zoom,
-    agolToken,
-    agolUrl,
-    basemapPortalItemId,
-    popDensityPortalItemId,
-    landusePortalItemId,
-    geozonePortalItemId
-  ]);
+  }, [latitude, longitude, zoom, agolToken, agolUrl, basemapPortalItemId, mapDiv, addLayers]);
 
   useEffect(() => {
     if (!agolToken) return;

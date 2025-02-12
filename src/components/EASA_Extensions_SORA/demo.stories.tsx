@@ -155,6 +155,9 @@ export const Default: Story = {
     latitude: 38.7223,
     longitude: -9.1393,
     zoom: 8,
+    //    flightPathJSON: null,
+    flightPathJSON:
+      '{"spatialReference":{"latestWkid":3857,"wkid":102100},"rings":[[[-983315.5512089686,4628094.701973546],[-969117.3732049979,4630679.228992439],[-973215.1145182232,4624162.972331126],[-983315.5512089686,4628094.701973546]]]}',
     sGPS: 3,
     sPos: 3,
     sK: 3,

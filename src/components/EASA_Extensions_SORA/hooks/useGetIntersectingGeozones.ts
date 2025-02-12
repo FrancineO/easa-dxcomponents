@@ -25,14 +25,16 @@ const useGetIntersectingGeozones = (flightVolume: FlightVolume | null) => {
       flightVolume.groundRiskVolume?.geometry
     ]) as __esri.Polygon;
 
-    const geozonesLayer = View?.map?.findLayerById(LayerId.geozones) as __esri.FeatureLayer;
-    const features = await geozonesLayer?.queryFeatures({
-      geometry,
-      outFields: ['*'],
-      spatialRelationship: 'intersects'
-    });
+    View.when(async () => {
+      const geozonesLayer = View?.map?.findLayerById(LayerId.geozones) as __esri.FeatureLayer;
+      const features = await geozonesLayer?.queryFeatures({
+        geometry,
+        outFields: ['*'],
+        spatialRelationship: 'intersects'
+      });
 
-    setIntersectingGeozones(features.features);
+      setIntersectingGeozones(features.features);
+    });
   }, [flightVolume]);
 
   return {

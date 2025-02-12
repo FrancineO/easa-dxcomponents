@@ -23,6 +23,7 @@ import LayerList from './layer-list';
 import useGetIntersectingGeozones from './hooks/useGetIntersectingGeozones';
 
 import Legends from './legends/legends';
+import { getFlightGeography } from './utils';
 
 // IRLi9g31pindstu7
 // mzFcMRqhxzPAoRJavp2MJnT86fp9vdIuHnlcY6yRjycMNMkD4n52uRAbbfniWAIwcJvOrFZPH8C_SP83gjBjxrV_sWf3RPNCjViDUmYVp7JvtqEydYhZ44rqgr31kl76Gi6-n6nx--QmMACz79SCOnfiQnL_H17j1s6ou-8RX8mWvUPH0Xz3cduYS6dohl6x
@@ -47,6 +48,7 @@ export const EasaExtensionsSORA = (props: ComponentProps) => {
   const {
     getPConnect,
     height,
+    flightPathJSON,
     cd,
     vO,
     printServiceUrl,
@@ -57,6 +59,8 @@ export const EasaExtensionsSORA = (props: ComponentProps) => {
   } = props;
 
   const [flightGeography, setFlightGeography] = useState<__esri.Graphic | null>(null);
+  const [flightPath, setFlightPath] = useState<__esri.Geometry | null>(null);
+  const [layersAdded, setLayersAdded] = useState(false);
 
   const pConnect = getPConnect();
 
@@ -72,7 +76,7 @@ export const EasaExtensionsSORA = (props: ComponentProps) => {
   );
 
   // Set up the hook for population density
-  const { populationDensity, calculateDensities, intersectingLanduseClasses } =
+  const { populationDensity, calculatePopDensities, intersectingLanduseClasses } =
     useGetPopulationDensity(
       flightVolume
         ? {
@@ -112,7 +116,22 @@ export const EasaExtensionsSORA = (props: ComponentProps) => {
   }, [flightVolume, getPrintRequest]);
 
   // Set up the hook for updating Pega props
-  const updatePegaProps = useUpdatePegaProps(pConnect, populationDensity, printRequest, groundRisk);
+  const updatePegaProps = useUpdatePegaProps(
+    pConnect,
+    populationDensity,
+    printRequest,
+    flightPath,
+    groundRisk
+  );
+
+  // Set up the effect for flight geometry which comes in as a parameter
+  useEffect(() => {
+    if (flightPathJSON && layersAdded) {
+      const fg = getFlightGeography(flightPathJSON);
+      if (!fg) return;
+      setFlightGeography(fg);
+    }
+  }, [flightPathJSON, layersAdded]);
 
   // Set up the effect for extent change
   useEffect(() => {
@@ -126,10 +145,10 @@ export const EasaExtensionsSORA = (props: ComponentProps) => {
     handleExtentChange();
   });
 
-  // Call calculateDensities when flightVolume changes
+  // Call calculatePopDensities when flightVolume changes
   useEffect(() => {
-    calculateDensities();
-  }, [flightVolume, calculateDensities]);
+    calculatePopDensities();
+  }, [flightVolume, calculatePopDensities]);
 
   // call applyFlightVolume when flightVolume changes
   useEffect(() => {
@@ -164,10 +183,19 @@ export const EasaExtensionsSORA = (props: ComponentProps) => {
           <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
             <LayerList />
             <SearchTool />
-            <DrawToolbar cd={cd} onFlightGeographyChange={setFlightGeography} />
+            <DrawToolbar
+              cd={cd}
+              onFlightGeographyChange={setFlightGeography}
+              onFlightPathChange={setFlightPath}
+              flightPathJSON={flightPathJSON}
+            />
           </div>
         </div>
-        <SoraMap style={{ height, position: 'relative' }} mapProps={props} />
+        <SoraMap
+          style={{ height, position: 'relative' }}
+          mapProps={props}
+          onLayersAdded={() => setLayersAdded(true)}
+        />
         <div
           style={{
             display: 'flex',

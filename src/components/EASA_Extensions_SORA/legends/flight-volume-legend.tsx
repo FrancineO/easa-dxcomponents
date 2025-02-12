@@ -1,4 +1,4 @@
-import { Card, CardContent } from '@pega/cosmos-react-core';
+import { Alert, Card, CardContent } from '@pega/cosmos-react-core';
 import {
   adjacentAreaColor,
   groundRiskVolumeColor,
@@ -36,13 +36,36 @@ const FlightVolumeLegend = ({ flightVolume }: { flightVolume: FlightVolume | nul
     flightVolume && (
       <Card>
         <CardContent>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+          <div style={{ display: 'flex', gap: '0.5rem' }}>
+            <Alert
+              style={{
+                visibility: 'hidden'
+              }}
+              variant='urgent'
+            />
+
             <div style={{ fontWeight: 'bold' }}>Flight Volume</div>
+          </div>
+          <div
+            style={{
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '0.5rem',
+              marginTop: '0.5rem'
+            }}
+          >
             {legendItems.map(item => (
               <div
                 key={item.label}
                 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}
               >
+                <Alert
+                  style={{
+                    visibility: 'hidden'
+                  }}
+                  variant='urgent'
+                />
+
                 <div
                   style={{
                     width: '1rem',

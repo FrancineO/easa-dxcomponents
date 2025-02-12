@@ -2,6 +2,7 @@ export type MapProps = {
   latitude: number;
   longitude: number;
   zoom: number;
+  flightPathJSON: string | null;
   agolUrl: string;
   agolToken: string;
   popDensityPortalItemId: string;

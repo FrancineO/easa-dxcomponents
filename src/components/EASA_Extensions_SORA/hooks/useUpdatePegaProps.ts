@@ -5,12 +5,14 @@ const useUpdatePegaProps = (
   pConnect: any,
   populationDensity: PopulationDensity | null,
   printRequest: any,
+  flightPath: __esri.Geometry | null,
   groundRisk: 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | null
 ) => {
   const paramsRef = useRef({
     pConnect,
     populationDensity,
     printRequest,
+    flightPath,
     groundRisk
   });
   const updateInProgress = useRef(false);
@@ -20,6 +22,7 @@ const useUpdatePegaProps = (
     pConnect,
     populationDensity,
     printRequest,
+    flightPath,
     groundRisk
   };
 
@@ -27,7 +30,13 @@ const useUpdatePegaProps = (
   return useCallback(async () => {
     // TODO: might have to call D_MapOutputSavable with all null values to clear the state
     const currentParams = paramsRef.current;
-    const { populationDensity: pD, printRequest: pR, pConnect: pC, groundRisk: gR } = currentParams;
+    const {
+      populationDensity: pD,
+      printRequest: pR,
+      pConnect: pC,
+      groundRisk: gR,
+      flightPath: fP
+    } = currentParams;
     if (!pD?.maxPopDensityOperationalGroundRisk || !pD?.avgPopDensityAdjacentArea || !pR || !gR)
       return;
 
@@ -41,6 +50,8 @@ const useUpdatePegaProps = (
     console.log('populationDensity', pD);
     // eslint-disable-next-line no-console
     console.log('printRequest', pR);
+    // eslint-disable-next-line no-console
+    console.log('flightPath', fP);
 
     try {
       updateInProgress.current = true;
@@ -62,6 +73,7 @@ const useUpdatePegaProps = (
             MaxPopulationVolume: pD.maxPopDensityOperationalGroundRisk,
             AveragePopulationDensityInAdjacentArea: pD.avgPopDensityAdjacentArea,
             MapImageJSON: JSON.stringify(pR),
+            FlightGeometryJSON: fP ? JSON.stringify(fP.toJSON()) : null,
             IntrinsicGroundRisk: gR
           }
         }

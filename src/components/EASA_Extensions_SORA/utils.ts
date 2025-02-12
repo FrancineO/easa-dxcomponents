@@ -6,6 +6,8 @@ import SimpleLineSymbol from '@arcgis/core/symbols/SimpleLineSymbol';
 import SimpleFillSymbol from '@arcgis/core/symbols/SimpleFillSymbol';
 import Color from '@arcgis/core/Color';
 import SimpleMarkerSymbol from '@arcgis/core/symbols/SimpleMarkerSymbol';
+import * as geometryJsonUtils from '@arcgis/core/geometry/support/jsonUtils';
+
 import {
   adjacentAreaColor,
   flightGeographyColor,
@@ -167,4 +169,21 @@ export const addScreenShot = (getPConnect: any, view: MapView, imageMapRef: stri
         actionsApi?.updateFieldValue(imageMapRef, screenshot.dataUrl);
       });
   }
+};
+
+export const getFlightGeography = (flightGeometryString: string | null) => {
+  if (!flightGeometryString) {
+    return null;
+  }
+
+  const flightGeometry = JSON.parse(flightGeometryString);
+
+  if (!flightGeometry) {
+    return null;
+  }
+
+  return new Graphic({
+    geometry: geometryJsonUtils.fromJSON(flightGeometry),
+    symbol: getSymbol(flightGeometry.type)
+  });
 };
