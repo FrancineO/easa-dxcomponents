@@ -5,7 +5,7 @@ import {
   contingencyVolumeColor,
   flightGeographyColor,
   flightPathColor
-} from './flight-volume-symbols';
+} from '../flight-volume/flight-volume-symbols';
 import type { FlightVolume } from '../types';
 
 const FlightVolumeLegend = ({ flightVolume }: { flightVolume: FlightVolume | null }) => {
@@ -51,7 +51,7 @@ const FlightVolumeLegend = ({ flightVolume }: { flightVolume: FlightVolume | nul
                     border: `1px solid rgb(${item.color.join(',')})`
                   }}
                 />
-                <div>{item.label}</div>
+                <div style={{ width: '9rem' }}>{item.label}</div>
               </div>
             ))}
           </div>

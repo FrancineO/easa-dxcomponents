@@ -20,11 +20,9 @@ import useMapExtent from './hooks/useMapExtent';
 import SoraMap from './sora-map';
 import useApplySpatialFilter from './hooks/useApplySpatialFilter';
 import LayerList from './layer-list';
-import LandusePopDensityLegend from './landuse-pop-density-legend';
-import Geozones from './geozones';
 import useGetIntersectingGeozones from './hooks/useGetIntersectingGeozones';
-import FlightVolumeLegend from './flight-volume/flight-volume-legend';
-import PopDensityLegend from './pop-density-legend';
+
+import Legends from './legends/legends';
 
 // IRLi9g31pindstu7
 // mzFcMRqhxzPAoRJavp2MJnT86fp9vdIuHnlcY6yRjycMNMkD4n52uRAbbfniWAIwcJvOrFZPH8C_SP83gjBjxrV_sWf3RPNCjViDUmYVp7JvtqEydYhZ44rqgr31kl76Gi6-n6nx--QmMACz79SCOnfiQnL_H17j1s6ou-8RX8mWvUPH0Xz3cduYS6dohl6x
@@ -48,7 +46,6 @@ import PopDensityLegend from './pop-density-legend';
 export const EasaExtensionsSORA = (props: ComponentProps) => {
   const {
     getPConnect,
-    // heading,
     height,
     cd,
     vO,
@@ -164,7 +161,6 @@ export const EasaExtensionsSORA = (props: ComponentProps) => {
             flexDirection: 'column'
           }}
         >
-          {/* <Text variant='h2'>{heading}</Text> */}
           <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
             <LayerList />
             <SearchTool />
@@ -199,12 +195,12 @@ export const EasaExtensionsSORA = (props: ComponentProps) => {
               }
             ]}
           />
-          <div style={{ display: 'flex', gap: '2rem' }}>
-            <FlightVolumeLegend flightVolume={flightVolume} />
-            <PopDensityLegend />
-            <LandusePopDensityLegend intersectingLanduseClasses={intersectingLanduseClasses} />
-            <Geozones intersectingGeozones={intersectingGeozones} />
-          </div>
+          <Legends
+            style={{ display: 'flex', flexWrap: 'wrap', gap: '2rem', maxWidth: '70%' }}
+            flightVolume={flightVolume}
+            intersectingGeozones={intersectingGeozones}
+            intersectingLanduseClasses={intersectingLanduseClasses}
+          />
         </div>
       </CardContent>
     </Card>

@@ -11,13 +11,6 @@
   "subtype": "FORM",
   "properties": [
     {
-      "name": "heading",
-      "label": "Heading",
-      "format": "TEXT",
-      "required": true,
-      "defaultValue": "Map"
-    },
-    {
       "name": "latitude",
       "label": "Latitude",
       "format": "NUMBER",
@@ -200,7 +193,6 @@
     }
   ],
   "defaultConfig": {
-    "heading": "Flight Plan",
     "latitude": 38.7223,
     "longitude": -9.1393,
     "zoom": 8,

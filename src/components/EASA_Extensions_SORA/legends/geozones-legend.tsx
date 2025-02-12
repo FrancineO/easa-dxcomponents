@@ -1,7 +1,7 @@
 import { Alert, Card, CardContent, Text } from '@pega/cosmos-react-core';
-import { geozoneRenderer, geozones } from './renderers';
+import { geozoneRenderer, geozones } from '../renderers';
 
-const Geozones = ({ intersectingGeozones }: { intersectingGeozones: __esri.Graphic[] }) => {
+const GeozonesLegend = ({ intersectingGeozones }: { intersectingGeozones: __esri.Graphic[] }) => {
   return (
     <Card>
       <CardContent>
@@ -32,10 +32,10 @@ const Geozones = ({ intersectingGeozones }: { intersectingGeozones: __esri.Graph
               />
               <div
                 style={{
-                  width: '20px',
-                  height: '20px',
-                  minWidth: '20px',
-                  minHeight: '20px',
+                  width: '1rem',
+                  height: '1rem',
+                  minWidth: '1rem',
+                  minHeight: '1rem',
                   backgroundColor: `rgba(${zone.color[0]},${zone.color[1]},${zone.color[2]},${zone.color[3] / 255})`,
                   border: `1px solid rgba(${zone.color[0]},${zone.color[1]},${zone.color[2]},${zone.color[3] / 255})`
                 }}
@@ -49,4 +49,4 @@ const Geozones = ({ intersectingGeozones }: { intersectingGeozones: __esri.Graph
   );
 };
 
-export default Geozones;
+export default GeozonesLegend;

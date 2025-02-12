@@ -1,5 +1,5 @@
 import { Card, CardContent, Text, Alert } from '@pega/cosmos-react-core';
-import { landusePopDensityLookup, landUseLabels, landuseColors } from './renderers';
+import { landusePopDensityLookup, landUseLabels, landuseColors } from '../renderers';
 
 const LandusePopDensityLegend = ({
   intersectingLanduseClasses
@@ -94,13 +94,12 @@ const LandusePopDensityLegend = ({
                 />
                 <div
                   style={{
-                    width: '20px',
-                    height: '20px',
-                    minWidth: '20px',
-                    minHeight: '20px',
+                    width: '1rem',
+                    height: '1rem',
+                    minWidth: '1rem',
+                    minHeight: '1rem',
                     backgroundColor: `rgba(${group.color.join(',')})`,
-                    border: `1px solid rgba(${group.color.join(',')})`,
-                    marginRight: '0.5rem'
+                    border: `1px solid rgba(${group.color.join(',')})`
                   }}
                 />
                 {
@@ -123,13 +122,18 @@ const LandusePopDensityLegend = ({
                       whiteSpace: 'nowrap',
                       overflow: 'hidden',
                       textOverflow: 'ellipsis',
-                      maxWidth: '15rem'
+                      width: '15rem'
                     }}
                   >{`${group.landuses
                     .map(l => l.label)
                     .sort((a, b) => a.localeCompare(b))
                     .join(' / ')}`}</Text>
-                  <Text>{`${group.maxDensity >= 1000 ? `${group.maxDensity / 1000}K` : group.maxDensity} per km²`}</Text>
+                  <Text
+                    style={{
+                      width: '6rem',
+                      textAlign: 'right'
+                    }}
+                  >{`${group.maxDensity >= 1000 ? `${group.maxDensity / 1000}K` : group.maxDensity} per km²`}</Text>
                 </div>
               </div>
             ))}
