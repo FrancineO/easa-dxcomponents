@@ -384,22 +384,22 @@ export const geozones = [
   {
     value: 'restricted',
     label: 'Restricted',
-    color: [255, 255, 0, 150]
+    color: [239, 210, 140, 255]
   },
   {
     value: 'open',
     label: 'Open',
-    color: [0, 255, 0, 150]
+    color: [151, 225, 150, 255]
   },
   {
     value: 'U-space',
     label: 'U-space',
-    color: [0, 0, 255, 150]
+    color: [149, 203, 233, 255]
   },
   {
     value: 'prohibited',
     label: 'Prohibited',
-    color: [255, 0, 0, 150]
+    color: [233, 149, 144, 255]
   }
 ];
 

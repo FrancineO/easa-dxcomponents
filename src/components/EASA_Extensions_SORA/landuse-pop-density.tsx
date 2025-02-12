@@ -55,7 +55,7 @@ const LandusePopDensity = ({
             }}
             variant='urgent'
           />
-          <Text variant='h3'>Land Use Population Density</Text>
+          <Text variant='h3'>Population Density by Landuse</Text>
         </div>
         <div
           style={{

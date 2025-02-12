@@ -6,13 +6,15 @@ import SimpleLineSymbol from '@arcgis/core/symbols/SimpleLineSymbol';
 import SimpleFillSymbol from '@arcgis/core/symbols/SimpleFillSymbol';
 import Color from '@arcgis/core/Color';
 import SimpleMarkerSymbol from '@arcgis/core/symbols/SimpleMarkerSymbol';
-
-const blue = '#3674b4';
-const green = '#92ce5a';
+import {
+  adjacentAreaColor,
+  flightGeographyColor,
+  flightPathColor
+} from './flight-volume/flight-volume-symbols';
 
 export const getPolylineSymbol = () => {
   return new SimpleLineSymbol({
-    color: new Color(blue),
+    color: new Color(flightPathColor),
     width: 2,
     cap: 'round',
     join: 'round'
@@ -20,14 +22,14 @@ export const getPolylineSymbol = () => {
 };
 
 export const getFillSymbol = (withOutline: boolean = true) => {
-  const color = new Color(green);
+  const color = new Color(flightGeographyColor);
   color.a = 0.5;
   return new SimpleFillSymbol({
     color,
     style: 'solid',
     outline: withOutline
       ? {
-          color: new Color(blue),
+          color: new Color(adjacentAreaColor),
           width: 2,
           cap: 'round',
           join: 'round'
@@ -42,7 +44,7 @@ export const getPointSymbol = () => {
     size: 10,
     style: 'circle',
     outline: {
-      color: new Color(blue),
+      color: new Color(adjacentAreaColor),
       width: 2
     }
   });

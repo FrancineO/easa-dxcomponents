@@ -1,7 +1,7 @@
 import {
   withConfiguration,
   Card,
-  Text,
+  // Text,
   CardContent,
   FieldValueList
 } from '@pega/cosmos-react-core';
@@ -23,6 +23,7 @@ import LayerList from './layer-list';
 import LandusePopDensity from './landuse-pop-density';
 import Geozones from './geozones';
 import useGetIntersectingGeozones from './hooks/useGetIntersectingGeozones';
+import FlightVolumeLegend from './flight-volume/flight-volume-legend';
 
 // IRLi9g31pindstu7
 // mzFcMRqhxzPAoRJavp2MJnT86fp9vdIuHnlcY6yRjycMNMkD4n52uRAbbfniWAIwcJvOrFZPH8C_SP83gjBjxrV_sWf3RPNCjViDUmYVp7JvtqEydYhZ44rqgr31kl76Gi6-n6nx--QmMACz79SCOnfiQnL_H17j1s6ou-8RX8mWvUPH0Xz3cduYS6dohl6x
@@ -46,7 +47,7 @@ import useGetIntersectingGeozones from './hooks/useGetIntersectingGeozones';
 export const EasaExtensionsSORA = (props: ComponentProps) => {
   const {
     getPConnect,
-    heading,
+    // heading,
     height,
     cd,
     vO,
@@ -103,6 +104,7 @@ export const EasaExtensionsSORA = (props: ComponentProps) => {
     printDpi
   );
 
+  // Set up the hook for applying spatial filter
   const { applySpatialFilter } = useApplySpatialFilter(flightVolume);
 
   // Set up the callback for extent change
@@ -110,6 +112,9 @@ export const EasaExtensionsSORA = (props: ComponentProps) => {
     if (!flightVolume) return;
     getPrintRequest();
   }, [flightVolume, getPrintRequest]);
+
+  // Set up the hook for updating Pega props
+  const updatePegaProps = useUpdatePegaProps(pConnect, populationDensity, printRequest, groundRisk);
 
   // Set up the effect for extent change
   useEffect(() => {
@@ -143,26 +148,23 @@ export const EasaExtensionsSORA = (props: ComponentProps) => {
     queryIntersectingGeozones();
   }, [flightVolume, queryIntersectingGeozones]);
 
-  // Set up the hook for updating Pega props
-  const updatePegaProps = useUpdatePegaProps(pConnect, populationDensity, printRequest, groundRisk);
-
   // Call updatePegaProps when density values change
   useEffect(() => {
     updatePegaProps();
   }, [populationDensity, groundRisk, printRequest, updatePegaProps]);
 
   return (
-    <Card style={{ height }}>
+    <Card style={{ height: '100%' }}>
       <CardContent style={{ height: '100%' }}>
         <div style={{ height: '10%', display: 'flex', justifyContent: 'space-between' }}>
-          <Text variant='h2'>{heading}</Text>
+          {/* <Text variant='h2'>{heading}</Text> */}
           <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
             <LayerList />
             <SearchTool />
             <DrawToolbar cd={cd} onFlightGeographyChange={setFlightGeography} />
           </div>
         </div>
-        <SoraMap style={{ height: '70%', position: 'relative' }} mapProps={props} />
+        <SoraMap style={{ height, position: 'relative' }} mapProps={props} />
         <div
           style={{
             display: 'flex',
@@ -179,11 +181,11 @@ export const EasaExtensionsSORA = (props: ComponentProps) => {
             fields={[
               {
                 name: 'Max. population in op. volume + ground risk buffer',
-                value: populationDensity?.maxPopDensityAdjacentArea
+                value: populationDensity?.maxPopDensityOperationalGroundRisk
               },
               {
                 name: 'Average population density in adjacent area',
-                value: populationDensity?.avgOperationalGroundRiskPopDensity
+                value: populationDensity?.avgPopDensityAdjacentArea
               },
               {
                 name: 'Intrinsic ground risk',
@@ -192,6 +194,7 @@ export const EasaExtensionsSORA = (props: ComponentProps) => {
             ]}
           />
           <div style={{ display: 'flex', gap: '2rem' }}>
+            <FlightVolumeLegend flightVolume={flightVolume} />
             <LandusePopDensity intersectingLanduseClasses={intersectingLanduseClasses} />
             <Geozones intersectingGeozones={intersectingGeozones} />
           </div>

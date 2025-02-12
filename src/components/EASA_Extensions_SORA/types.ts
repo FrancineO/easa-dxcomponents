@@ -51,8 +51,8 @@ export type FlightVolume = {
 };
 
 export type PopulationDensity = {
-  maxPopDensityAdjacentArea: number | null;
-  avgOperationalGroundRiskPopDensity: number | null;
+  maxPopDensityOperationalGroundRisk: number | null;
+  avgPopDensityAdjacentArea: number | null;
 };
 
 export enum LayerGroupType {

@@ -1,7 +1,11 @@
 import Graphic from '@arcgis/core/Graphic';
 import * as geometryEngine from '@arcgis/core/geometry/geometryEngine';
-import SimpleFillSymbol from '@arcgis/core/symbols/SimpleFillSymbol';
 import type { FlightVolumeParams } from '../types';
+import {
+  adjacentAreaSymbol,
+  groundRiskVolumeSymbol,
+  contingencyVolumeSymbol
+} from './flight-volume-symbols';
 
 const g = 9.81;
 
@@ -31,10 +35,7 @@ export const getContingencyVolume = ({
 
   return new Graphic({
     geometry: sCVPolygon,
-    symbol: new SimpleFillSymbol({
-      color: 'rgba(238, 191, 82, 0.5)',
-      outline: { color: 'rgb(238, 191, 82)', width: 2 }
-    })
+    symbol: contingencyVolumeSymbol
   });
 };
 
@@ -89,10 +90,7 @@ export const getGroundRiskVolume = (
 
   return new Graphic({
     geometry: grPolygon,
-    symbol: new SimpleFillSymbol({
-      color: 'rgba(181, 45, 62, 0.5)',
-      outline: { color: 'rgb(181, 45, 62)', width: 2 }
-    })
+    symbol: groundRiskVolumeSymbol
   });
 };
 
@@ -116,9 +114,6 @@ export const getAdjacentArea = (
 
   return new Graphic({
     geometry: aa,
-    symbol: new SimpleFillSymbol({
-      color: 'rgba(98,128,177, 0.5)',
-      outline: { color: 'rgb(98,128,177)', width: 2 }
-    })
+    symbol: adjacentAreaSymbol
   });
 };

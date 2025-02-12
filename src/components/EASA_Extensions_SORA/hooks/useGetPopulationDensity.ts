@@ -3,6 +3,7 @@ import View from '../View';
 import * as geometryEngine from '@arcgis/core/geometry/geometryEngine';
 import type { FlightVolume, PopulationDensity } from '../types';
 import { landusePopDensityLookup } from '../renderers';
+import _ from 'lodash';
 
 export const useGetPopulationDensity = (flightVolume: FlightVolume | null) => {
   const [populationDensity, setPopulationDensity] = useState<PopulationDensity | null>(null);
@@ -74,53 +75,48 @@ export const useGetPopulationDensity = (flightVolume: FlightVolume | null) => {
     const currentFlightVolume = flightVolumeRef.current;
 
     const popDensity: PopulationDensity = {
-      maxPopDensityAdjacentArea: null,
-      avgOperationalGroundRiskPopDensity: null
+      maxPopDensityOperationalGroundRisk: null,
+      avgPopDensityAdjacentArea: null
     };
 
     // Get the max density for the adjacent area
-    const maxDensity = await getMaxDensity(
+    const opAndGr = getOperationalAndGroundRiskGeometry();
+    const maxDensity = await getMaxDensity(opAndGr as __esri.Polygon, layer);
+    popDensity.maxPopDensityOperationalGroundRisk = maxDensity;
+
+    // Get the average density for the adjacent area
+    const avgDensity = await getAvgDensity(
       currentFlightVolume?.adjacentArea?.geometry as __esri.Polygon,
       layer
     );
-    popDensity.maxPopDensityAdjacentArea = maxDensity;
-
-    // Calculate operational and ground risk geometry
-    const opAndGr = getOperationalAndGroundRiskGeometry();
-
-    const avgDensity = await getAvgDensity(opAndGr as __esri.Polygon, layer);
-    popDensity.avgOperationalGroundRiskPopDensity = avgDensity;
+    popDensity.avgPopDensityAdjacentArea = avgDensity;
 
     return popDensity;
   }, []);
 
-  const getLandusePopDensity = useCallback(async (layer: __esri.ImageryLayer) => {
-    setIntersectingLanduseClasses([]);
-    const currentFlightVolume = flightVolumeRef.current;
+  const getLanduseMaxPopDensityOperationalGroundrisk = useCallback(
+    async (layer: __esri.ImageryLayer) => {
+      setIntersectingLanduseClasses([]);
 
-    // get the max population density in the adjacent area
-    const landuseHistograms = await layer.computeHistograms({
-      geometry: currentFlightVolume?.adjacentArea?.geometry as __esri.Polygon
-    });
-    const intersectedLanduseClasses: number[] = [];
-    const counts = landuseHistograms.histograms?.[0]?.counts;
-    if (counts) {
-      counts.forEach((count: number, landuseClass: number) => {
-        if (count > 0) {
-          intersectedLanduseClasses.push(landuseClass);
-        }
+      // get the max population density in the Operational Ground Risk area
+      const opAndGr = getOperationalAndGroundRiskGeometry();
+      const landuseHistograms = await layer.computeHistograms({
+        geometry: opAndGr as __esri.Polygon
       });
-    }
-    setIntersectingLanduseClasses(intersectedLanduseClasses);
-    const maxPopDensity = Math.max(
-      ...intersectedLanduseClasses.map(index => landusePopDensityLookup[index])
-    );
-
-    // TODO: get the average population density in the Operational Ground Risk area.
-    // flightGeography, contingencyVolume, groundRiskVolume
-
-    return { maxPopDensityAdjacentArea: maxPopDensity };
-  }, []);
+      const intersectedLanduseClasses: number[] = [];
+      const counts = landuseHistograms.histograms?.[0]?.counts;
+      if (counts) {
+        counts.forEach((count: number, landuseClass: number) => {
+          if (count > 0) {
+            intersectedLanduseClasses.push(landuseClass);
+          }
+        });
+      }
+      setIntersectingLanduseClasses(intersectedLanduseClasses);
+      return Math.max(...intersectedLanduseClasses.map(index => landusePopDensityLookup[index]));
+    },
+    []
+  );
 
   const calculateDensities = useCallback(async () => {
     // Use the ref instead of the params dependency
@@ -156,13 +152,28 @@ export const useGetPopulationDensity = (flightVolume: FlightVolume | null) => {
     try {
       calculationInProgress.current = true;
 
-      const landusePopDensity = await getLandusePopDensity(landuseLayer);
       const popDensity = await getPopulationDensity(popDensityLayer);
 
-      popDensity.maxPopDensityAdjacentArea = Math.max(
-        popDensity.maxPopDensityAdjacentArea ?? 0,
-        landusePopDensity.maxPopDensityAdjacentArea ?? 0
+      const maxPopDensityLanduseOperationalGroundRisk =
+        await getLanduseMaxPopDensityOperationalGroundrisk(landuseLayer);
+
+      popDensity.maxPopDensityOperationalGroundRisk = Math.max(
+        popDensity.maxPopDensityOperationalGroundRisk ?? 0,
+        maxPopDensityLanduseOperationalGroundRisk ?? 0
       );
+
+      // TODO: calculate the average population density for the adjacent area
+      const avgPopDensityLanduseAdjacentArea = await getAvgDensity(
+        adjacentArea.geometry as __esri.Polygon,
+        landuseLayer
+      );
+
+      if (avgPopDensityLanduseAdjacentArea !== 0) {
+        const combined =
+          (popDensity.avgPopDensityAdjacentArea ?? 0) + (avgPopDensityLanduseAdjacentArea ?? 0);
+
+        popDensity.avgPopDensityAdjacentArea = combined !== 0 ? _.round(combined / 2) : 0;
+      }
 
       setPopulationDensity(popDensity);
     } catch (error) {

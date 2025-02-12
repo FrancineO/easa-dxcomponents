@@ -5,7 +5,7 @@ import {
   getAdjacentArea,
   getContingencyVolume,
   getGroundRiskVolume
-} from './flight-volume-calculations';
+} from '../flight-volume/flight-volume-calculations';
 import type { FlightVolume, FlightVolumeParams } from '../types';
 
 const useCalculateFlightVolume = (params: FlightVolumeParams) => {

@@ -28,7 +28,7 @@ const useUpdatePegaProps = (
     // TODO: might have to call D_MapOutputSavable with all null values to clear the state
     const currentParams = paramsRef.current;
     const { populationDensity: pD, printRequest: pR, pConnect: pC, groundRisk: gR } = currentParams;
-    if (!pD?.maxPopDensityAdjacentArea || !pD?.avgOperationalGroundRiskPopDensity || !pR || !gR)
+    if (!pD?.maxPopDensityOperationalGroundRisk || !pD?.avgPopDensityAdjacentArea || !pR || !gR)
       return;
 
     // Prevent multiple simultaneous updates
@@ -59,8 +59,8 @@ const useUpdatePegaProps = (
         body: {
           data: {
             pyGUID: caseId,
-            MaxPopulationVolume: pD.maxPopDensityAdjacentArea,
-            AveragePopulationDensityInAdjacentArea: pD.avgOperationalGroundRiskPopDensity,
+            MaxPopulationVolume: pD.maxPopDensityOperationalGroundRisk,
+            AveragePopulationDensityInAdjacentArea: pD.avgPopDensityAdjacentArea,
             MapImageJSON: JSON.stringify(pR),
             IntrinsicGroundRisk: gR
           }

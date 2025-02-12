@@ -1,9 +1,10 @@
 import { useEffect, type FC, useCallback, useState } from 'react';
-import View from './View';
+import View from '../View';
 import GraphicsLayer from '@arcgis/core/layers/GraphicsLayer';
 import * as geometryEngine from '@arcgis/core/geometry/geometryEngine';
 import Graphic from '@arcgis/core/Graphic';
-import SimpleFillSymbol from '@arcgis/core/symbols/SimpleFillSymbol';
+import { adjacentAreaSymbol, groundRiskVolumeSymbol } from './flight-volume-symbols';
+import { contingencyVolumeSymbol } from './flight-volume-symbols';
 
 /**
  * Interface for flight volume calculation parameters
@@ -105,10 +106,7 @@ const FlightVolumeCalculator: FC<Props> = props => {
 
     return new Graphic({
       geometry: sCVPolygon,
-      symbol: new SimpleFillSymbol({
-        color: 'rgba(238, 191, 82, 0.5)',
-        outline: { color: 'rgb(238, 191, 82)', width: 2 }
-      })
+      symbol: contingencyVolumeSymbol
     });
   }, [flightGeography, sGPS, sPos, sK, vO, tR, tP, parachute, rollAngle, multirotor]);
 
@@ -145,10 +143,7 @@ const FlightVolumeCalculator: FC<Props> = props => {
 
       return new Graphic({
         geometry: grPolygon,
-        symbol: new SimpleFillSymbol({
-          color: 'rgba(181, 45, 62, 0.5)',
-          outline: { color: 'rgb(181, 45, 62)', width: 2 }
-        })
+        symbol: groundRiskVolumeSymbol
       });
     },
     [
@@ -187,10 +182,7 @@ const FlightVolumeCalculator: FC<Props> = props => {
 
       return new Graphic({
         geometry: aa,
-        symbol: new SimpleFillSymbol({
-          color: 'rgba(98,128,177, 0.5)',
-          outline: { color: 'rgb(98,128,177)', width: 2 }
-        })
+        symbol: adjacentAreaSymbol
       });
     },
     [flightGeography, vO]

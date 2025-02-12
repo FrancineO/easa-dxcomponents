@@ -105,7 +105,7 @@ const useGetIntrinsicGroundRisk = (params: {
       return;
     }
 
-    const risk = calculateGroundRisk(populationDensity.avgOperationalGroundRiskPopDensity, cd, vO);
+    const risk = calculateGroundRisk(populationDensity.avgPopDensityAdjacentArea, cd, vO);
 
     setGroundRisk(risk);
   }, []);
