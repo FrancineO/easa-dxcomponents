@@ -163,8 +163,9 @@ export const EasaExtensionsSORA = (props: ComponentProps) => {
   }, [populationDensity, cd, vO, calculateIntrinsicGroundRisk]);
 
   useEffect(() => {
+    if (!layersAdded) return;
     queryIntersectingGeozones();
-  }, [flightVolume, queryIntersectingGeozones]);
+  }, [flightVolume, layersAdded, queryIntersectingGeozones]);
 
   // Call updatePegaProps when density values change
   useEffect(() => {
