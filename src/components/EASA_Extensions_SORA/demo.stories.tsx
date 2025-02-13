@@ -178,7 +178,7 @@ export const Default: Story = {
     cL: 0.5,
     gliding: true,
     agolToken:
-      'mzFcMRqhxzPAoRJavp2MJnT86fp9vdIuHnlcY6yRjycMNMkD4n52uRAbbfniWAIwKiNzdnbm2oAVukqobdLQLOLnG_hh-AkRR3yI8Z17EQ_5whJu4wOBI4wKx3s56FtBivWQtP32UwFauQSpqxWXg73ECgEGtgW3pY61BsurnrE.',
+      'mzFcMRqhxzPAoRJavp2MJnT86fp9vdIuHnlcY6yRjycMNMkD4n52uRAbbfniWAIwF7xC9LSoqABJqPl9Q31E_gpA6DFwfyAZreIzmxYXs3AC2UzS8P57XC89gaBRnCMm3zsT6OphM7-kRsQ5aY09VUl_x7V_OpqRzcj8b1Z3N3M.',
     agolUrl: 'https://easa.maps.arcgis.com/',
     printServiceUrl:
       'https://utility.arcgisonline.com/arcgis/rest/services/Utilities/PrintingTools/GPServer/Export%20Web%20Map%20Task',
