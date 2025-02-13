@@ -156,6 +156,9 @@ const SoraMap = (props: Props) => {
   useEffect(() => {
     if (!agolToken) return;
     createMap();
+  }, [createMap, agolToken]);
+
+  useEffect(() => {
     return () => {
       // eslint-disable-next-line no-console
       console.log('destroying view');
@@ -163,7 +166,7 @@ const SoraMap = (props: Props) => {
       // eslint-disable-next-line no-console
       console.log('view destroyed');
     };
-  }, [createMap, agolToken]);
+  }, []);
 
   return (
     <>
