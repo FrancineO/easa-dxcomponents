@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useRef } from 'react';
-import StyledSORAMap from './styles';
 import type ImageryLayer from '@arcgis/core/layers/ImageryLayer';
 import { LayerId, type MapProps } from './types';
 import View from './View';
@@ -170,7 +169,7 @@ const SoraMap = (props: Props) => {
     <>
       {agolToken ? (
         <div style={style}>
-          <StyledSORAMap ref={mapDiv} />
+          <div style={{ width: '100%', height: '100%' }} ref={mapDiv} />
         </div>
       ) : (
         <Text>No agol token</Text>
