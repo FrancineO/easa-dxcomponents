@@ -1,5 +1,5 @@
 import { useEffect, type FC, useCallback, useState } from 'react';
-import View from '../View';
+import { getView } from '../View';
 import GraphicsLayer from '@arcgis/core/layers/GraphicsLayer';
 import * as geometryEngine from '@arcgis/core/geometry/geometryEngine';
 import Graphic from '@arcgis/core/Graphic';
@@ -189,10 +189,10 @@ const FlightVolumeCalculator: FC<Props> = props => {
   );
 
   useEffect(() => {
-    let layer: GraphicsLayer = View.map?.findLayerById('flight-volumes') as GraphicsLayer;
+    let layer: GraphicsLayer = getView().map?.findLayerById('flight-volumes') as GraphicsLayer;
     if (!layer) {
       layer = new GraphicsLayer({ id: 'flight-volumes' });
-      View.map?.add(layer);
+      getView().map?.add(layer);
     }
 
     if (flightGeography) {

@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Popover, Text, throttle } from '@pega/cosmos-react-core';
 import * as reactiveUtils from '@arcgis/core/core/reactiveUtils';
-import View from './View';
+import { getView } from './View';
 
 /**
  * VertexInfo component
@@ -30,7 +30,7 @@ const VertexInfo = () => {
   const handleMouseMove = useCallback(async (mp: { x: number; y: number } | null) => {
     if (!mp) return;
 
-    const vertexLv = View.allLayerViews.find(lv => lv.layer.title === 'SVM Internal');
+    const vertexLv = getView().allLayerViews.find(lv => lv.layer.title === 'SVM Internal');
 
     if (!vertexLv) {
       setMousePoint(null);
@@ -49,7 +49,7 @@ const VertexInfo = () => {
       setInfoTextElement(<Text style={{ fontSize: '10px' }}>Drag to move vertex</Text>);
     }
 
-    const result = await View.hitTest(mp, { include: [vertexLv.layer] });
+    const result = await getView().hitTest(mp, { include: [vertexLv.layer] });
     if (result.results.length > 0) {
       const graphicHit = result.results[0] as __esri.GraphicHit;
       const g = graphicHit.graphic;
@@ -65,16 +65,16 @@ const VertexInfo = () => {
     let mounted = true;
 
     reactiveUtils
-      .whenOnce(() => View.ready)
+      .whenOnce(() => getView().ready)
       .then(() => {
         if (!mounted) return;
 
         const throttledSetMouseMove = throttle((event: __esri.ViewPointerMoveEvent) => {
-          if (!mounted || !View?.ready) return;
+          if (!mounted || !getView().ready) return;
           handleMouseMove({ x: event.x, y: event.y });
         }, 100);
 
-        const handle = reactiveUtils.on(() => View, 'pointer-move', throttledSetMouseMove);
+        const handle = reactiveUtils.on(() => getView(), 'pointer-move', throttledSetMouseMove);
 
         return () => {
           mounted = false;

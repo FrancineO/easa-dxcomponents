@@ -1,6 +1,6 @@
 import { useMemo, useEffect, useState } from 'react';
 import { Card, CardContent, Switch, Text } from '@pega/cosmos-react-core';
-import View from './View';
+import { getView } from './View';
 import { LayerGroupType, LayerId } from './types';
 import * as reactiveUtils from '@arcgis/core/core/reactiveUtils';
 
@@ -36,13 +36,13 @@ const LayerList = (props: Props) => {
     let mounted = true;
 
     reactiveUtils
-      .whenOnce(() => View.ready && View.map)
+      .whenOnce(() => getView().ready && getView().map)
       .then(() => {
         if (!mounted) return;
 
         layerGroups.forEach(layerGroup => {
           layerGroup.ids.forEach(id => {
-            const layer = View.map?.findLayerById(id);
+            const layer = getView().map?.findLayerById(id);
             if (layer) {
               layer.visible = visibilityState[layerGroup.type];
             }
@@ -63,7 +63,7 @@ const LayerList = (props: Props) => {
     setVisibilityState(prev => ({ ...prev, [layerGroupType]: newVisibility }));
 
     layerGroup.ids.forEach(id => {
-      const layer = View.map?.findLayerById(id);
+      const layer = getView().map?.findLayerById(id);
       if (layer) {
         layer.visible = newVisibility;
       }

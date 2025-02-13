@@ -1,5 +1,5 @@
 import { useCallback, useState, useRef } from 'react';
-import View from '../View';
+import { getView } from '../View';
 import * as geometryEngine from '@arcgis/core/geometry/geometryEngine';
 import type { FlightVolume, PopulationDensity } from '../types';
 import { landusePopDensityLookup } from '../renderers';
@@ -17,10 +17,10 @@ export const useGetPopulationDensity = (flightVolume: FlightVolume | null) => {
   const getMaxDensity = useCallback(
     async (geometry: __esri.Polygon, layer: __esri.ImageryLayer) => {
       const pixelSize = {
-        x: View.resolution,
-        y: View.resolution,
+        x: getView().resolution,
+        y: getView().resolution,
         spatialReference: {
-          wkid: View.spatialReference.wkid
+          wkid: getView().spatialReference.wkid
         }
       };
       const adjacentStats = await layer.computeStatisticsHistograms({
@@ -39,10 +39,10 @@ export const useGetPopulationDensity = (flightVolume: FlightVolume | null) => {
   const getAvgDensity = useCallback(
     async (geometry: __esri.Polygon, layer: __esri.ImageryLayer) => {
       const pixelSize = {
-        x: View.resolution,
-        y: View.resolution,
+        x: getView().resolution,
+        y: getView().resolution,
         spatialReference: {
-          wkid: View.spatialReference.wkid
+          wkid: getView().spatialReference.wkid
         }
       };
 
@@ -139,11 +139,11 @@ export const useGetPopulationDensity = (flightVolume: FlightVolume | null) => {
       return;
     }
 
-    const popDensityLayer = View.map.layers.find(
+    const popDensityLayer = getView().map.layers.find(
       layer => layer.id === 'PopulationDensity'
     ) as __esri.ImageryLayer;
 
-    const landuseLayer = View.map.layers.find(
+    const landuseLayer = getView().map.layers.find(
       layer => layer.id === 'Landuse'
     ) as __esri.ImageryLayer;
 

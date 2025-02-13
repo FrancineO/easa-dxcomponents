@@ -3,7 +3,7 @@ import { Button } from '@pega/cosmos-react-core';
 import { CardContent } from '@pega/cosmos-react-core';
 import { Card } from '@pega/cosmos-react-core';
 import { useEffect, useState, useCallback } from 'react';
-import View from './View';
+import { getView } from './View';
 import SketchViewModel from '@arcgis/core/widgets/Sketch/SketchViewModel';
 import GraphicsLayer from '@arcgis/core/layers/GraphicsLayer';
 import Graphic from '@arcgis/core/Graphic';
@@ -39,29 +39,6 @@ type Props = {
 
 const bufferGraphicsLayerId = 'easa-sora-tool-buffer-graphics';
 
-const sketchViewModel = new SketchViewModel({
-  view: View,
-  layer: new GraphicsLayer(),
-  updateOnGraphicClick: true,
-  polylineSymbol: getSymbol('polyline') as SimpleLineSymbol,
-  polygonSymbol: getSymbol('polygon') as SimpleFillSymbol,
-  pointSymbol: getSymbol('point') as SimpleMarkerSymbol,
-  activeFillSymbol: getSymbol('polygon') as SimpleFillSymbol,
-
-  defaultUpdateOptions: {
-    tool: 'reshape',
-    reshapeOptions: {
-      vertexOperation: 'move',
-      shapeOperation: 'none'
-    },
-    highlightOptions: {
-      enabled: false
-    },
-    enableRotation: false,
-    enableScaling: false
-  }
-});
-
 /**
  * DrawToolbar component
  * @param props - The props for the component
@@ -75,12 +52,12 @@ export const DrawToolbar = (props: Props) => {
   const [handleUpdate, setHandleUpdate] = useState<any>();
   const [graphic, setGraphic] = useState<Graphic | null>(null);
   const [hasGraphic, setHasGraphic] = useState(false);
-
+  const [sketchViewModel, setSketchViewModel] = useState<SketchViewModel | null>(null);
   const getBufferLayer = useCallback(() => {
-    let l = View.map?.findLayerById(bufferGraphicsLayerId) as GraphicsLayer;
+    let l = getView().map?.findLayerById(bufferGraphicsLayerId) as GraphicsLayer;
     if (!l) {
       l = new GraphicsLayer({ id: bufferGraphicsLayerId });
-      View.map?.add(l);
+      getView().map?.add(l);
     }
     return l;
   }, []);
@@ -89,7 +66,7 @@ export const DrawToolbar = (props: Props) => {
     (event: any) => {
       if (event.state === 'start') {
         setGraphic(null);
-        sketchViewModel.layer.removeAll();
+        sketchViewModel?.layer.removeAll();
         const l = getBufferLayer();
         l?.removeAll();
       }
@@ -98,36 +75,39 @@ export const DrawToolbar = (props: Props) => {
         setHasGraphic(true);
       }
     },
-    [getBufferLayer]
+    [getBufferLayer, sketchViewModel]
   );
 
-  const onUpdate = useCallback((event: __esri.SketchUpdateEvent) => {
-    if (
-      event.state === 'complete' ||
-      (event.state === 'active' && event.toolEventInfo.type === 'vertex-remove')
-    ) {
-      if (event.aborted) return;
+  const onUpdate = useCallback(
+    (event: __esri.SketchUpdateEvent) => {
+      if (
+        event.state === 'complete' ||
+        (event.state === 'active' && event.toolEventInfo.type === 'vertex-remove')
+      ) {
+        if (event.aborted) return;
 
-      // TODO: nasty hack to remove old graphics. maybe figure out a better approach
-      const graphicsToRemove = sketchViewModel?.layer?.graphics?.filter(
-        g => g !== event.graphics[0]
-      );
-      if (graphicsToRemove) {
-        graphicsToRemove.forEach(g => sketchViewModel.layer.remove(g));
+        // TODO: nasty hack to remove old graphics. maybe figure out a better approach
+        const graphicsToRemove = sketchViewModel?.layer?.graphics?.filter(
+          g => g !== event.graphics[0]
+        );
+        if (graphicsToRemove) {
+          graphicsToRemove.forEach(g => sketchViewModel?.layer.remove(g));
+        }
+
+        const g = new Graphic({
+          geometry: event.graphics[0].geometry,
+          symbol: event.graphics[0].symbol
+        });
+        setGraphic(g);
+        setHasGraphic(true);
+        sketchViewModel?.update([event.graphics[0]]);
       }
-
-      const g = new Graphic({
-        geometry: event.graphics[0].geometry,
-        symbol: event.graphics[0].symbol
-      });
-      setGraphic(g);
-      setHasGraphic(true);
-      sketchViewModel.update([event.graphics[0]]);
-    }
-    if (event.state === 'active' && event.toolEventInfo.type === 'reshape-stop') {
-      sketchViewModel.complete();
-    }
-  }, []);
+      if (event.state === 'active' && event.toolEventInfo.type === 'reshape-stop') {
+        sketchViewModel?.complete();
+      }
+    },
+    [sketchViewModel]
+  );
 
   useEffect(() => {
     if (handleCreate || handleUpdate) {
@@ -139,24 +119,33 @@ export const DrawToolbar = (props: Props) => {
     }
 
     reactiveUtils
-      .whenOnce(() => View.ready)
+      .whenOnce(() => getView().ready)
       .then(() => {
         // make sure the buffer layer is created
         getBufferLayer();
 
-        const hc = sketchViewModel.on('create', onCreate);
+        const hc = sketchViewModel?.on('create', onCreate);
         setHandleCreate(hc);
-        const hu = sketchViewModel.on('update', onUpdate);
+        const hu = sketchViewModel?.on('update', onUpdate);
         setHandleUpdate(hu);
-
-        View.map?.add(sketchViewModel.layer);
+        if (sketchViewModel?.layer) {
+          getView().map?.add(sketchViewModel.layer);
+        }
       });
-  }, [selectedTool, handleCreate, onCreate, handleUpdate, onUpdate, getBufferLayer]);
+  }, [
+    selectedTool,
+    handleCreate,
+    onCreate,
+    handleUpdate,
+    onUpdate,
+    getBufferLayer,
+    sketchViewModel
+  ]);
 
   useEffect(() => {
     if (flightPathJSON) {
       reactiveUtils
-        .whenOnce(() => View.ready)
+        .whenOnce(() => getView().ready)
         .then(() => {
           const fg = getFlightGeography(flightPathJSON);
           if (!fg) return;
@@ -178,8 +167,8 @@ export const DrawToolbar = (props: Props) => {
 
   useEffect(() => {
     if (!graphic) {
-      sketchViewModel.layer.removeAll();
-      const l = View.map?.findLayerById(bufferGraphicsLayerId) as GraphicsLayer;
+      sketchViewModel?.layer.removeAll();
+      const l = getView().map?.findLayerById(bufferGraphicsLayerId) as GraphicsLayer;
       l?.removeAll();
       onFlightGeographyChange(null);
       onFlightPathChange(null);
@@ -187,8 +176,8 @@ export const DrawToolbar = (props: Props) => {
     }
 
     // ensure the graphic is added to the sketchViewModel layer
-    if (!sketchViewModel.layer.graphics.find(g => g === graphic)) {
-      sketchViewModel.layer.add(graphic);
+    if (!sketchViewModel?.layer.graphics.find(g => g === graphic)) {
+      sketchViewModel?.layer.add(graphic);
     }
 
     if (graphic?.geometry.type === 'polyline') {
@@ -209,16 +198,24 @@ export const DrawToolbar = (props: Props) => {
       onFlightGeographyChange(graphic);
     }
     onFlightPathChange(graphic.geometry);
-    sketchViewModel.update([graphic]);
-  }, [graphic, selectedTool, onFlightGeographyChange, cd, onFlightPathChange, getBufferLayer]);
+    sketchViewModel?.update([graphic]);
+  }, [
+    graphic,
+    selectedTool,
+    onFlightGeographyChange,
+    cd,
+    onFlightPathChange,
+    getBufferLayer,
+    sketchViewModel
+  ]);
 
   const handleClear = () => {
-    sketchViewModel.layer.removeAll();
-    const l = View.map?.findLayerById(bufferGraphicsLayerId) as GraphicsLayer;
+    sketchViewModel?.layer.removeAll();
+    const l = getView().map?.findLayerById(bufferGraphicsLayerId) as GraphicsLayer;
     l?.removeAll();
     setGraphic(null);
     setHasGraphic(false);
-    sketchViewModel.cancel();
+    sketchViewModel?.cancel();
     onFlightGeographyChange(null);
     onFlightPathChange(null);
   };
@@ -229,11 +226,40 @@ export const DrawToolbar = (props: Props) => {
       setSelectedTool(undefined);
     } else {
       setSelectedTool(tool);
-      sketchViewModel.create(
+      sketchViewModel?.create(
         tool as 'circle' | 'point' | 'multipoint' | 'polyline' | 'polygon' | 'mesh' | 'rectangle'
       );
     }
   };
+
+  useEffect(() => {
+    if (sketchViewModel) return;
+
+    const skvm = new SketchViewModel({
+      view: getView(),
+      layer: new GraphicsLayer(),
+      updateOnGraphicClick: true,
+      polylineSymbol: getSymbol('polyline') as SimpleLineSymbol,
+      polygonSymbol: getSymbol('polygon') as SimpleFillSymbol,
+      pointSymbol: getSymbol('point') as SimpleMarkerSymbol,
+      activeFillSymbol: getSymbol('polygon') as SimpleFillSymbol,
+
+      defaultUpdateOptions: {
+        tool: 'reshape',
+        reshapeOptions: {
+          vertexOperation: 'move',
+          shapeOperation: 'none'
+        },
+        highlightOptions: {
+          enabled: false
+        },
+        enableRotation: false,
+        enableScaling: false
+      }
+    });
+
+    setSketchViewModel(skvm);
+  }, [sketchViewModel]);
 
   // green/yellow/red -> maximum pop dens in polygons -> send back to pega
   // blue -> adjacent area - average pop dens -> send back to pega
@@ -277,7 +303,7 @@ export const DrawToolbar = (props: Props) => {
             onClick={() => {
               handleClear();
               if (selectedTool) {
-                sketchViewModel.create(selectedTool as 'circle' | 'polyline' | 'polygon');
+                sketchViewModel?.create(selectedTool as 'circle' | 'polyline' | 'polygon');
               }
             }}
           >

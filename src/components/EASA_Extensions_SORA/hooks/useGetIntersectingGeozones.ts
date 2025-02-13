@@ -1,7 +1,7 @@
 import { useState, useCallback } from 'react';
 import { LayerId, type FlightVolume } from '../types';
 import * as geometryEngine from '@arcgis/core/geometry/geometryEngine';
-import View from '../View';
+import { getView } from '../View';
 
 const useGetIntersectingGeozones = (flightVolume: FlightVolume | null) => {
   const [intersectingGeozones, setIntersectingGeozones] = useState<any[]>([]);
@@ -25,8 +25,8 @@ const useGetIntersectingGeozones = (flightVolume: FlightVolume | null) => {
       flightVolume.groundRiskVolume?.geometry
     ]) as __esri.Polygon;
 
-    View.when(async () => {
-      const geozonesLayer = View?.map?.findLayerById(LayerId.geozones) as __esri.FeatureLayer;
+    getView().when(async () => {
+      const geozonesLayer = getView().map?.findLayerById(LayerId.geozones) as __esri.FeatureLayer;
       const features = await geozonesLayer?.queryFeatures({
         geometry,
         outFields: ['*'],

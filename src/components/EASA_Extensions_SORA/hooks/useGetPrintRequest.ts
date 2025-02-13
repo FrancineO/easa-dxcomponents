@@ -1,6 +1,6 @@
 import { useCallback, useState } from 'react';
 import esriConfig from '@arcgis/core/config';
-import View from '../View';
+import { getView } from '../View';
 import PrintTemplate from '@arcgis/core/rest/support/PrintTemplate';
 import PrintViewModel from '@arcgis/core/widgets/Print/PrintViewModel';
 
@@ -57,7 +57,7 @@ const useGetPrintRequest = (
 
     const pvm = new PrintViewModel({
       printServiceUrl,
-      view: View
+      view: getView()
     });
 
     pvm.print(
@@ -74,7 +74,7 @@ const useGetPrintRequest = (
           | 'aix'
           | 'eps',
         layout: 'map-only',
-        exportOptions: { width: View.width, height: View.height, dpi: printDpi },
+        exportOptions: { width: getView().width, height: getView().height, dpi: printDpi },
         scalePreserved: false,
         attributionVisible: false
         // outScale: View.scale

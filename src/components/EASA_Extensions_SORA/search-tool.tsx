@@ -1,7 +1,7 @@
 import { SearchInput } from '@pega/cosmos-react-core';
 import { useCallback, useEffect, useState } from 'react';
 import SearchViewModel from '@arcgis/core/widgets/Search/SearchViewModel';
-import View from './View';
+import { getView } from './View';
 import useDebouncedEffect from './hooks/useDebouncedEffect';
 import type { SearchResult } from '@pega/cosmos-react-core/lib/components/SearchInput/SearchInput';
 import * as reactiveUtils from '@arcgis/core/core/reactiveUtils';
@@ -30,12 +30,12 @@ const SearchTool = () => {
     let mounted = true;
 
     reactiveUtils
-      .whenOnce(() => View.ready)
+      .whenOnce(() => getView().ready)
       .then(() => {
         if (mounted) {
           setSearchViewModel(
             new SearchViewModel({
-              view: View,
+              view: getView(),
               includeDefaultSources: true,
               resultGraphicEnabled: false,
               maxSuggestions: 4,
@@ -96,7 +96,7 @@ const SearchTool = () => {
 
   useEffect(() => {
     if (activeSearchResult?.feature?.geometry) {
-      View.goTo({
+      getView().goTo({
         target: activeSearchResult.feature.geometry as __esri.Point,
         duration: 1000
       });

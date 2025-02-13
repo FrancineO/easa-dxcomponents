@@ -1,13 +1,15 @@
 import { useCallback } from 'react';
 import { LayerId, type FlightVolume } from '../types';
-import View from '../View';
+import { getView } from '../View';
 import type ImageryLayer from '@arcgis/core/layers/ImageryLayer';
 import * as rasterFunctionUtils from '@arcgis/core/layers/support/rasterFunctionUtils';
 import * as geometryEngine from '@arcgis/core/geometry/geometryEngine';
 
 export const useApplySpatialFilter = (flightVolume: FlightVolume | null) => {
   const applySpatialFilter = useCallback(() => {
-    const landuseHighlightLayer = View.map?.findLayerById(LayerId.landuseHighlight) as ImageryLayer;
+    const landuseHighlightLayer = getView().map?.findLayerById(
+      LayerId.landuseHighlight
+    ) as ImageryLayer;
     if (!flightVolume) {
       if (landuseHighlightLayer) {
         landuseHighlightLayer.visible = false;
@@ -20,17 +22,16 @@ export const useApplySpatialFilter = (flightVolume: FlightVolume | null) => {
     }
 
     landuseHighlightLayer.visible = true;
-    View.map?.reorder(landuseHighlightLayer, View.map.layers.length - 1);
+    getView().map?.reorder(landuseHighlightLayer, getView().map.layers.length - 1);
 
-    const flightVolumeGeometry = geometryEngine.union([
+    const operationalAndGroundRiskGeometry = geometryEngine.union([
       flightVolume?.flightGeography?.geometry as __esri.Polygon,
       flightVolume?.contingencyVolume?.geometry as __esri.Polygon,
-      flightVolume?.groundRiskVolume?.geometry as __esri.Polygon,
-      flightVolume?.adjacentArea?.geometry as __esri.Polygon
+      flightVolume?.groundRiskVolume?.geometry as __esri.Polygon
     ]) as __esri.Polygon;
 
     landuseHighlightLayer.rasterFunction = rasterFunctionUtils.clip({
-      geometry: flightVolumeGeometry,
+      geometry: operationalAndGroundRiskGeometry,
       keepOutside: false
     });
   }, [flightVolume]);

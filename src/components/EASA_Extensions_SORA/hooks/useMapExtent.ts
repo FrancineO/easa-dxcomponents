@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react';
 import * as reactiveUtils from '@arcgis/core/core/reactiveUtils';
-import View from '../View';
+import { getView } from '../View';
 import debounce from 'lodash/debounce';
 
 const useMapExtent = (onExtentChange: () => void) => {
@@ -14,14 +14,14 @@ const useMapExtent = (onExtentChange: () => void) => {
     let mounted = true;
 
     reactiveUtils
-      .whenOnce(() => View.ready)
+      .whenOnce(() => getView().ready)
       .then(() => {
         if (!mounted) return;
 
         const handle = reactiveUtils.watch(
-          () => View.extent,
+          () => getView().extent,
           () => {
-            if (!mounted || !View?.extent) return;
+            if (!mounted || !getView().extent) return;
             debouncedCallback(onExtentChange);
           }
         );

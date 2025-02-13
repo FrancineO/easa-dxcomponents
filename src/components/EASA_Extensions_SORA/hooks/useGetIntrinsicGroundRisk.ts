@@ -4,7 +4,8 @@ import type { PopulationDensity } from '../types';
 const calculateGroundRisk = (
   populationDensity: number | null,
   cd: number | null,
-  vO: number | null
+  vO: number | null,
+  controlledGroundArea: boolean
 ): 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | null => {
   // Return null if inputs are invalid
   if (populationDensity === null || cd === null || vO === null) return null;
@@ -58,24 +59,31 @@ const calculateGroundRisk = (
   if (groundRiskByDimension === null || groundRiskBySpeed === null) return null;
 
   // Return the higher (more conservative) value
-  return Math.max(groundRiskByDimension, groundRiskBySpeed) as
-    | 1
-    | 2
-    | 3
-    | 4
-    | 5
-    | 6
-    | 7
-    | 8
-    | 9
-    | 10
-    | null;
+  let groundRisk: number | null = Math.max(groundRiskByDimension, groundRiskBySpeed);
+
+  // eslint-disable-next-line no-console
+  console.log('groundRiskByDimension', groundRiskByDimension);
+  // eslint-disable-next-line no-console
+  console.log('groundRiskBySpeed', groundRiskBySpeed);
+
+  if (controlledGroundArea) {
+    if (groundRiskByDimension > groundRiskBySpeed) {
+      groundRisk = groundRiskMatrix[0][densityCategory];
+    } else {
+      groundRisk = groundRiskMatrix[0][speedCategory];
+    }
+    // eslint-disable-next-line no-console
+    console.log('controlledGroundArea groundRisk', groundRisk);
+  }
+
+  return groundRisk as 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | null;
 };
 
 const useGetIntrinsicGroundRisk = (params: {
   populationDensity: PopulationDensity | null;
   cd: number | null;
   vO: number | null;
+  controlledGroundArea: boolean;
 }) => {
   const [groundRisk, setGroundRisk] = useState<1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | null>(null);
 
@@ -97,7 +105,7 @@ const useGetIntrinsicGroundRisk = (params: {
       return;
     }
 
-    const { populationDensity, cd, vO } = currentParams;
+    const { populationDensity, cd, vO, controlledGroundArea } = currentParams;
 
     // Check if params are valid
     if (!populationDensity || cd === undefined || cd === null || vO === undefined || vO === null) {
@@ -105,7 +113,12 @@ const useGetIntrinsicGroundRisk = (params: {
       return;
     }
 
-    const risk = calculateGroundRisk(populationDensity.avgPopDensityAdjacentArea, cd, vO);
+    const risk = calculateGroundRisk(
+      populationDensity.avgPopDensityAdjacentArea,
+      cd,
+      vO,
+      controlledGroundArea
+    );
 
     setGroundRisk(risk);
   }, []);

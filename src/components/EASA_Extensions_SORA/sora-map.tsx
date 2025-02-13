@@ -1,7 +1,7 @@
-import { useCallback, useEffect, useRef } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import type ImageryLayer from '@arcgis/core/layers/ImageryLayer';
 import { LayerId, type MapProps } from './types';
-import View from './View';
+import { getView, getNewView } from './View';
 import IdentityManager from '@arcgis/core/identity/IdentityManager';
 import Basemap from '@arcgis/core/Basemap';
 import PortalItem from '@arcgis/core/portal/PortalItem';
@@ -34,12 +34,40 @@ const SoraMap = (props: Props) => {
   } = mapProps;
   const mapDiv = useRef(null);
 
+  const [signedIn, setSignedIn] = useState(false);
+  const [signInStatusChecked, setSignInStatusChecked] = useState(false);
+  const [signInError, setSignInError] = useState<string | null>(null);
+
+  const checkingSignInStatus = useRef(false);
+
   // for publishing
   // const agolToken =
   //   'mzFcMRqhxzPAoRJavp2MJnT86fp9vdIuHnlcY6yRjycMNMkD4n52uRAbbfniWAIwcJvOrFZPH8C_SP83gjBjxrV_sWf3RPNCjViDUmYVp7JvtqEydYhZ44rqgr31kl76Gi6-n6nx--QmMACz79SCOnfiQnL_H17j1s6ou-8RX8mWvUPH0Xz3cduYS6dohl6x';
 
   // from Piotr
   // mzFcMRqhxzPAoRJavp2MJtFI_Vj3noDUjaUFIsUu5ObcYgL0WG9UdlYwuGUrlGEGnxW94bF1MSabQrDWr6yPabIUywOWxBzUSX9zKknGn2fv_nxxjna_xNVe1B0BpqVvxhthxkuRO5ZxlJnGpNIAEMASjUxX6vgyk6UndXNCLBFkS
+
+  const checkSignInStatus = useCallback(() => {
+    if (checkingSignInStatus.current) return;
+    checkingSignInStatus.current = true;
+    IdentityManager.registerToken({
+      token: agolToken,
+      server: agolUrl
+    });
+
+    IdentityManager.checkSignInStatus(agolUrl)
+      .then(() => {
+        setSignedIn(true);
+      })
+      .catch(error => {
+        setSignInError(error.message);
+        setSignedIn(false);
+      })
+      .finally(() => {
+        setSignInStatusChecked(true);
+        checkingSignInStatus.current = false;
+      });
+  }, [agolToken, agolUrl]);
 
   const applyRenderer = useCallback(
     (layer: __esri.ImageryLayer | FeatureLayer) => {
@@ -50,7 +78,7 @@ const SoraMap = (props: Props) => {
         ) as __esri.ClassBreaksRenderer;
       }
       if (layer.portalItem.id === landusePortalItemId) {
-        const landuseLayer = View.map?.findLayerById(LayerId.landuse);
+        const landuseLayer = getView().map?.findLayerById(LayerId.landuse);
 
         layer.id = landuseLayer ? LayerId.landuseHighlight : LayerId.landuse;
         layer.visible = !landuseLayer;
@@ -122,13 +150,14 @@ const SoraMap = (props: Props) => {
   );
 
   const createMap = useCallback(() => {
-    if (View?.map) return;
+    if (getView()?.map) return;
 
     if (mapDiv.current) {
       IdentityManager.registerToken({
         token: agolToken,
         server: agolUrl
       });
+
       const basemap = new Basemap({
         portalItem: new PortalItem({
           id: basemapPortalItemId,
@@ -144,38 +173,72 @@ const SoraMap = (props: Props) => {
 
       addLayers(map);
 
-      View.container = mapDiv.current;
-      View.map = map;
-      View.center = new Point({ latitude, longitude });
-      View.zoom = zoom;
+      getView().container = mapDiv.current;
+      getView().map = map;
+      getView().center = new Point({ latitude, longitude });
+      getView().zoom = zoom;
 
-      View.focus();
+      getView().focus();
     }
   }, [latitude, longitude, zoom, agolToken, agolUrl, basemapPortalItemId, mapDiv, addLayers]);
 
   useEffect(() => {
-    if (!agolToken) return;
+    if (!signInStatusChecked) {
+      checkSignInStatus();
+    }
+    if (!agolToken || !signedIn) return;
     createMap();
-  }, [createMap, agolToken]);
+  }, [createMap, agolToken, signInStatusChecked, signedIn, checkSignInStatus]);
 
   useEffect(() => {
     return () => {
       // eslint-disable-next-line no-console
       console.log('destroying view');
-      View?.destroy();
+      getView()?.destroy();
       // eslint-disable-next-line no-console
       console.log('view destroyed');
+      getNewView();
     };
   }, []);
 
   return (
     <>
-      {agolToken ? (
+      {signedIn ? (
         <div style={style}>
           <div style={{ width: '100%', height: '100%' }} ref={mapDiv} />
         </div>
       ) : (
-        <Text>No agol token</Text>
+        signInStatusChecked && (
+          <div
+            style={{
+              display: 'flex',
+              flexDirection: 'column',
+              justifyContent: 'center',
+              alignItems: 'center',
+              height: '100%',
+              margin: '1rem',
+              padding: '1rem',
+              border: '1px solid red',
+              gap: '0.5rem'
+            }}
+          >
+            <Text variant='h3' style={{ color: 'red' }}>
+              Agol token may have expired!
+            </Text>
+            <Text variant='h3' style={{ color: 'red' }}>
+              Your token is:
+            </Text>
+            <Text
+              variant='h3'
+              style={{ color: 'red', overflowWrap: 'break-word', inlineSize: '50%' }}
+            >
+              {agolToken}
+            </Text>
+            <Text variant='h3' style={{ color: 'red' }}>
+              {signInError}
+            </Text>
+          </div>
+        )
       )}
     </>
   );

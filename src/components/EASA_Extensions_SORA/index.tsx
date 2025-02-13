@@ -51,6 +51,7 @@ export const EasaExtensionsSORA = (props: ComponentProps) => {
     flightPathJSON,
     cd,
     vO,
+    controlledGroundArea,
     printServiceUrl,
     printWidth,
     printHeight,
@@ -69,10 +70,11 @@ export const EasaExtensionsSORA = (props: ComponentProps) => {
   // Replace the existing useEffect with useDebouncedEffect
   useDebouncedEffect(
     () => {
+      if (!layersAdded) return;
       calculateVolume();
     },
     300,
-    [flightGeography, props, calculateVolume]
+    [flightGeography, props, layersAdded, calculateVolume]
   );
 
   // Set up the hook for population density
@@ -94,7 +96,8 @@ export const EasaExtensionsSORA = (props: ComponentProps) => {
   const { groundRisk, calculateIntrinsicGroundRisk } = useGetIntrinsicGroundRisk({
     populationDensity,
     cd,
-    vO
+    vO,
+    controlledGroundArea
   });
 
   // Set up the hook for print request
@@ -136,8 +139,9 @@ export const EasaExtensionsSORA = (props: ComponentProps) => {
   // Set up the effect for extent change
   useEffect(() => {
     // if (!View?.extent) return;
+    if (!layersAdded) return;
     handleExtentChange();
-  }, [handleExtentChange]);
+  }, [handleExtentChange, layersAdded]);
 
   // Set up the effect for map extent
   useMapExtent(() => {
@@ -153,24 +157,27 @@ export const EasaExtensionsSORA = (props: ComponentProps) => {
 
   // call applyFlightVolume when flightVolume changes
   useEffect(() => {
+    if (!layersAdded) return;
     applySpatialFilter();
-  }, [flightVolume, applySpatialFilter]);
+  }, [flightVolume, layersAdded, applySpatialFilter]);
 
   // Call calculateIntrinsicGroundRisk when populationDensity, cd, or vO changes
-
   useEffect(() => {
+    if (!layersAdded) return;
     calculateIntrinsicGroundRisk();
-  }, [populationDensity, cd, vO, calculateIntrinsicGroundRisk]);
+  }, [populationDensity, cd, vO, layersAdded, calculateIntrinsicGroundRisk]);
 
+  // Call queryIntersectingGeozones when flightVolume changes
   useEffect(() => {
     if (!layersAdded) return;
     queryIntersectingGeozones();
   }, [flightVolume, layersAdded, queryIntersectingGeozones]);
 
-  // Call updatePegaProps when density values change
+  // Call updatePegaProps when groundRisk, or printRequest changes
   useEffect(() => {
+    if (!layersAdded) return;
     updatePegaProps();
-  }, [populationDensity, groundRisk, printRequest, updatePegaProps]);
+  }, [groundRisk, printRequest, layersAdded, updatePegaProps]);
 
   return (
     <Card style={{ height: '100%' }}>

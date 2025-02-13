@@ -45,13 +45,15 @@ const useUpdatePegaProps = (
     if (!pC.getValue || !pConnect) return;
 
     // eslint-disable-next-line no-console
-    console.log('groundRisk', gR);
+    console.log('sending to pega:');
     // eslint-disable-next-line no-console
-    console.log('populationDensity', pD);
+    console.log('   groundRisk', gR);
     // eslint-disable-next-line no-console
-    console.log('printRequest', pR);
+    console.log('   populationDensity', pD);
     // eslint-disable-next-line no-console
-    console.log('flightPath', fP);
+    console.log('   printRequest', pR);
+    // eslint-disable-next-line no-console
+    console.log('   flightPath', fP);
 
     try {
       updateInProgress.current = true;

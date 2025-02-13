@@ -1,6 +1,6 @@
 import { useCallback, useState, useRef } from 'react';
 import GraphicsLayer from '@arcgis/core/layers/GraphicsLayer';
-import View from '../View';
+import { getView } from '../View';
 import {
   getAdjacentArea,
   getContingencyVolume,
@@ -26,7 +26,7 @@ const useCalculateFlightVolume = (params: FlightVolumeParams) => {
     // Only proceed if we have a flight geography
     if (!currentParams.flightGeography) {
       // clear the flight volume
-      const layer = View.map?.findLayerById('flight-volumes') as GraphicsLayer;
+      const layer = getView().map?.findLayerById('flight-volumes') as GraphicsLayer;
       if (layer) {
         layer.removeAll();
       }
@@ -35,10 +35,10 @@ const useCalculateFlightVolume = (params: FlightVolumeParams) => {
     }
 
     // Get or create the layer only once when needed
-    let layer: GraphicsLayer = View.map?.findLayerById('flight-volumes') as GraphicsLayer;
+    let layer: GraphicsLayer = getView().map?.findLayerById('flight-volumes') as GraphicsLayer;
     if (!layer) {
       layer = new GraphicsLayer({ id: 'flight-volumes' });
-      View.map?.add(layer);
+      getView().map?.add(layer);
     }
 
     // Clear existing graphics
