@@ -3,11 +3,11 @@ import { Button } from '@pega/cosmos-react-core';
 import { CardContent } from '@pega/cosmos-react-core';
 import { Card } from '@pega/cosmos-react-core';
 import { useEffect, useState, useCallback } from 'react';
-import { getView } from './View';
+import { getView } from '../../map/view';
 import SketchViewModel from '@arcgis/core/widgets/Sketch/SketchViewModel';
 import GraphicsLayer from '@arcgis/core/layers/GraphicsLayer';
 import Graphic from '@arcgis/core/Graphic';
-import { getFillSymbol, getFlightGeography, getSymbol } from './utils';
+import { getFillSymbol, getFlightGeography, getSymbol } from './draw-utils';
 import type SimpleLineSymbol from '@arcgis/core/symbols/SimpleLineSymbol';
 import type SimpleFillSymbol from '@arcgis/core/symbols/SimpleFillSymbol';
 import type SimpleMarkerSymbol from '@arcgis/core/symbols/SimpleMarkerSymbol';
@@ -73,6 +73,7 @@ export const DrawToolbar = (props: Props) => {
       if (event.state === 'complete') {
         setGraphic(event.graphic);
         setHasGraphic(true);
+        sketchViewModel?.update([event.graphic]);
       }
     },
     [getBufferLayer, sketchViewModel]
@@ -198,7 +199,8 @@ export const DrawToolbar = (props: Props) => {
       onFlightGeographyChange(graphic);
     }
     onFlightPathChange(graphic.geometry);
-    sketchViewModel?.update([graphic]);
+    // moved this to the onCreate function so it does not appear when loading a stored flight path
+    // sketchViewModel?.update([graphic]);
   }, [
     graphic,
     selectedTool,

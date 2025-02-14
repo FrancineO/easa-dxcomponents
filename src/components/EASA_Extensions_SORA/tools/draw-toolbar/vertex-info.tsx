@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Popover, Text, throttle } from '@pega/cosmos-react-core';
 import * as reactiveUtils from '@arcgis/core/core/reactiveUtils';
-import { getView } from './View';
+import { getView } from '../../map/view';
 
 /**
  * VertexInfo component

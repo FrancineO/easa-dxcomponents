@@ -1,8 +1,8 @@
 import { SearchInput } from '@pega/cosmos-react-core';
 import { useCallback, useEffect, useState } from 'react';
 import SearchViewModel from '@arcgis/core/widgets/Search/SearchViewModel';
-import { getView } from './View';
-import useDebouncedEffect from './hooks/useDebouncedEffect';
+import { getView } from '../map/view';
+import useDebouncedEffect from '../hooks/useDebouncedEffect';
 import type { SearchResult } from '@pega/cosmos-react-core/lib/components/SearchInput/SearchInput';
 import * as reactiveUtils from '@arcgis/core/core/reactiveUtils';
 

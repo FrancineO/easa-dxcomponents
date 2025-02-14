@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react';
 import * as reactiveUtils from '@arcgis/core/core/reactiveUtils';
-import { getView } from '../View';
+import { getView } from '../map/view';
 import debounce from 'lodash/debounce';
 
 const useMapExtent = (onExtentChange: () => void) => {

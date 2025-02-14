@@ -1,7 +1,7 @@
 import { useState, useCallback } from 'react';
 import { LayerId, type FlightVolume } from '../types';
 import * as geometryEngine from '@arcgis/core/geometry/geometryEngine';
-import { getView } from '../View';
+import { getView } from '../map/view';
 
 const useGetIntersectingGeozones = (flightVolume: FlightVolume | null) => {
   const [intersectingGeozones, setIntersectingGeozones] = useState<any[]>([]);
@@ -10,7 +10,6 @@ const useGetIntersectingGeozones = (flightVolume: FlightVolume | null) => {
     if (
       !flightVolume ||
       !flightVolume.flightGeography ||
-      !flightVolume.adjacentArea ||
       !flightVolume.contingencyVolume ||
       !flightVolume.groundRiskVolume
     ) {
@@ -19,7 +18,6 @@ const useGetIntersectingGeozones = (flightVolume: FlightVolume | null) => {
     }
 
     const geometry = geometryEngine.union([
-      flightVolume.adjacentArea?.geometry,
       flightVolume.flightGeography?.geometry,
       flightVolume.contingencyVolume?.geometry,
       flightVolume.groundRiskVolume?.geometry

@@ -1,5 +1,5 @@
 import { useCallback, useState, useRef } from 'react';
-import { getView } from '../View';
+import { getView } from '../map/view';
 import * as geometryEngine from '@arcgis/core/geometry/geometryEngine';
 import type { FlightVolume, PopulationDensity } from '../types';
 import { landusePopDensityLookup } from '../renderers';
@@ -7,7 +7,6 @@ import _ from 'lodash';
 
 export const useGetPopulationDensity = (flightVolume: FlightVolume | null) => {
   const [populationDensity, setPopulationDensity] = useState<PopulationDensity | null>(null);
-  const [intersectingLanduseClasses, setIntersectingLanduseClasses] = useState<number[]>([]);
   const calculationInProgress = useRef(false);
   const flightVolumeRef = useRef(flightVolume);
 
@@ -96,8 +95,6 @@ export const useGetPopulationDensity = (flightVolume: FlightVolume | null) => {
 
   const getLanduseMaxPopDensityOperationalGroundrisk = useCallback(
     async (layer: __esri.ImageryLayer) => {
-      setIntersectingLanduseClasses([]);
-
       // get the max population density in the Operational Ground Risk area
       const opAndGr = getOperationalAndGroundRiskGeometry();
       const landuseHistograms = await layer.computeHistograms({
@@ -112,7 +109,6 @@ export const useGetPopulationDensity = (flightVolume: FlightVolume | null) => {
           }
         });
       }
-      setIntersectingLanduseClasses(intersectedLanduseClasses);
       return Math.max(...intersectedLanduseClasses.map(index => landusePopDensityLookup[index]));
     },
     []
@@ -128,7 +124,6 @@ export const useGetPopulationDensity = (flightVolume: FlightVolume | null) => {
     // Reset states if no params
     if (!currentFlightVolume) {
       setPopulationDensity(null);
-      setIntersectingLanduseClasses([]);
       return;
     }
 
@@ -162,12 +157,12 @@ export const useGetPopulationDensity = (flightVolume: FlightVolume | null) => {
         maxPopDensityLanduseOperationalGroundRisk ?? 0
       );
 
-      // TODO: calculate the average population density for the adjacent area
       const avgPopDensityLanduseAdjacentArea = await getAvgDensity(
         adjacentArea.geometry as __esri.Polygon,
         landuseLayer
       );
 
+      // TODO: Is this correct? Can I just take an average of the two averages?
       if (avgPopDensityLanduseAdjacentArea !== 0) {
         const combined =
           (popDensity.avgPopDensityAdjacentArea ?? 0) + (avgPopDensityLanduseAdjacentArea ?? 0);
@@ -186,7 +181,6 @@ export const useGetPopulationDensity = (flightVolume: FlightVolume | null) => {
 
   return {
     populationDensity,
-    intersectingLanduseClasses,
     calculatePopDensities
   };
 };

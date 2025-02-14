@@ -7,8 +7,8 @@ import {
 } from '@pega/cosmos-react-core';
 import { useCallback, useEffect, useState } from 'react';
 import '../create-nonce';
-import { DrawToolbar } from './draw-toolbar';
-import SearchTool from './search-tool';
+import { DrawToolbar } from './tools/draw-toolbar/draw-toolbar';
+import SearchTool from './tools/search-tool';
 import { useGetPopulationDensity } from './hooks/useGetPopulationDensity';
 import useCalculateFlightVolume from './hooks/useCalculateFlightVolume';
 import type { ComponentProps } from './types';
@@ -17,13 +17,14 @@ import useDebouncedEffect from './hooks/useDebouncedEffect';
 import useGetPrintRequest from './hooks/useGetPrintRequest';
 import useGetIntrinsicGroundRisk from './hooks/useGetIntrinsicGroundRisk';
 import useMapExtent from './hooks/useMapExtent';
-import SoraMap from './sora-map';
+import SoraMap from './map/sora-map';
 import useApplySpatialFilter from './hooks/useApplySpatialFilter';
-import LayerList from './layer-list';
+import LayerList from './tools/layer-list';
 import useGetIntersectingGeozones from './hooks/useGetIntersectingGeozones';
 
 import Legends from './legends/legends';
-import { getFlightGeography } from './utils';
+import { getFlightGeography } from './tools/draw-toolbar/draw-utils';
+import useGetIntersectingLanduses from './hooks/useGetIntersectingLanduses';
 
 // IRLi9g31pindstu7
 // mzFcMRqhxzPAoRJavp2MJnT86fp9vdIuHnlcY6yRjycMNMkD4n52uRAbbfniWAIwcJvOrFZPH8C_SP83gjBjxrV_sWf3RPNCjViDUmYVp7JvtqEydYhZ44rqgr31kl76Gi6-n6nx--QmMACz79SCOnfiQnL_H17j1s6ou-8RX8mWvUPH0Xz3cduYS6dohl6x
@@ -78,15 +79,18 @@ export const EasaExtensionsSORA = (props: ComponentProps) => {
   );
 
   // Set up the hook for population density
-  const { populationDensity, calculatePopDensities, intersectingLanduseClasses } =
-    useGetPopulationDensity(
-      flightVolume
-        ? {
-            ...flightVolume,
-            flightGeography
-          }
-        : null
-    );
+  const { populationDensity, calculatePopDensities } = useGetPopulationDensity(
+    flightVolume
+      ? {
+          ...flightVolume,
+          flightGeography
+        }
+      : null
+  );
+
+  // Set up the hook to get the intersecting landuses
+  const { intersectingLanduseClasses, queryIntersectingLanduses } =
+    useGetIntersectingLanduses(flightVolume);
 
   // Set up the hook to get the intersecting geozones
   const { intersectingGeozones, queryIntersectingGeozones } =
@@ -153,7 +157,8 @@ export const EasaExtensionsSORA = (props: ComponentProps) => {
   useEffect(() => {
     if (!layersAdded) return;
     calculatePopDensities();
-  }, [flightVolume, layersAdded, calculatePopDensities]);
+    queryIntersectingLanduses();
+  }, [flightVolume, layersAdded, calculatePopDensities, queryIntersectingLanduses]);
 
   // call applyFlightVolume when flightVolume changes
   useEffect(() => {

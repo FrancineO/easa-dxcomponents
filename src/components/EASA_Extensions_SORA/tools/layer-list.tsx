@@ -1,7 +1,7 @@
 import { useMemo, useEffect, useState } from 'react';
 import { Card, CardContent, Switch, Text } from '@pega/cosmos-react-core';
-import { getView } from './View';
-import { LayerGroupType, LayerId } from './types';
+import { getView } from '../map/view';
+import { LayerGroupType, LayerId } from '../types';
 import * as reactiveUtils from '@arcgis/core/core/reactiveUtils';
 
 type Props = {

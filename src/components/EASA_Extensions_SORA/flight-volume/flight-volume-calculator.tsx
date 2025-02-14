@@ -1,5 +1,5 @@
 import { useEffect, type FC, useCallback, useState } from 'react';
-import { getView } from '../View';
+import { getView } from '../map/view';
 import GraphicsLayer from '@arcgis/core/layers/GraphicsLayer';
 import * as geometryEngine from '@arcgis/core/geometry/geometryEngine';
 import Graphic from '@arcgis/core/Graphic';

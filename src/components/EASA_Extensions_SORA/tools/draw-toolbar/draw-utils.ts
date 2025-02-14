@@ -1,7 +1,6 @@
 import Graphic from '@arcgis/core/Graphic';
 import * as webMercatorUtils from '@arcgis/core/geometry/support/webMercatorUtils';
 import GraphicsLayer from '@arcgis/core/layers/GraphicsLayer';
-import type MapView from '@arcgis/core/views/MapView';
 import SimpleLineSymbol from '@arcgis/core/symbols/SimpleLineSymbol';
 import SimpleFillSymbol from '@arcgis/core/symbols/SimpleFillSymbol';
 import Color from '@arcgis/core/Color';
@@ -12,7 +11,7 @@ import {
   adjacentAreaColor,
   flightGeographyColor,
   flightPathColor
-} from './flight-volume/flight-volume-symbols';
+} from '../../flight-volume/flight-volume-symbols';
 
 export const getPolylineSymbol = () => {
   return new SimpleLineSymbol({
@@ -155,21 +154,21 @@ export const addPoint = (
   actionsApi?.updateFieldValue(latitudePropRef, ll[1]);
 };
 
-export const addScreenShot = (getPConnect: any, view: MapView, imageMapRef: string) => {
-  if (imageMapRef) {
-    view
-      .takeScreenshot({
-        format: 'jpg',
-        quality: 70,
-        width: 500,
-        height: (view.height * 500) / view.width
-      })
-      .then((screenshot: any) => {
-        const actionsApi = getPConnect().getActionsApi();
-        actionsApi?.updateFieldValue(imageMapRef, screenshot.dataUrl);
-      });
-  }
-};
+// export const addScreenShot = (getPConnect: any, view: MapView, imageMapRef: string) => {
+//   if (imageMapRef) {
+//     view
+//       .takeScreenshot({
+//         format: 'jpg',
+//         quality: 70,
+//         width: 500,
+//         height: (view.height * 500) / view.width
+//       })
+//       .then((screenshot: any) => {
+//         const actionsApi = getPConnect().getActionsApi();
+//         actionsApi?.updateFieldValue(imageMapRef, screenshot.dataUrl);
+//       });
+//   }
+// };
 
 export const getFlightGeography = (flightGeometryString: string | null) => {
   if (!flightGeometryString) {

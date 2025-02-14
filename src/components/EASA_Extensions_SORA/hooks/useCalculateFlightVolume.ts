@@ -1,6 +1,6 @@
 import { useCallback, useState, useRef } from 'react';
 import GraphicsLayer from '@arcgis/core/layers/GraphicsLayer';
-import { getView } from '../View';
+import { getView } from '../map/view';
 import {
   getAdjacentArea,
   getContingencyVolume,

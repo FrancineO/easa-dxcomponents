@@ -1,6 +1,6 @@
 import { useCallback, useState } from 'react';
 import esriConfig from '@arcgis/core/config';
-import { getView } from '../View';
+import { getView } from '../map/view';
 import PrintTemplate from '@arcgis/core/rest/support/PrintTemplate';
 import PrintViewModel from '@arcgis/core/widgets/Print/PrintViewModel';
 
