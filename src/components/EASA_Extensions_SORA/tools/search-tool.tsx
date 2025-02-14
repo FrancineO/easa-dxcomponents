@@ -12,9 +12,9 @@ const SearchTool = () => {
   const [activeSearchResult, setActiveSearchResult] =
     useState<__esri.SearchViewModelSearchResult | null>();
   const [searchViewModel, setSearchViewModel] = useState<SearchViewModel>();
-  const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
+  const [searchResults, setSearchResults] = useState<SearchResult[] | null>(null);
   const [locatorResults, setLocatorResults] = useState<__esri.SearchViewModelSuggestResult[]>([]);
-
+  const [searchChanged, setSearchChanged] = useState(false);
   const mapResults = useCallback(
     (results: __esri.SearchViewModelSuggestResult[]): SearchResult[] => {
       return results.map(result => ({
@@ -53,7 +53,12 @@ const SearchTool = () => {
 
   useDebouncedEffect(
     () => {
-      if (!searchViewModel || !searchString || activeSearchResult?.name === searchString) {
+      if (
+        !searchViewModel ||
+        !searchString ||
+        activeSearchResult?.name === searchString ||
+        !searchChanged
+      ) {
         setLoading(false);
         return;
       }
@@ -75,18 +80,19 @@ const SearchTool = () => {
         });
     },
     500,
-    [searchString, searchViewModel, activeSearchResult]
+    [searchString, searchViewModel, activeSearchResult, searchChanged]
   );
 
-  const handleSearchResult = useCallback(
+  const handleSearchResultSelected = useCallback(
     (index: number) => {
+      setSearchChanged(false);
       if (!searchViewModel || !locatorResults[index]) return;
 
       searchViewModel.search(locatorResults[index]).then(res => {
         const result = res?.results[0]?.results[0];
         if (result) {
           setActiveSearchResult(result);
-          setSearchResults([]);
+          setSearchResults(null);
           setSearchString(locatorResults[index].text);
         }
       });
@@ -110,9 +116,10 @@ const SearchTool = () => {
       value={searchString}
       searchResults={searchResults?.map((result, index) => ({
         ...result,
-        onClick: () => handleSearchResult(index)
+        onClick: () => handleSearchResultSelected(index)
       }))}
       onSearchChange={(v: string) => {
+        setSearchChanged(true);
         setLoading(v?.length > 0);
         setSearchString(v);
       }}

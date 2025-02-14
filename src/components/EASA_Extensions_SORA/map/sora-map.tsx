@@ -12,6 +12,7 @@ import Layer from '@arcgis/core/layers/Layer';
 import FeatureLayer from '@arcgis/core/layers/FeatureLayer';
 import * as rendererJsonUtils from '@arcgis/core/renderers/support/jsonUtils.js';
 import { Text } from '@pega/cosmos-react-core';
+import BasemapChooser from '../tools/basemap-chooser';
 
 type Props = {
   style: React.CSSProperties;
@@ -39,13 +40,6 @@ const SoraMap = (props: Props) => {
   const [signInError, setSignInError] = useState<string | null>(null);
 
   const checkingSignInStatus = useRef(false);
-
-  // for publishing
-  // const agolToken =
-  //   'mzFcMRqhxzPAoRJavp2MJnT86fp9vdIuHnlcY6yRjycMNMkD4n52uRAbbfniWAIwcJvOrFZPH8C_SP83gjBjxrV_sWf3RPNCjViDUmYVp7JvtqEydYhZ44rqgr31kl76Gi6-n6nx--QmMACz79SCOnfiQnL_H17j1s6ou-8RX8mWvUPH0Xz3cduYS6dohl6x';
-
-  // from Piotr
-  // mzFcMRqhxzPAoRJavp2MJtFI_Vj3noDUjaUFIsUu5ObcYgL0WG9UdlYwuGUrlGEGnxW94bF1MSabQrDWr6yPabIUywOWxBzUSX9zKknGn2fv_nxxjna_xNVe1B0BpqVvxhthxkuRO5ZxlJnGpNIAEMASjUxX6vgyk6UndXNCLBFkS
 
   const checkSignInStatus = useCallback(() => {
     if (checkingSignInStatus.current) return;
@@ -209,6 +203,7 @@ const SoraMap = (props: Props) => {
       {signedIn ? (
         <div style={style}>
           <div style={{ width: '100%', height: '100%' }} ref={mapDiv} />
+          <BasemapChooser />
         </div>
       ) : (
         signInStatusChecked && (
