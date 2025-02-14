@@ -134,6 +134,9 @@ const SoraMap = (props: Props) => {
       Promise.all(promises).then(layers => {
         layers.forEach(layer => {
           applyRenderer(layer as ImageryLayer | FeatureLayer);
+          if (layer.id === LayerId.geozones) {
+            (layer as FeatureLayer).popupEnabled = false;
+          }
           map.add(layer, 0);
         });
         onLayersAdded();
