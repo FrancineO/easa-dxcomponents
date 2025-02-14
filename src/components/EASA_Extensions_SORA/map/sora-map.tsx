@@ -12,7 +12,7 @@ import Layer from '@arcgis/core/layers/Layer';
 import FeatureLayer from '@arcgis/core/layers/FeatureLayer';
 import * as rendererJsonUtils from '@arcgis/core/renderers/support/jsonUtils.js';
 import { Text } from '@pega/cosmos-react-core';
-import BasemapChooser from '../tools/basemap-chooser';
+import BasemapChooser from '../tools/basemap-chooser/basemap-chooser';
 
 type Props = {
   style: React.CSSProperties;
