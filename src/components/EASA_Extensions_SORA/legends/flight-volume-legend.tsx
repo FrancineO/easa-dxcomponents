@@ -1,30 +1,30 @@
-import { Alert, Card, CardContent } from '@pega/cosmos-react-core';
+import { Alert, Card, CardContent, Text } from '@pega/cosmos-react-core';
 import {
   adjacentAreaColor,
   groundRiskVolumeColor,
   contingencyVolumeColor,
-  flightGeographyColor,
-  flightPathColor
+  flightGeographyColor
+  // flightPathColor
 } from '../flight-volume/flight-volume-symbols';
 import type { FlightVolume } from '../types';
 
 const FlightVolumeLegend = ({ flightVolume }: { flightVolume: FlightVolume | null }) => {
   const legendItems = [
-    {
-      label: 'Flight Path',
-      color: flightPathColor
-    },
+    // {
+    //   label: 'Flight Path',
+    //   color: flightPathColor
+    // },
     {
       label: 'Flight Geography',
       color: flightGeographyColor
     },
     {
-      label: 'Ground Risk Volume',
-      color: groundRiskVolumeColor
-    },
-    {
       label: 'Contingency Volume',
       color: contingencyVolumeColor
+    },
+    {
+      label: 'Ground Risk Volume',
+      color: groundRiskVolumeColor
     },
     {
       label: 'Adjacent Area',
@@ -43,8 +43,7 @@ const FlightVolumeLegend = ({ flightVolume }: { flightVolume: FlightVolume | nul
               }}
               variant='urgent'
             />
-
-            <div style={{ fontWeight: 'bold' }}>Flight Volume</div>
+            <Text variant='h3'>Flight Volume</Text>
           </div>
           <div
             style={{

@@ -162,8 +162,8 @@ export const Default: Story = {
     sPos: 3,
     sK: 3,
     vO: 10,
+    criticalArea: 1000,
     tR: 2,
-
     tP: 2,
     parachute: true,
     multirotor: true,

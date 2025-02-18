@@ -5,10 +5,21 @@ const calculateGroundRisk = (
   populationDensity: number | null,
   cd: number | null,
   vO: number | null,
-  controlledGroundArea: boolean
+  controlledGroundArea: boolean,
+  criticalArea: number | null
 ): 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | null => {
   // Return null if inputs are invalid
-  if (populationDensity === null || cd === null || vO === null) return null;
+  if (populationDensity === null || cd === null || vO === null || criticalArea === null)
+    return null;
+
+  // claulated critical area in pega
+  let criticalAreaCategory: number;
+  if (criticalArea <= 6.5) criticalAreaCategory = 0;
+  else if (criticalArea <= 65) criticalAreaCategory = 1;
+  else if (criticalArea <= 650) criticalAreaCategory = 2;
+  else if (criticalArea <= 6500) criticalAreaCategory = 3;
+  else if (criticalArea <= 65000) criticalAreaCategory = 4;
+  else return null; // Invalid critical area
 
   // Get dimension category based on characteristic dimension (cd)
   let dimensionCategory: number;
@@ -54,17 +65,29 @@ const calculateGroundRisk = (
   // Get the ground risk values from the matrix for both dimension and speed
   const groundRiskByDimension = groundRiskMatrix[densityCategory][dimensionCategory];
   const groundRiskBySpeed = groundRiskMatrix[densityCategory][speedCategory];
+  const groundRiskByCriticalArea = groundRiskMatrix[criticalAreaCategory][speedCategory];
 
   // Return null if either combination is not part of SORA
-  if (groundRiskByDimension === null || groundRiskBySpeed === null) return null;
+  if (
+    groundRiskByDimension === null ||
+    groundRiskBySpeed === null ||
+    groundRiskByCriticalArea === null
+  )
+    return null;
 
   // Return the higher (more conservative) value
-  let groundRisk: number | null = Math.max(groundRiskByDimension, groundRiskBySpeed);
+  let groundRisk: number | null = Math.max(
+    groundRiskByDimension,
+    groundRiskBySpeed,
+    groundRiskByCriticalArea
+  );
 
   // eslint-disable-next-line no-console
   console.log('groundRiskByDimension', groundRiskByDimension);
   // eslint-disable-next-line no-console
   console.log('groundRiskBySpeed', groundRiskBySpeed);
+  // eslint-disable-next-line no-console
+  console.log('groundRiskByCriticalArea', groundRiskByCriticalArea);
 
   if (controlledGroundArea) {
     if (groundRiskByDimension > groundRiskBySpeed) {
@@ -84,6 +107,7 @@ const useGetIntrinsicGroundRisk = (params: {
   cd: number | null;
   vO: number | null;
   controlledGroundArea: boolean;
+  criticalArea: number | null;
 }) => {
   const [groundRisk, setGroundRisk] = useState<1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | null>(null);
 
@@ -105,7 +129,7 @@ const useGetIntrinsicGroundRisk = (params: {
       return;
     }
 
-    const { populationDensity, cd, vO, controlledGroundArea } = currentParams;
+    const { populationDensity, cd, vO, controlledGroundArea, criticalArea } = currentParams;
 
     // Check if params are valid
     if (!populationDensity || cd === undefined || cd === null || vO === undefined || vO === null) {
@@ -117,7 +141,8 @@ const useGetIntrinsicGroundRisk = (params: {
       populationDensity.avgPopDensityAdjacentArea,
       cd,
       vO,
-      controlledGroundArea
+      controlledGroundArea,
+      criticalArea
     );
 
     setGroundRisk(risk);

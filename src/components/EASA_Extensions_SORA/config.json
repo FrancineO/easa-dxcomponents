@@ -67,6 +67,11 @@
       "format": "PROPERTY"
     },
     {
+      "name": "criticalArea",
+      "label": "Critical area (m2)",
+      "format": "PROPERTY"
+    },
+    {
       "name": "tR",
       "label": "Reaction time (s)",
       "format": "PROPERTY"
@@ -213,6 +218,7 @@
     "sPos": 3,
     "sK": 3,
     "vO": 10,
+    "criticalArea": 1000,
     "tR": 2,
     "tP": 2,
     "parachute": true,

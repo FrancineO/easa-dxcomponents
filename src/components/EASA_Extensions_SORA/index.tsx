@@ -40,6 +40,7 @@ export const EasaExtensionsSORA = (props: ComponentProps) => {
     flightPathJSON,
     cd,
     vO,
+    criticalArea,
     controlledGroundArea,
     printServiceUrl,
     printWidth,
@@ -89,7 +90,8 @@ export const EasaExtensionsSORA = (props: ComponentProps) => {
     populationDensity,
     cd,
     vO,
-    controlledGroundArea
+    controlledGroundArea,
+    criticalArea
   });
 
   // Set up the hook for print request

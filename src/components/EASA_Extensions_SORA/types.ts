@@ -39,6 +39,7 @@ export type ComponentProps = {
   cL: number;
   gliding: boolean;
   controlledGroundArea: boolean;
+  criticalArea: number | null;
 } & MapProps;
 
 export type FlightVolumeParams = {
