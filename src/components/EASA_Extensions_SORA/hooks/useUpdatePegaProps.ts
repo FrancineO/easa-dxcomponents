@@ -1,6 +1,5 @@
 import { useCallback, useRef } from 'react';
 import type { MapState, PopulationDensity } from '../types';
-import debounce from 'lodash/debounce';
 
 const useUpdatePegaProps = (
   pConnect: any,
@@ -73,6 +72,14 @@ const useUpdatePegaProps = (
         return;
       }
 
+      let flightGeometryJSON = null;
+      if (fP) {
+        const json = fP.toJSON();
+        // for some reason the js api does not set type on the json object
+        json.type = fP.type;
+        flightGeometryJSON = JSON.stringify(json);
+      }
+
       await PCore.getRestClient().invokeRestApi('updateDataObject', {
         queryPayload: {
           data_view_ID: 'D_MapOutputSavable'
@@ -83,7 +90,7 @@ const useUpdatePegaProps = (
             MaxPopulationVolume: pD?.maxPopDensityOperationalGroundRisk,
             AveragePopulationDensityInAdjacentArea: pD?.avgPopDensityAdjacentArea,
             MapImageJSON: JSON.stringify(pR),
-            FlightGeometryJSON: fP ? JSON.stringify(fP.toJSON()) : null,
+            FlightGeometryJSON: flightGeometryJSON,
             MapStateJSON: mS ? JSON.stringify(mS) : null,
             IntrinsicGroundRisk: gR
           }
