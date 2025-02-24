@@ -2,7 +2,7 @@ import MapView from '@arcgis/core/views/MapView';
 
 let viewInstance = new MapView({
   ui: {
-    components: [] // Remove default UI components
+    components: ['zoom']
   }
 });
 
@@ -15,7 +15,7 @@ const getNewView = () => {
 
   viewInstance = new MapView({
     ui: {
-      components: [] // Remove default UI components
+      components: []
     }
   });
 };

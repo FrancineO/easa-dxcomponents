@@ -1,6 +1,6 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type ImageryLayer from '@arcgis/core/layers/ImageryLayer';
-import { LayerId, type MapProps } from '../types';
+import { LayerId, type MapProps, type MapState } from '../types';
 import { getView, getNewView } from './view';
 import IdentityManager from '@arcgis/core/identity/IdentityManager';
 import Basemap from '@arcgis/core/Basemap';
@@ -11,33 +11,48 @@ import { geozoneRenderer, landuseRenderer, populationDensityRenderer } from '../
 import Layer from '@arcgis/core/layers/Layer';
 import FeatureLayer from '@arcgis/core/layers/FeatureLayer';
 import * as rendererJsonUtils from '@arcgis/core/renderers/support/jsonUtils.js';
-import { Text } from '@pega/cosmos-react-core';
+import { Button, Text } from '@pega/cosmos-react-core';
+import { Card, CardContent } from '@pega/cosmos-react-core';
+import { Icon } from '@pega/cosmos-react-core';
 import BasemapChooser from '../tools/basemap-chooser/basemap-chooser';
+import LocateViewModel from '@arcgis/core/widgets/Locate/LocateViewModel';
 
 type Props = {
   style: React.CSSProperties;
   mapProps: MapProps;
+  mapState: MapState | null;
   onLayersAdded: () => void;
 };
 
 const SoraMap = (props: Props) => {
-  const { style, mapProps, onLayersAdded } = props;
+  const { style, mapProps, mapState, onLayersAdded } = props;
   const {
-    latitude,
-    longitude,
-    zoom,
     agolUrl,
     agolToken,
     popDensityPortalItemId,
-    basemapPortalItemId,
+    basemapPortalItemIds,
     landusePortalItemId,
     geozonePortalItemId
   } = mapProps;
+
+  const basemapPortalItemIdsArray = useMemo(() => {
+    const bmIds = basemapPortalItemIds?.split(',');
+    if (!bmIds || bmIds.length === 0) {
+      return [
+        '979c6cc89af9449cbeb5342a439c6a76',
+        '86265e5a4bbb4187a59719cf134e0018',
+        '67372ff42cd145319639a99152b15bc3'
+      ];
+    }
+    return bmIds;
+  }, [basemapPortalItemIds]);
+
   const mapDiv = useRef(null);
 
   const [signedIn, setSignedIn] = useState(false);
   const [signInStatusChecked, setSignInStatusChecked] = useState(false);
   const [signInError, setSignInError] = useState<string | null>(null);
+  const [locateVM, setLocateVM] = useState<LocateViewModel | null>(null);
 
   const checkingSignInStatus = useRef(false);
 
@@ -54,7 +69,7 @@ const SoraMap = (props: Props) => {
         setSignedIn(true);
       })
       .catch(error => {
-        setSignInError(error.message);
+        setSignInError(error?.message);
         setSignedIn(false);
       })
       .finally(() => {
@@ -130,6 +145,21 @@ const SoraMap = (props: Props) => {
           applyRenderer(layer as ImageryLayer | FeatureLayer);
           if (layer.id === LayerId.geozones) {
             (layer as FeatureLayer).popupEnabled = false;
+            const hasGeozonesVisibilityProperty =
+              mapState?.layerVisibility &&
+              Object.prototype.hasOwnProperty.call(mapState.layerVisibility, 'Geozones');
+
+            if (hasGeozonesVisibilityProperty) {
+              layer.visible = mapState?.layerVisibility?.Geozones as boolean;
+            }
+          }
+          if (layer.id === LayerId.populationDensity || layer.id === LayerId.landuse) {
+            const hasPopulationDensityVisibilityProperty =
+              mapState?.layerVisibility &&
+              Object.prototype.hasOwnProperty.call(mapState.layerVisibility, 'PopulationDensity');
+            if (hasPopulationDensityVisibilityProperty) {
+              layer.visible = mapState?.layerVisibility?.PopulationDensity as boolean;
+            }
           }
           map.add(layer, 0);
         });
@@ -142,7 +172,8 @@ const SoraMap = (props: Props) => {
       geozonePortalItemId,
       applyRenderer,
       agolUrl,
-      onLayersAdded
+      onLayersAdded,
+      mapState
     ]
   );
 
@@ -150,6 +181,12 @@ const SoraMap = (props: Props) => {
     if (getView()?.map) return;
 
     if (mapDiv.current) {
+      setLocateVM(
+        new LocateViewModel({
+          view: getView()
+        })
+      );
+
       IdentityManager.registerToken({
         token: agolToken,
         server: agolUrl
@@ -157,7 +194,7 @@ const SoraMap = (props: Props) => {
 
       const basemap = new Basemap({
         portalItem: new PortalItem({
-          id: basemapPortalItemId,
+          id: basemapPortalItemIdsArray[0],
           portal: {
             url: agolUrl
           }
@@ -172,12 +209,17 @@ const SoraMap = (props: Props) => {
 
       getView().container = mapDiv.current;
       getView().map = map;
-      getView().center = new Point({ latitude, longitude });
-      getView().zoom = zoom;
+      if (!mapState) {
+        getView().center = new Point({ latitude: 53, longitude: 16 });
+        getView().zoom = 4;
+      } else {
+        getView().center = new Point(mapState.center);
+        getView().zoom = mapState.zoom ?? 4;
+      }
 
       getView().focus();
     }
-  }, [latitude, longitude, zoom, agolToken, agolUrl, basemapPortalItemId, mapDiv, addLayers]);
+  }, [mapState, agolToken, agolUrl, mapDiv, addLayers, basemapPortalItemIdsArray]);
 
   useEffect(() => {
     if (!signInStatusChecked) {
@@ -198,12 +240,63 @@ const SoraMap = (props: Props) => {
     };
   }, []);
 
+  // TODO: Add tooltips to the buttons
   return (
     <>
       {signedIn ? (
         <div style={style}>
           <div style={{ width: '100%', height: '100%' }} ref={mapDiv} />
-          <BasemapChooser />
+          <Card style={{ position: 'absolute', top: '0', left: '0' }}>
+            <CardContent style={{ display: 'flex', flexDirection: 'column', gap: '0.15rem' }}>
+              <Button
+                title='Zoom in'
+                style={{
+                  width: '2rem',
+                  height: '2rem',
+                  marginLeft: '0.25rem',
+                  marginTop: '0.25rem'
+                }}
+                variant='secondary'
+                onClick={() => {
+                  getView().zoom = getView().zoom + 1;
+                }}
+              >
+                <Icon name='plus' type='button' />
+              </Button>
+              <Button
+                title='Zoom out'
+                style={{
+                  width: '2rem',
+                  height: '2rem',
+                  marginLeft: '0.25rem',
+                  marginTop: '0.25rem'
+                }}
+                variant='secondary'
+                onClick={() => {
+                  getView().zoom = getView().zoom - 1;
+                }}
+              >
+                <Icon name='minus' type='button' />
+              </Button>
+              <Button
+                title='Locate Me'
+                style={{
+                  width: '2rem',
+                  height: '2rem',
+                  marginLeft: '0.25rem',
+                  marginTop: '0.25rem'
+                }}
+                disabled={locateVM === null}
+                variant='secondary'
+                onClick={() => {
+                  locateVM?.locate();
+                }}
+              >
+                <Icon name='crosshairs' type='button' />
+              </Button>
+            </CardContent>
+          </Card>
+          <BasemapChooser basemapPortalItemIds={basemapPortalItemIdsArray} mapState={mapState} />
         </div>
       ) : (
         signInStatusChecked && (

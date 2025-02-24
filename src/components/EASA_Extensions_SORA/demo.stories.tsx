@@ -152,10 +152,9 @@ export const Default: Story = {
   },
   args: {
     height: '40rem',
-    latitude: 38.7223,
-    longitude: -9.1393,
-    zoom: 8,
     controlledGroundArea: false,
+    mapStateJSON:
+      '{"center": {"latitude": 53, "longitude": 16 },"zoom": 3,"basemap": "86265e5a4bbb4187a59719cf134e0018","layerVisibility": { "PopulationDensity": false, "Geozones": true }}',
     flightPathJSON:
       '{"spatialReference":{"latestWkid":3857,"wkid":102100},"rings":[[[-983315.5512089686,4628094.701973546],[-969117.3732049979,4630679.228992439],[-973215.1145182232,4624162.972331126],[-983315.5512089686,4628094.701973546]]]}',
     sGPS: 3,
@@ -187,7 +186,8 @@ export const Default: Story = {
     printFormat: 'jpg',
     printDpi: 300,
     popDensityPortalItemId: '0bfa97c0648449069cf45586578459c5',
-    basemapPortalItemId: '979c6cc89af9449cbeb5342a439c6a76',
+    basemapPortalItemIds:
+      '979c6cc89af9449cbeb5342a439c6a76,86265e5a4bbb4187a59719cf134e0018,67372ff42cd145319639a99152b15bc3',
     landusePortalItemId: '87919279e9394adb9ba4f3f8009e1360',
     geozonePortalItemId: 'e632deb3526647aaa864e2b89e92c738'
   }

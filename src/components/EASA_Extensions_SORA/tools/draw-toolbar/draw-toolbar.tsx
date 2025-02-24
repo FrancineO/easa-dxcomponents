@@ -106,6 +106,12 @@ export const DrawToolbar = (props: Props) => {
       if (event.state === 'active' && event.toolEventInfo.type === 'reshape-stop') {
         sketchViewModel?.complete();
       }
+      if (event.state === 'active' && event.toolEventInfo.type === 'move-stop') {
+        sketchViewModel?.complete();
+      }
+      if (event.state === 'active' && event.toolEventInfo.type === 'scale-stop') {
+        sketchViewModel?.complete();
+      }
     },
     [sketchViewModel]
   );
@@ -250,13 +256,13 @@ export const DrawToolbar = (props: Props) => {
         tool: 'reshape',
         reshapeOptions: {
           vertexOperation: 'move',
-          shapeOperation: 'none'
+          shapeOperation: 'move'
         },
         highlightOptions: {
           enabled: false
         },
         enableRotation: false,
-        enableScaling: false
+        enableScaling: true
       }
     });
 

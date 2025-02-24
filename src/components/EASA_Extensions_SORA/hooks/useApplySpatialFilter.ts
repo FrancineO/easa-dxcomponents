@@ -5,8 +5,8 @@ import type ImageryLayer from '@arcgis/core/layers/ImageryLayer';
 import * as rasterFunctionUtils from '@arcgis/core/layers/support/rasterFunctionUtils';
 import * as geometryEngine from '@arcgis/core/geometry/geometryEngine';
 
-export const useApplySpatialFilter = (flightVolume: FlightVolume | null) => {
-  const applySpatialFilter = useCallback(() => {
+export const useHighlightIntersectingLanduse = (flightVolume: FlightVolume | null) => {
+  const highlightIntersectingLanduse = useCallback(() => {
     const landuseHighlightLayer = getView().map?.findLayerById(
       LayerId.landuseHighlight
     ) as ImageryLayer;
@@ -27,8 +27,7 @@ export const useApplySpatialFilter = (flightVolume: FlightVolume | null) => {
     const operationalAndGroundRiskGeometry = geometryEngine.union([
       flightVolume?.flightGeography?.geometry as __esri.Polygon,
       flightVolume?.contingencyVolume?.geometry as __esri.Polygon,
-      flightVolume?.groundRiskVolume?.geometry as __esri.Polygon,
-      flightVolume?.adjacentArea?.geometry as __esri.Polygon
+      flightVolume?.groundRiskVolume?.geometry as __esri.Polygon
     ]) as __esri.Polygon;
 
     landuseHighlightLayer.rasterFunction = rasterFunctionUtils.clip({
@@ -37,7 +36,7 @@ export const useApplySpatialFilter = (flightVolume: FlightVolume | null) => {
     });
   }, [flightVolume]);
 
-  return { applySpatialFilter };
+  return { highlightIntersectingLanduse };
 };
 
-export default useApplySpatialFilter;
+export default useHighlightIntersectingLanduse;

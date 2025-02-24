@@ -1,35 +1,30 @@
-import { useMemo, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Card, CardContent, Switch, Text } from '@pega/cosmos-react-core';
 import { getView } from '../map/view';
-import { LayerGroupType, LayerId } from '../types';
+import { LayerGroupType, type MapState, layerGroups } from '../types';
 import * as reactiveUtils from '@arcgis/core/core/reactiveUtils';
 
 type Props = {
   style?: React.CSSProperties;
+  mapState: MapState | null;
 };
 
 const LayerList = (props: Props) => {
-  const { style } = props;
-  const [visibilityState, setVisibilityState] = useState({
-    [LayerGroupType.populationDensity]: true,
-    [LayerGroupType.geozones]: true
-  });
+  const { style, mapState } = props;
 
-  const layerGroups = useMemo(
-    () => [
-      {
-        type: LayerGroupType.populationDensity,
-        label: 'Population Density',
-        ids: [LayerId.populationDensity, LayerId.landuse]
-      },
-      {
-        type: LayerGroupType.geozones,
-        label: 'Geozones',
-        ids: [LayerId.geozones]
-      }
-    ],
-    []
-  );
+  const hasPopDensity =
+    mapState?.layerVisibility && 'PopulationDensity' in mapState.layerVisibility;
+  const hasGeozones = mapState?.layerVisibility && 'Geozones' in mapState.layerVisibility;
+
+  const popDensityVisible = hasPopDensity
+    ? (mapState?.layerVisibility?.PopulationDensity ?? true)
+    : true;
+  const geozonesVisible = hasGeozones ? (mapState?.layerVisibility?.Geozones ?? true) : true;
+
+  const [visibilityState, setVisibilityState] = useState({
+    [LayerGroupType.populationDensity]: popDensityVisible,
+    [LayerGroupType.geozones]: geozonesVisible
+  });
 
   // Initialize layer visibility
   useEffect(() => {
@@ -53,7 +48,7 @@ const LayerList = (props: Props) => {
     return () => {
       mounted = false;
     };
-  }, [layerGroups, visibilityState]);
+  }, [visibilityState]);
 
   const toggleLayer = (layerGroupType: LayerGroupType) => {
     const layerGroup = layerGroups.find(lg => lg.type === layerGroupType);

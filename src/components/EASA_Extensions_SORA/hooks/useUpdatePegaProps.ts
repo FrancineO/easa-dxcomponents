@@ -1,11 +1,13 @@
 import { useCallback, useRef } from 'react';
-import type { PopulationDensity } from '../types';
+import type { MapState, PopulationDensity } from '../types';
+import debounce from 'lodash/debounce';
 
 const useUpdatePegaProps = (
   pConnect: any,
   populationDensity: PopulationDensity | null,
   printRequest: any,
   flightPath: __esri.Geometry | null,
+  mapState: MapState | null,
   groundRisk: 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | null
 ) => {
   const paramsRef = useRef({
@@ -13,6 +15,7 @@ const useUpdatePegaProps = (
     populationDensity,
     printRequest,
     flightPath,
+    mapState,
     groundRisk
   });
   const updateInProgress = useRef(false);
@@ -23,6 +26,7 @@ const useUpdatePegaProps = (
     populationDensity,
     printRequest,
     flightPath,
+    mapState,
     groundRisk
   };
 
@@ -35,10 +39,12 @@ const useUpdatePegaProps = (
       printRequest: pR,
       pConnect: pC,
       groundRisk: gR,
-      flightPath: fP
+      flightPath: fP,
+      mapState: mS
     } = currentParams;
-    if (!pD?.maxPopDensityOperationalGroundRisk || !pD?.avgPopDensityAdjacentArea || !pR || !gR)
-      return;
+
+    // if (!pD?.maxPopDensityOperationalGroundRisk || !pD?.avgPopDensityAdjacentArea || !pR || !gR)
+    //   return;
 
     // Prevent multiple simultaneous updates
     if (updateInProgress.current) return;
@@ -54,6 +60,8 @@ const useUpdatePegaProps = (
     console.log('   printRequest', pR);
     // eslint-disable-next-line no-console
     console.log('   flightPath', fP);
+    // eslint-disable-next-line no-console
+    console.log('   mapState', mS);
 
     try {
       updateInProgress.current = true;
@@ -72,10 +80,11 @@ const useUpdatePegaProps = (
         body: {
           data: {
             pyGUID: caseId,
-            MaxPopulationVolume: pD.maxPopDensityOperationalGroundRisk,
-            AveragePopulationDensityInAdjacentArea: pD.avgPopDensityAdjacentArea,
+            MaxPopulationVolume: pD?.maxPopDensityOperationalGroundRisk,
+            AveragePopulationDensityInAdjacentArea: pD?.avgPopDensityAdjacentArea,
             MapImageJSON: JSON.stringify(pR),
             FlightGeometryJSON: fP ? JSON.stringify(fP.toJSON()) : null,
+            MapStateJSON: mS ? JSON.stringify(mS) : null,
             IntrinsicGroundRisk: gR
           }
         }

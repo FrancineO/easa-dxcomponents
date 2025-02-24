@@ -4,25 +4,28 @@ import { useEffect, useMemo, useState } from 'react';
 import Basemap from '@arcgis/core/Basemap';
 import { getView } from '../../map/view';
 import BasemapChooserStyle from './basemap-chooser-style';
+import type { MapState } from '../../types';
 
-const BasemapChooser = () => {
+const BasemapChooser = (props: { basemapPortalItemIds: string[]; mapState: MapState | null }) => {
+  const { basemapPortalItemIds, mapState } = props;
   const [choicesOpen, setChoicesOpen] = useState(false);
 
   const [basemaps, setBasemaps] = useState<Basemap[]>([]);
-  const [currentBasemapItemId, setCurrentBasemapItemId] = useState<string>('');
-  const currentBaseMap = useMemo(
-    () => basemaps.find(b => b?.id === currentBasemapItemId),
-    [basemaps, currentBasemapItemId]
+  const [currentBasemapItemId, setCurrentBasemapItemId] = useState<string>(
+    mapState?.basemap ?? basemapPortalItemIds[0]
   );
 
-  useEffect(() => {
-    const basemapItemIds = [
-      '979c6cc89af9449cbeb5342a439c6a76',
-      '86265e5a4bbb4187a59719cf134e0018',
-      '67372ff42cd145319639a99152b15bc3'
-    ];
+  const currentBaseMap = useMemo(() => {
+    return basemaps.find(b => b?.portalItem?.id === currentBasemapItemId);
+  }, [basemaps, currentBasemapItemId]);
 
-    const bMaps = basemapItemIds.map(
+  const basemapsLoaded = useMemo(() => {
+    return basemaps.length === basemapPortalItemIds.length;
+  }, [basemaps, basemapPortalItemIds]);
+
+  useEffect(() => {
+    if (basemapsLoaded) return;
+    const bMaps = basemapPortalItemIds.map(
       id =>
         new Basemap({
           portalItem: {
@@ -36,8 +39,7 @@ const BasemapChooser = () => {
         setBasemaps(prev => [...prev, basemap]);
       });
     });
-    setCurrentBasemapItemId(bMaps[0].id);
-  }, []);
+  }, [basemapPortalItemIds, basemapsLoaded]);
 
   useEffect(() => {
     if (!getView()?.map && currentBaseMap === undefined) return;
@@ -63,12 +65,12 @@ const BasemapChooser = () => {
               role='button'
               tabIndex={0}
               onClick={() => {
-                setCurrentBasemapItemId(basemap.id);
+                setCurrentBasemapItemId(basemap.portalItem.id);
                 setChoicesOpen(false);
               }}
               onKeyDown={e => {
                 if (e.key === 'Enter' || e.key === ' ') {
-                  setCurrentBasemapItemId(basemap.id);
+                  setCurrentBasemapItemId(basemap.portalItem.id);
                   setChoicesOpen(false);
                 }
               }}

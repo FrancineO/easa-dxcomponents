@@ -1,17 +1,20 @@
 export const populationDensityColors = {
-  noValue: [0, 0, 0, 0],
-  low: [198, 219, 239, 255], // Light blue
-  medium: [107, 174, 214, 255], // Medium blue
-  high: [33, 113, 181, 255], // Dark blue
-  extreme: [8, 48, 107, 255] // Darkest blue
+  noValue: [0, 0, 0, 0], // Transparent
+  veryLow: [224, 240, 255, 255], // Very Light Blue
+  low: [173, 216, 230, 255], // Light Blue
+  medium: [100, 149, 237, 255], // Medium Blue
+  high: [40, 90, 200, 255], // Dark Blue
+  extreme: [0, 35, 102, 255] // Deepest Blue
 };
+
 export const populationDensityClassbreaks = [
   { value: 0, color: populationDensityColors.noValue, label: 'No data' },
   { value: 0.01, color: populationDensityColors.noValue, label: 'No data' },
-  { value: 25, color: populationDensityColors.low, label: '0 - 25' },
-  { value: 100, color: populationDensityColors.medium, label: '25 - 100' },
-  { value: 500, color: populationDensityColors.high, label: '100 - 500' },
-  { value: 8000, color: populationDensityColors.extreme, label: '500 - 8000' }
+  { value: 5, color: populationDensityColors.veryLow, label: '<5' },
+  { value: 50, color: populationDensityColors.low, label: '<50' },
+  { value: 500, color: populationDensityColors.medium, label: '<500' },
+  { value: 5000, color: populationDensityColors.high, label: '<5000' },
+  { value: 50000, color: populationDensityColors.extreme, label: '<50000' }
 ];
 
 export const populationDensityRenderer = {

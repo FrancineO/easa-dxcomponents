@@ -11,8 +11,7 @@ const useGetIntersectingLanduses = (flightVolume: FlightVolume | null) => {
       !flightVolume ||
       !flightVolume.flightGeography ||
       !flightVolume.contingencyVolume ||
-      !flightVolume.groundRiskVolume ||
-      !flightVolume.adjacentArea
+      !flightVolume.groundRiskVolume
     ) {
       setIntersectingLanduseClasses([]);
       return;
@@ -21,8 +20,7 @@ const useGetIntersectingLanduses = (flightVolume: FlightVolume | null) => {
     const geometry = geometryEngine.union([
       flightVolume.flightGeography?.geometry,
       flightVolume.contingencyVolume?.geometry,
-      flightVolume.groundRiskVolume?.geometry,
-      flightVolume.adjacentArea?.geometry
+      flightVolume.groundRiskVolume?.geometry
     ]) as __esri.Polygon;
 
     getView().when(async () => {

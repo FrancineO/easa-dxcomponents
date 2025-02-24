@@ -1,14 +1,26 @@
 export type MapProps = {
-  latitude: number;
-  longitude: number;
-  zoom: number;
   flightPathJSON: string | null;
+  mapStateJSON: string | null;
   agolUrl: string;
   agolToken: string;
   popDensityPortalItemId: string;
-  basemapPortalItemId: string;
+  basemapPortalItemIds: string;
   landusePortalItemId: string;
   geozonePortalItemId: string;
+};
+
+export type MapState = {
+  center?: {
+    latitude: number;
+    longitude: number;
+  };
+  zoom?: number;
+  basemap?: string;
+  layerVisibility?: LayerVisibility;
+};
+
+export type LayerVisibility = {
+  [key in LayerGroupType]?: boolean | undefined;
 };
 
 export type ComponentProps = {
@@ -75,3 +87,16 @@ export enum LayerId {
   landuse = 'Landuse',
   landuseHighlight = 'LanduseHighlight'
 }
+
+export const layerGroups: LayerGroup[] = [
+  {
+    type: LayerGroupType.populationDensity,
+    label: 'Population Density',
+    ids: [LayerId.populationDensity, LayerId.landuse]
+  },
+  {
+    type: LayerGroupType.geozones,
+    label: 'Geozones',
+    ids: [LayerId.geozones]
+  }
+];

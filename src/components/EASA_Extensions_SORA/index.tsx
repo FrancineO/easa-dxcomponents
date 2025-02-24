@@ -5,20 +5,20 @@ import {
   CardContent,
   FieldValueList
 } from '@pega/cosmos-react-core';
-import { useCallback, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import '../create-nonce';
 import { DrawToolbar } from './tools/draw-toolbar/draw-toolbar';
 import SearchTool from './tools/search-tool';
 import { useGetPopulationDensity } from './hooks/useGetPopulationDensity';
 import useCalculateFlightVolume from './hooks/useCalculateFlightVolume';
-import type { ComponentProps } from './types';
+import type { ComponentProps, MapState } from './types';
 import useUpdatePegaProps from './hooks/useUpdatePegaProps';
 import useDebouncedEffect from './hooks/useDebouncedEffect';
 import useGetPrintRequest from './hooks/useGetPrintRequest';
 import useGetIntrinsicGroundRisk from './hooks/useGetIntrinsicGroundRisk';
-import useMapExtent from './hooks/useMapExtent';
+import useMapState from './hooks/useMapState';
 import SoraMap from './map/sora-map';
-import useApplySpatialFilter from './hooks/useApplySpatialFilter';
+import useHighlightIntersectingLanduse from './hooks/useApplySpatialFilter';
 import LayerList from './tools/layer-list';
 import useGetIntersectingGeozones from './hooks/useGetIntersectingGeozones';
 
@@ -26,18 +26,29 @@ import Legends from './legends/legends';
 import { getFlightGeography } from './tools/draw-toolbar/draw-utils';
 import useGetIntersectingLanduses from './hooks/useGetIntersectingLanduses';
 
-// IRLi9g31pindstu7
-
 // https://map.droneguide.be/
+// https://maptool-dipul.dfs.de/
 
 // geozones in the future will be updateable by an api
-// - they will then be single files from each memeber states which will then mean sinlge layers for each member state, or the api can update the whole layer.
+// - they will then be single files from each member states which will then mean single layers for each member state, or the api can update the whole layer.
+
+// TODO: change the pop density layers from a resolution of 200m resolution to another value based on the drone height.
+// See table in screenshot from alberto.
+// Should write a script which fetches the data from the url this url: https://jrcbox.jrc.ec.europa.eu/index.php/s/QN29mKagdLqnfnT
+// See mail from Alberto on 2025-01-23 (subject: Population density data for eSORA) for the password
+// The various pop density layers need to be used to make the calculation.
+// For visualizing on the map, we probably always want to show the 200m resolution (confirm with alberto)
+
+// TODO: fix the flight geography bug when loading an already existing flight path.
+
+// TODO: allow the user to upload a gpx or kml. low priority
 
 export const EasaExtensionsSORA = (props: ComponentProps) => {
   const {
     getPConnect,
     height,
     flightPathJSON,
+    mapStateJSON,
     cd,
     vO,
     criticalArea,
@@ -52,6 +63,7 @@ export const EasaExtensionsSORA = (props: ComponentProps) => {
   const [flightGeography, setFlightGeography] = useState<__esri.Graphic | null>(null);
   const [flightPath, setFlightPath] = useState<__esri.Geometry | null>(null);
   const [layersAdded, setLayersAdded] = useState(false);
+  const [mapState, setMapState] = useState<MapState | null>(null);
 
   const pConnect = getPConnect();
 
@@ -103,14 +115,14 @@ export const EasaExtensionsSORA = (props: ComponentProps) => {
     printDpi
   );
 
-  // Set up the hook for applying spatial filter
-  const { applySpatialFilter } = useApplySpatialFilter(flightVolume);
+  useEffect(() => {
+    if (mapStateJSON) {
+      setMapState(JSON.parse(mapStateJSON));
+    }
+  }, [mapStateJSON]);
 
-  // Set up the callback for extent change
-  const handleExtentChange = useCallback(() => {
-    if (!flightVolume) return;
-    getPrintRequest();
-  }, [flightVolume, getPrintRequest]);
+  // Set up the hook for highlighting the intersecting landuse
+  const { highlightIntersectingLanduse } = useHighlightIntersectingLanduse(flightVolume);
 
   // Set up the hook for updating Pega props
   const updatePegaProps = useUpdatePegaProps(
@@ -118,6 +130,7 @@ export const EasaExtensionsSORA = (props: ComponentProps) => {
     populationDensity,
     printRequest,
     flightPath,
+    mapState,
     groundRisk
   );
 
@@ -130,18 +143,19 @@ export const EasaExtensionsSORA = (props: ComponentProps) => {
     }
   }, [flightPathJSON, layersAdded]);
 
-  // Set up the effect for extent change
-  useEffect(() => {
-    // if (!View?.extent) return;
-    if (!layersAdded) return;
-    handleExtentChange();
-  }, [handleExtentChange, layersAdded]);
+  // Set up the effect for map state
+  const updatedMapState = useMapState(mapState);
 
-  // Set up the effect for map extent
-  useMapExtent(() => {
-    // if (!View?.extent) return;
-    handleExtentChange();
-  });
+  useEffect(() => {
+    if (!flightVolume) return;
+    getPrintRequest();
+  }, [getPrintRequest, flightVolume]);
+
+  useEffect(() => {
+    if (updatedMapState) {
+      setMapState({ ...updatedMapState });
+    }
+  }, [updatedMapState]);
 
   // Call calculatePopDensities when flightVolume changes
   useEffect(() => {
@@ -150,11 +164,11 @@ export const EasaExtensionsSORA = (props: ComponentProps) => {
     queryIntersectingLanduses();
   }, [flightVolume, layersAdded, calculatePopDensities, queryIntersectingLanduses]);
 
-  // call applyFlightVolume when flightVolume changes
+  // highlight the intersecting landuse when flightVolume changes
   useEffect(() => {
     if (!layersAdded) return;
-    applySpatialFilter();
-  }, [flightVolume, layersAdded, applySpatialFilter]);
+    highlightIntersectingLanduse();
+  }, [flightVolume, layersAdded, highlightIntersectingLanduse]);
 
   // Call calculateIntrinsicGroundRisk when populationDensity, cd, or vO changes
   useEffect(() => {
@@ -172,7 +186,7 @@ export const EasaExtensionsSORA = (props: ComponentProps) => {
   useEffect(() => {
     if (!layersAdded) return;
     updatePegaProps();
-  }, [groundRisk, printRequest, layersAdded, updatePegaProps]);
+  }, [groundRisk, printRequest, layersAdded, updatePegaProps, mapState]);
 
   return (
     <Card style={{ height: '100%' }}>
@@ -185,7 +199,7 @@ export const EasaExtensionsSORA = (props: ComponentProps) => {
           }}
         >
           <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
-            <LayerList />
+            <LayerList mapState={mapState} />
             <SearchTool />
             <DrawToolbar
               cd={cd}
@@ -197,6 +211,7 @@ export const EasaExtensionsSORA = (props: ComponentProps) => {
         </div>
         <SoraMap
           style={{ height, position: 'relative' }}
+          mapState={mapState}
           mapProps={props}
           onLayersAdded={() => setLayersAdded(true)}
         />
