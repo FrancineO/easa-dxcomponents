@@ -10,11 +10,11 @@ export const populationDensityColors = {
 export const populationDensityClassbreaks = [
   { value: 0, color: populationDensityColors.noValue, label: 'No data' },
   { value: 0.01, color: populationDensityColors.noValue, label: 'No data' },
-  { value: 5, color: populationDensityColors.veryLow, label: '<5' },
-  { value: 50, color: populationDensityColors.low, label: '<50' },
-  { value: 500, color: populationDensityColors.medium, label: '<500' },
-  { value: 5000, color: populationDensityColors.high, label: '<5000' },
-  { value: 50000, color: populationDensityColors.extreme, label: '<50000' }
+  { value: 5, color: populationDensityColors.veryLow, label: '< 5' },
+  { value: 50, color: populationDensityColors.low, label: '< 50' },
+  { value: 500, color: populationDensityColors.medium, label: '< 500' },
+  { value: 5000, color: populationDensityColors.high, label: '< 5,000' },
+  { value: 50000, color: populationDensityColors.extreme, label: '< 50,000' }
 ];
 
 export const populationDensityRenderer = {

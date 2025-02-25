@@ -54,7 +54,7 @@ const PopDensityLegend = () => {
                     textAlign: 'left'
                   }}
                 >
-                  {breakInfo.label} people/km²
+                  {breakInfo.label} ppl/km²
                 </Text>
               </div>
             ))}
