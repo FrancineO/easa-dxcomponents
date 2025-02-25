@@ -28,7 +28,7 @@ export const useGetPopulationDensity = (flightVolume: FlightVolume | null) => {
       });
 
       if (adjacentStats.statistics[0]?.max) {
-        return Math.round(adjacentStats.statistics[0].max);
+        return _.round(adjacentStats.statistics[0].max, 2);
       }
       return null;
     },
@@ -52,7 +52,7 @@ export const useGetPopulationDensity = (flightVolume: FlightVolume | null) => {
       });
 
       if (opStats.statistics[0]?.avg) {
-        return Math.round(opStats.statistics[0].avg);
+        return _.round(opStats.statistics[0].avg, 2);
       }
       return null;
     },
@@ -167,7 +167,8 @@ export const useGetPopulationDensity = (flightVolume: FlightVolume | null) => {
         const combined =
           (popDensity.avgPopDensityAdjacentArea ?? 0) + (avgPopDensityLanduseAdjacentArea ?? 0);
 
-        popDensity.avgPopDensityAdjacentArea = combined !== 0 ? _.round(combined / 2) : 0;
+        popDensity.avgPopDensityAdjacentArea =
+          combined !== 0 ? _.round(combined / 2, combined < 1 ? 2 : 0) : 0;
       }
 
       setPopulationDensity(popDensity);

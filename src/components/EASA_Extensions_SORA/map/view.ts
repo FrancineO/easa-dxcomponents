@@ -2,7 +2,7 @@ import MapView from '@arcgis/core/views/MapView';
 
 let viewInstance = new MapView({
   ui: {
-    components: ['zoom']
+    components: []
   }
 });
 

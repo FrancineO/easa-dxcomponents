@@ -39,9 +39,15 @@ import useGetIntersectingLanduses from './hooks/useGetIntersectingLanduses';
 // The various pop density layers need to be used to make the calculation.
 // For visualizing on the map, we probably always want to show the 200m resolution (confirm with alberto)
 
-// TODO: fix the flight geography bug when loading an already existing flight path.
-
 // TODO: allow the user to upload a gpx or kml. low priority
+
+// TODO: ask Piotr about the parameters that are text and if we want to add them to the pega database. such as portal url, print service url, etc.
+
+// TODO: need to handle the geozones correctly. Only have geozones for portugal at the moment.
+
+// TODO: max popdensiity should never be "-"" once calculated. it should be 0
+
+// TODO: seems like the iGRC is not calculated correctly. see area where the max pop density is like 7
 
 export const EasaExtensionsSORA = (props: ComponentProps) => {
   const {
@@ -188,6 +194,15 @@ export const EasaExtensionsSORA = (props: ComponentProps) => {
     updatePegaProps();
   }, [groundRisk, printRequest, layersAdded, updatePegaProps, mapState]);
 
+  const maxPopDensity =
+    populationDensity?.maxPopDensityOperationalGroundRisk === 0
+      ? '0'
+      : populationDensity?.maxPopDensityOperationalGroundRisk;
+  const avgPopDensity =
+    populationDensity?.avgPopDensityAdjacentArea === 0
+      ? '0'
+      : populationDensity?.avgPopDensityAdjacentArea;
+
   return (
     <Card style={{ height: '100%' }}>
       <CardContent style={{ height: '100%' }}>
@@ -230,11 +245,11 @@ export const EasaExtensionsSORA = (props: ComponentProps) => {
             fields={[
               {
                 name: 'Max. population in op. volume + ground risk buffer',
-                value: populationDensity?.maxPopDensityOperationalGroundRisk
+                value: maxPopDensity
               },
               {
                 name: 'Average population density in adjacent area',
-                value: populationDensity?.avgPopDensityAdjacentArea
+                value: avgPopDensity
               },
               {
                 name: 'Intrinsic ground risk',

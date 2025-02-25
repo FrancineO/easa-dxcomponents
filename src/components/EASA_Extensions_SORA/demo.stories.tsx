@@ -153,10 +153,12 @@ export const Default: Story = {
   args: {
     height: '40rem',
     controlledGroundArea: false,
-    mapStateJSON:
-      '{"center": {"latitude": 53, "longitude": 16 },"zoom": 3,"basemap": "86265e5a4bbb4187a59719cf134e0018","layerVisibility": { "PopulationDensity": false, "Geozones": true }}',
-    flightPathJSON:
-      '{"spatialReference":{"latestWkid":3857,"wkid":102100},"paths":[[[775678.2918865071,6818734.746604987],[1190387.388847621,7123737.59871983],[1363115.963515002,6924428.047466287]]],"type":"polyline"}',
+    mapStateJSON: null,
+    // mapStateJSON:
+    //   '{"center": {"latitude": 53, "longitude": 16 },"zoom": 3,"basemap": "86265e5a4bbb4187a59719cf134e0018","layerVisibility": { "PopulationDensity": false, "Geozones": true }}',
+    flightPathJSON: null,
+    // flightPathJSON:
+    //   '{"spatialReference":{"latestWkid":3857,"wkid":102100},"paths":[[[775678.2918865071,6818734.746604987],[1190387.388847621,7123737.59871983],[1363115.963515002,6924428.047466287]]],"type":"polyline"}',
     sGPS: 3,
     sPos: 3,
     sK: 3,
