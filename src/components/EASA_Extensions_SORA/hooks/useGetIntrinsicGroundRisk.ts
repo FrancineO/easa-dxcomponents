@@ -62,6 +62,15 @@ const calculateGroundRisk = (
     [7, 8, null, null, null] // > 50,000
   ];
 
+  // eslint-disable-next-line no-console
+  console.log('densityCategory', densityCategory);
+  // eslint-disable-next-line no-console
+  console.log('dimensionCategory', dimensionCategory);
+  // eslint-disable-next-line no-console
+  console.log('speedCategory', speedCategory);
+  // eslint-disable-next-line no-console
+  console.log('criticalAreaCategory', criticalAreaCategory);
+
   // Get the ground risk values from the matrix for both dimension and speed
   const groundRiskByDimension = groundRiskMatrix[densityCategory][dimensionCategory];
   const groundRiskBySpeed = groundRiskMatrix[densityCategory][speedCategory];
@@ -95,7 +104,9 @@ const calculateGroundRisk = (
   }
 
   if (controlledGroundArea) {
-    if (groundRiskByDimension > groundRiskBySpeed) {
+    if (groundRiskByCriticalArea !== null) {
+      groundRisk = groundRiskMatrix[0][criticalAreaCategory];
+    } else if (groundRiskByDimension > groundRiskBySpeed) {
       groundRisk = groundRiskMatrix[0][dimensionCategory];
     } else {
       groundRisk = groundRiskMatrix[0][speedCategory];

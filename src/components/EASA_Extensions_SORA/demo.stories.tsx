@@ -152,7 +152,7 @@ export const Default: Story = {
   },
   args: {
     height: '40rem',
-    controlledGroundArea: false,
+    controlledGroundArea: true,
     mapStateJSON: null,
     // mapStateJSON:
     //   '{"center": {"latitude": 53, "longitude": 16 },"zoom": 3,"basemap": "86265e5a4bbb4187a59719cf134e0018","layerVisibility": { "PopulationDensity": false, "Geozones": true }}',
@@ -163,7 +163,7 @@ export const Default: Story = {
     sPos: 3,
     sK: 3,
     vO: 10,
-    criticalArea: 1000,
+    criticalArea: 7.1,
     tR: 2,
     tP: 2,
     parachute: true,
