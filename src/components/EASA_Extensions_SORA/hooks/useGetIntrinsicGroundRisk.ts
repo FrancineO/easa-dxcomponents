@@ -12,7 +12,7 @@ const calculateGroundRisk = (
   if (populationDensity === null || cd === null || vO === null || criticalArea === null)
     return null;
 
-  // claulated critical area in pega
+  // calculated critical area in pega
   let criticalAreaCategory: number;
   if (criticalArea <= 6.5) criticalAreaCategory = 0;
   else if (criticalArea <= 65) criticalAreaCategory = 1;
@@ -65,7 +65,7 @@ const calculateGroundRisk = (
   // Get the ground risk values from the matrix for both dimension and speed
   const groundRiskByDimension = groundRiskMatrix[densityCategory][dimensionCategory];
   const groundRiskBySpeed = groundRiskMatrix[densityCategory][speedCategory];
-  const groundRiskByCriticalArea = groundRiskMatrix[criticalAreaCategory][speedCategory];
+  const groundRiskByCriticalArea = groundRiskMatrix[densityCategory][criticalAreaCategory];
 
   // Return null if either combination is not part of SORA
   if (
@@ -89,15 +89,23 @@ const calculateGroundRisk = (
   // eslint-disable-next-line no-console
   console.log('groundRiskByCriticalArea', groundRiskByCriticalArea);
 
+  // if the critical area is not null, then use the critical area value
+  if (groundRiskByCriticalArea !== null) {
+    groundRisk = groundRiskByCriticalArea;
+  }
+
   if (controlledGroundArea) {
     if (groundRiskByDimension > groundRiskBySpeed) {
-      groundRisk = groundRiskMatrix[0][densityCategory];
+      groundRisk = groundRiskMatrix[0][dimensionCategory];
     } else {
       groundRisk = groundRiskMatrix[0][speedCategory];
     }
     // eslint-disable-next-line no-console
     console.log('controlledGroundArea groundRisk', groundRisk);
   }
+
+  // eslint-disable-next-line no-console
+  console.log('output iGRC', groundRisk);
 
   return groundRisk as 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | null;
 };
@@ -138,7 +146,7 @@ const useGetIntrinsicGroundRisk = (params: {
     }
 
     const risk = calculateGroundRisk(
-      populationDensity.avgPopDensityAdjacentArea,
+      populationDensity.maxPopDensityOperationalGroundRisk,
       cd,
       vO,
       controlledGroundArea,
