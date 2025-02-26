@@ -1,5 +1,6 @@
 import { Alert, Card, CardContent, Text } from '@pega/cosmos-react-core';
 import { geozoneRenderer, geozones } from '../renderers';
+import TooltipElement from '../components/tooltip-element';
 
 const GeozonesLegend = ({ intersectingGeozones }: { intersectingGeozones: __esri.Graphic[] }) => {
   return (
@@ -19,17 +20,20 @@ const GeozonesLegend = ({ intersectingGeozones }: { intersectingGeozones: __esri
         >
           {geozones.map(zone => (
             <div key={zone.value} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              <Alert
-                title={`The Flight Path Intersects with ${zone.label} GeoZone`}
-                style={{
-                  visibility: intersectingGeozones.some(
-                    gz => gz.attributes[geozoneRenderer.field1] === zone.value
-                  )
-                    ? 'visible'
-                    : 'hidden'
-                }}
-                variant='urgent'
-              />
+              <TooltipElement
+                tooltipContent={`The Flight Path Intersects with ${zone.label} GeoZone`}
+              >
+                <Alert
+                  style={{
+                    visibility: intersectingGeozones.some(
+                      gz => gz.attributes[geozoneRenderer.field1] === zone.value
+                    )
+                      ? 'visible'
+                      : 'hidden'
+                  }}
+                  variant='urgent'
+                />
+              </TooltipElement>
               <div
                 style={{
                   width: '1rem',

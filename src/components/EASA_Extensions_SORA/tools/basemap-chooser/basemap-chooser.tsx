@@ -5,6 +5,8 @@ import Basemap from '@arcgis/core/Basemap';
 import { getView } from '../../map/view';
 import BasemapChooserStyle from './basemap-chooser-style';
 import type { MapState } from '../../types';
+import { useTheme } from '@pega/cosmos-react-core';
+import { merge } from 'lodash';
 
 const BasemapChooser = (props: { basemapPortalItemIds: string[]; mapState: MapState | null }) => {
   const { basemapPortalItemIds, mapState } = props;
@@ -14,6 +16,10 @@ const BasemapChooser = (props: { basemapPortalItemIds: string[]; mapState: MapSt
   const [currentBasemapItemId, setCurrentBasemapItemId] = useState<string>(
     mapState?.basemap ?? basemapPortalItemIds[0]
   );
+
+  let PCore: any;
+  const defaultTheme = useTheme();
+  const theme = PCore ? merge(defaultTheme, PCore.getEnvironmentInfo().getTheme()) : defaultTheme;
 
   const currentBaseMap = useMemo(() => {
     return basemaps.find(b => b?.portalItem?.id === currentBasemapItemId);
@@ -48,7 +54,7 @@ const BasemapChooser = (props: { basemapPortalItemIds: string[]; mapState: MapSt
   }, [currentBaseMap]);
 
   return (
-    <BasemapChooserStyle>
+    <BasemapChooserStyle theme={theme}>
       <div className='basemap-chooser' style={{ display: 'flex' }}>
         {basemaps &&
           basemaps.map((basemap, i) => (
@@ -93,7 +99,7 @@ const BasemapChooser = (props: { basemapPortalItemIds: string[]; mapState: MapSt
           <div
             title='Change Basemap'
             className='img-box'
-            style={{ border: '0.2rem solid #076bc9' }} // TODO: use palette
+            style={{ border: `0.2rem solid ${theme.base.palette['brand-primary']}` }}
           >
             <img src={currentBaseMap?.thumbnailUrl} alt={currentBaseMap?.title} />
           </div>

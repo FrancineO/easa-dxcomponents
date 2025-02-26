@@ -249,7 +249,7 @@ const SoraMap = (props: Props) => {
           <Card style={{ position: 'absolute', top: '0', left: '0' }}>
             <CardContent style={{ display: 'flex', flexDirection: 'column', gap: '0.15rem' }}>
               <Button
-                title='Zoom in'
+                label='Zoom in'
                 style={{
                   width: '2rem',
                   height: '2rem',
@@ -264,7 +264,7 @@ const SoraMap = (props: Props) => {
                 <Icon name='plus' type='button' />
               </Button>
               <Button
-                title='Zoom out'
+                label='Zoom out'
                 style={{
                   width: '2rem',
                   height: '2rem',
@@ -279,7 +279,7 @@ const SoraMap = (props: Props) => {
                 <Icon name='minus' type='button' />
               </Button>
               <Button
-                title='Locate Me'
+                label='Locate Me'
                 style={{
                   width: '2rem',
                   height: '2rem',

@@ -1,6 +1,6 @@
 import styled, { css } from 'styled-components';
 
-export default styled.div(() => {
+export default styled.div(({ theme }) => {
   return css`
     .basemap-chooser {
       justify-content: center;
@@ -22,11 +22,11 @@ export default styled.div(() => {
       height: 100%;
       border-radius: 100%;
       padding: 0;
-      border: 0.2rem solid #ffffff;
+      border: 0.2rem solid ${theme.base.palette['brand-secondary']};
     }
 
     .basemap-chooser .basemap-choice .img-box:hover {
-      border: 0.2rem solid #076bc9;
+      border: 0.2rem solid ${theme.base.palette['brand-primary']};
     }
 
     .basemap-chooser .basemap-choice .img-box > img {

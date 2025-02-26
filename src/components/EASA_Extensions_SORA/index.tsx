@@ -45,8 +45,6 @@ import useGetIntersectingLanduses from './hooks/useGetIntersectingLanduses';
 
 // TODO: need to handle the geozones correctly. Only have geozones for portugal at the moment.
 
-// TODO: max popdensiity should never be "-"" once calculated. it should be 0
-
 // TODO: seems like the iGRC is not calculated correctly. see area where the max pop density is like 7
 
 export const EasaExtensionsSORA = (props: ComponentProps) => {

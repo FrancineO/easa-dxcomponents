@@ -1,5 +1,6 @@
 import { Card, CardContent, Text, Alert } from '@pega/cosmos-react-core';
 import { landusePopDensityLookup, landUseLabels, landuseColors } from '../renderers';
+import TooltipElement from '../components/tooltip-element';
 
 const LandusePopDensityLegend = ({
   intersectingLanduseClasses
@@ -39,10 +40,10 @@ const LandusePopDensityLegend = ({
     >
   );
 
-  const hasIntersectingLanduse = (group: {
+  const getIntersectingLanduse = (group: {
     landuses: { label: string; density: number; landuse: number }[];
   }) => {
-    return group.landuses.some(l => intersectingLanduseClasses?.includes(l.landuse));
+    return group.landuses.filter(l => intersectingLanduseClasses?.includes(l.landuse));
   };
 
   return (
@@ -85,56 +86,70 @@ const LandusePopDensityLegend = ({
                   alignItems: 'center'
                 }}
               >
-                <Alert
-                  title='The Flight Path Intersects with one of these land uses'
-                  style={{
-                    visibility: hasIntersectingLanduse(group) ? 'visible' : 'hidden'
-                  }}
-                  variant='urgent'
-                />
-                <div
-                  style={{
-                    width: '1rem',
-                    height: '1rem',
-                    minWidth: '1rem',
-                    minHeight: '1rem',
-                    backgroundColor: `rgba(${group.color.join(',')})`,
-                    border: `1px solid rgba(${group.color.join(',')})`
-                  }}
-                />
-                {
-                  // TODO: ask francine how the tooltip works
-                }
-                <div
+                <TooltipElement
+                  tooltipContent={`The Flight Path Intersects with ${getIntersectingLanduse(group)
+                    .map(l => l.label)
+                    .join(', ')}`}
+                >
+                  <Alert
+                    style={{
+                      visibility: getIntersectingLanduse(group).length > 0 ? 'visible' : 'hidden'
+                    }}
+                    variant='urgent'
+                  />
+                </TooltipElement>
+                <TooltipElement
                   style={{
                     display: 'flex',
                     gap: '0.5rem',
-                    justifyContent: 'space-between',
-                    flexGrow: 1
+                    minWidth: '250px',
+                    alignItems: 'center'
                   }}
-                >
-                  <Text
-                    title={`${group.landuses
-                      .map(l => l.label)
-                      .sort((a, b) => a.localeCompare(b))
-                      .join(' / ')}`}
-                    style={{
-                      whiteSpace: 'nowrap',
-                      overflow: 'hidden',
-                      textOverflow: 'ellipsis',
-                      width: '15rem'
-                    }}
-                  >{`${group.landuses
+                  tooltipContent={`${group.landuses
                     .map(l => l.label)
                     .sort((a, b) => a.localeCompare(b))
-                    .join(' / ')}`}</Text>
-                  <Text
+                    .join(' / ')}`}
+                >
+                  <div
                     style={{
-                      width: '6rem',
-                      textAlign: 'right'
+                      width: '1rem',
+                      height: '1rem',
+                      minWidth: '1rem',
+                      minHeight: '1rem',
+                      backgroundColor: `rgba(${group.color.join(',')})`,
+                      border: `1px solid rgba(${group.color.join(',')})`
                     }}
-                  >{`${group.maxDensity >= 1000 ? `${group.maxDensity / 1000}K` : group.maxDensity} per km²`}</Text>
-                </div>
+                  />
+                  {
+                    // TODO: @Francine how can i add a tooltip to the text?
+                  }
+                  <div
+                    style={{
+                      display: 'flex',
+                      gap: '0.5rem',
+                      justifyContent: 'space-between',
+                      flexGrow: 1
+                    }}
+                  >
+                    <Text
+                      style={{
+                        whiteSpace: 'nowrap',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        width: '15rem'
+                      }}
+                    >{`${group.landuses
+                      .map(l => l.label)
+                      .sort((a, b) => a.localeCompare(b))
+                      .join(' / ')}`}</Text>
+                    <Text
+                      style={{
+                        width: '6rem',
+                        textAlign: 'right'
+                      }}
+                    >{`${group.maxDensity >= 1000 ? `${group.maxDensity / 1000}K` : group.maxDensity} per km²`}</Text>
+                  </div>
+                </TooltipElement>
               </div>
             ))}
         </div>
