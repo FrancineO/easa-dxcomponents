@@ -18,6 +18,7 @@ const getNewView = () => {
       components: []
     }
   });
+  viewInstance.focus();
 };
 
 export { getView, getNewView };

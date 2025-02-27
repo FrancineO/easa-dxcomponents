@@ -251,7 +251,7 @@ export const EasaExtensionsSORA = (props: ComponentProps) => {
               },
               {
                 name: 'Intrinsic ground risk',
-                value: groundRisk
+                value: groundRisk === 0 ? null : groundRisk
               }
             ]}
           />

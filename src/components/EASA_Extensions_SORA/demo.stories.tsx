@@ -178,8 +178,11 @@ export const Default: Story = {
     power: true,
     cL: 0.5,
     gliding: true,
+    // to get token for agol use postman
+    // referer: https://easa.maps.arcgis.com/sharing/generateToken
+    // http://localhost:6006/
     agolToken:
-      'mzFcMRqhxzPAoRJavp2MJnT86fp9vdIuHnlcY6yRjycMNMkD4n52uRAbbfniWAIwF7xC9LSoqABJqPl9Q31E_gpA6DFwfyAZreIzmxYXs3AC2UzS8P57XC89gaBRnCMm3zsT6OphM7-kRsQ5aY09VUl_x7V_OpqRzcj8b1Z3N3M.',
+      'mzFcMRqhxzPAoRJavp2MJnT86fp9vdIuHnlcY6yRjycMNMkD4n52uRAbbfniWAIwtSRzRhrap2cHxNO1oWD1BQOjsjFi4B1L2uOYs_2sCI0YSCELbXQO7Jzp6GFfGDVZmM_GtIakA4rpO7QayQSQjd5dxhgQwCpXHLwQYnbfEU4.',
     agolUrl: 'https://easa.maps.arcgis.com/',
     printServiceUrl:
       'https://utility.arcgisonline.com/arcgis/rest/services/Utilities/PrintingTools/GPServer/Export%20Web%20Map%20Task',

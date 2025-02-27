@@ -11,7 +11,7 @@ import { geozoneRenderer, landuseRenderer, populationDensityRenderer } from '../
 import Layer from '@arcgis/core/layers/Layer';
 import FeatureLayer from '@arcgis/core/layers/FeatureLayer';
 import * as rendererJsonUtils from '@arcgis/core/renderers/support/jsonUtils.js';
-import { Button, Text } from '@pega/cosmos-react-core';
+import { Button, Modal, Text, useModalContext } from '@pega/cosmos-react-core';
 import { Card, CardContent } from '@pega/cosmos-react-core';
 import { Icon } from '@pega/cosmos-react-core';
 import BasemapChooser from '../tools/basemap-chooser/basemap-chooser';
@@ -53,8 +53,10 @@ const SoraMap = (props: Props) => {
   const [signInStatusChecked, setSignInStatusChecked] = useState(false);
   const [signInError, setSignInError] = useState<string | null>(null);
   const [locateVM, setLocateVM] = useState<LocateViewModel | null>(null);
-
+  const [locateError, setLocateError] = useState<string | null>(null);
   const checkingSignInStatus = useRef(false);
+
+  const { dismiss } = useModalContext();
 
   const checkSignInStatus = useCallback(() => {
     if (checkingSignInStatus.current) return;
@@ -240,6 +242,14 @@ const SoraMap = (props: Props) => {
     };
   }, []);
 
+  const locateMe = useCallback(() => {
+    if (locateVM) {
+      locateVM.locate().catch(error => {
+        setLocateError(error.message);
+      });
+    }
+  }, [locateVM]);
+
   // TODO: Add tooltips to the buttons
   return (
     <>
@@ -288,15 +298,36 @@ const SoraMap = (props: Props) => {
                 }}
                 disabled={locateVM === null}
                 variant='secondary'
-                onClick={() => {
-                  locateVM?.locate();
-                }}
+                onClick={locateMe}
               >
                 <Icon name='crosshairs' type='button' />
               </Button>
             </CardContent>
           </Card>
           <BasemapChooser basemapPortalItemIds={basemapPortalItemIdsArray} mapState={mapState} />
+          {locateError && (
+            <Modal
+              dismissible
+              actions={
+                <Button
+                  label='Close'
+                  onClick={() => {
+                    dismiss();
+                    setLocateError(null);
+                  }}
+                >
+                  OK
+                </Button>
+              }
+              heading='Error Getting Location'
+              center
+            >
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                <Text>{locateError}</Text>
+                <Text>Please check your browser location settings and try again.</Text>
+              </div>
+            </Modal>
+          )}
         </div>
       ) : (
         signInStatusChecked && (
