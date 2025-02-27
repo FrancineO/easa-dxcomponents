@@ -11,8 +11,7 @@ import { geozoneRenderer, landuseRenderer, populationDensityRenderer } from '../
 import Layer from '@arcgis/core/layers/Layer';
 import FeatureLayer from '@arcgis/core/layers/FeatureLayer';
 import * as rendererJsonUtils from '@arcgis/core/renderers/support/jsonUtils.js';
-import { Button, Modal, Text, useModalContext } from '@pega/cosmos-react-core';
-import { Card, CardContent } from '@pega/cosmos-react-core';
+import { Button, Modal, Text, useModalContext, useModalManager, Card, CardContent } from '@pega/cosmos-react-core';
 import { Icon } from '@pega/cosmos-react-core';
 import BasemapChooser from '../tools/basemap-chooser/basemap-chooser';
 import LocateViewModel from '@arcgis/core/widgets/Locate/LocateViewModel';
@@ -179,6 +178,35 @@ const SoraMap = (props: Props) => {
     ]
   );
 
+  const { create } = useModalManager();
+
+  const locationErrorModal = (modalProps: any) => {
+    const { dismiss } = useModalContext();
+    return (
+       <Modal
+          dismissible
+          actions={
+            <Button
+              label='Close'
+              onClick={() => {
+                dismiss();
+                setLocateError(null);
+              }}
+            >
+              OK
+            </Button>
+          }
+          heading='Error Getting Location'
+          center
+        >
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+            <Text>{locateError}</Text>
+            <Text>Please check your browser location settings and try again.</Text>
+          </div>
+        </Modal>
+    );
+  }
+
   const createMap = useCallback(() => {
     if (getView()?.map) return;
 
@@ -241,6 +269,12 @@ const SoraMap = (props: Props) => {
       getNewView();
     };
   }, []);
+
+  useEffect(() => {
+    if(locateError) {
+      create(locationErrorModal);
+    }
+  }, [locateError]);
 
   const locateMe = useCallback(() => {
     if (locateVM) {
@@ -305,29 +339,6 @@ const SoraMap = (props: Props) => {
             </CardContent>
           </Card>
           <BasemapChooser basemapPortalItemIds={basemapPortalItemIdsArray} mapState={mapState} />
-          {locateError && (
-            <Modal
-              dismissible
-              actions={
-                <Button
-                  label='Close'
-                  onClick={() => {
-                    dismiss();
-                    setLocateError(null);
-                  }}
-                >
-                  OK
-                </Button>
-              }
-              heading='Error Getting Location'
-              center
-            >
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                <Text>{locateError}</Text>
-                <Text>Please check your browser location settings and try again.</Text>
-              </div>
-            </Modal>
-          )}
         </div>
       ) : (
         signInStatusChecked && (
