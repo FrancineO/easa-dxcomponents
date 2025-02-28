@@ -1,10 +1,13 @@
 import {
   withConfiguration,
   Card,
-  // Text,
   CardContent,
-  FieldValueList
+  FieldValueList,
+  Text,
+  useTheme,
+  Progress
 } from '@pega/cosmos-react-core';
+import { merge } from 'lodash';
 import { useEffect, useState } from 'react';
 import '../create-nonce';
 import { DrawToolbar } from './tools/draw-toolbar/draw-toolbar';
@@ -15,7 +18,7 @@ import type { ComponentProps, MapState } from './types';
 import useUpdatePegaProps from './hooks/useUpdatePegaProps';
 import useDebouncedEffect from './hooks/useDebouncedEffect';
 import useGetPrintRequest from './hooks/useGetPrintRequest';
-import useGetIntrinsicGroundRisk from './hooks/useGetIntrinsicGroundRisk';
+import useGetIntrinsicGroundRisk, { GroundRiskError } from './hooks/useGetIntrinsicGroundRisk';
 import useMapState from './hooks/useMapState';
 import SoraMap from './map/sora-map';
 import useHighlightIntersectingLanduse from './hooks/useApplySpatialFilter';
@@ -45,8 +48,6 @@ import useGetIntersectingLanduses from './hooks/useGetIntersectingLanduses';
 
 // TODO: need to handle the geozones correctly. Only have geozones for portugal at the moment.
 
-// TODO: seems like the iGRC is not calculated correctly. see area where the max pop density is like 7
-
 export const EasaExtensionsSORA = (props: ComponentProps) => {
   const {
     getPConnect,
@@ -68,8 +69,13 @@ export const EasaExtensionsSORA = (props: ComponentProps) => {
   const [flightPath, setFlightPath] = useState<__esri.Geometry | null>(null);
   const [layersAdded, setLayersAdded] = useState(false);
   const [mapState, setMapState] = useState<MapState | null>(null);
+  const [errorText, setErrorText] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
 
   const pConnect = getPConnect();
+  let PCore: any;
+  const defaultTheme = useTheme();
+  const theme = PCore ? merge(defaultTheme, PCore.getEnvironmentInfo().getTheme()) : defaultTheme;
 
   const { flightVolume, calculateVolume } = useCalculateFlightVolume({ ...props, flightGeography });
 
@@ -77,6 +83,10 @@ export const EasaExtensionsSORA = (props: ComponentProps) => {
   useDebouncedEffect(
     () => {
       if (!layersAdded) return;
+      setErrorText(null);
+      if (flightGeography) {
+        setLoading(true);
+      }
       calculateVolume();
     },
     300,
@@ -135,7 +145,9 @@ export const EasaExtensionsSORA = (props: ComponentProps) => {
     printRequest,
     flightPath,
     mapState,
-    groundRisk
+    groundRisk,
+    errorText,
+    flightVolume?.contingencyVolumeHeight ?? null
   );
 
   // Set up the effect for flight geometry which comes in as a parameter
@@ -163,10 +175,17 @@ export const EasaExtensionsSORA = (props: ComponentProps) => {
 
   // Call calculatePopDensities when flightVolume changes
   useEffect(() => {
-    if (!layersAdded) return;
-    calculatePopDensities();
+    if (!flightVolume) return;
+
+    calculatePopDensities()
+      .catch(error => {
+        setErrorText(error.message);
+      })
+      .finally(() => {
+        setLoading(false);
+      });
     queryIntersectingLanduses();
-  }, [flightVolume, layersAdded, calculatePopDensities, queryIntersectingLanduses]);
+  }, [flightVolume, calculatePopDensities, queryIntersectingLanduses]);
 
   // highlight the intersecting landuse when flightVolume changes
   useEffect(() => {
@@ -177,7 +196,13 @@ export const EasaExtensionsSORA = (props: ComponentProps) => {
   // Call calculateIntrinsicGroundRisk when populationDensity, cd, or vO changes
   useEffect(() => {
     if (!layersAdded) return;
-    calculateIntrinsicGroundRisk();
+    try {
+      calculateIntrinsicGroundRisk();
+    } catch (error: any) {
+      if (error instanceof GroundRiskError) {
+        setErrorText(`Error calculating ground risk: ${error.message}`);
+      }
+    }
   }, [populationDensity, cd, vO, layersAdded, calculateIntrinsicGroundRisk]);
 
   // Call queryIntersectingGeozones when flightVolume changes
@@ -190,7 +215,7 @@ export const EasaExtensionsSORA = (props: ComponentProps) => {
   useEffect(() => {
     if (!layersAdded) return;
     updatePegaProps();
-  }, [groundRisk, printRequest, layersAdded, updatePegaProps, mapState]);
+  }, [groundRisk, printRequest, layersAdded, updatePegaProps, mapState, errorText]);
 
   const maxPopDensity =
     populationDensity?.maxPopDensityOperationalGroundRisk === 0
@@ -207,11 +232,35 @@ export const EasaExtensionsSORA = (props: ComponentProps) => {
         <div
           style={{
             display: 'flex',
-            alignItems: 'flex-end',
-            flexDirection: 'column'
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            flexDirection: 'row'
           }}
         >
-          <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+          {errorText && (
+            <Text
+              variant='secondary'
+              style={{
+                color: theme.base.palette.urgent,
+                border: `1px solid ${theme.base.palette.urgent}`,
+                padding: '0.5rem',
+                borderRadius: '0.5rem',
+                fontSize: '10'
+              }}
+            >
+              {errorText}
+            </Text>
+          )}
+
+          <div
+            style={{
+              display: 'flex',
+              gap: '10px',
+              alignItems: 'center',
+              justifyContent: 'flex-end',
+              flexGrow: 1
+            }}
+          >
             <LayerList mapState={mapState} />
             <SearchTool />
             <DrawToolbar
@@ -243,15 +292,23 @@ export const EasaExtensionsSORA = (props: ComponentProps) => {
             fields={[
               {
                 name: 'Max. population in op. volume + ground risk buffer',
-                value: maxPopDensity
+                value: loading ? (
+                  <Progress variant='ring' placement='inline' visible />
+                ) : (
+                  maxPopDensity
+                )
               },
               {
                 name: 'Average population density in adjacent area',
-                value: avgPopDensity
+                value: loading ? (
+                  <Progress variant='ring' placement='inline' visible />
+                ) : (
+                  avgPopDensity
+                )
               },
               {
                 name: 'Intrinsic ground risk',
-                value: groundRisk === 0 ? null : groundRisk
+                value: loading ? <Progress variant='ring' placement='inline' visible /> : groundRisk
               }
             ]}
           />

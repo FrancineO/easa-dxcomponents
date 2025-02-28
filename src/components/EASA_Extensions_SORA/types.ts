@@ -59,6 +59,7 @@ export type FlightVolumeParams = {
 } & ComponentProps;
 
 export type FlightVolume = {
+  contingencyVolumeHeight: number | null;
   contingencyVolume: __esri.Graphic | null;
   groundRiskVolume: __esri.Graphic | null;
   adjacentArea: __esri.Graphic | null;

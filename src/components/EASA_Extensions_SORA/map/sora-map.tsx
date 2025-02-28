@@ -11,10 +11,19 @@ import { geozoneRenderer, landuseRenderer, populationDensityRenderer } from '../
 import Layer from '@arcgis/core/layers/Layer';
 import FeatureLayer from '@arcgis/core/layers/FeatureLayer';
 import * as rendererJsonUtils from '@arcgis/core/renderers/support/jsonUtils.js';
-import { Button, Modal, Text, useModalContext, useModalManager, Card, CardContent } from '@pega/cosmos-react-core';
+import {
+  Button,
+  Modal,
+  Text,
+  useModalManager,
+  Card,
+  CardContent,
+  useTheme
+} from '@pega/cosmos-react-core';
 import { Icon } from '@pega/cosmos-react-core';
 import BasemapChooser from '../tools/basemap-chooser/basemap-chooser';
 import LocateViewModel from '@arcgis/core/widgets/Locate/LocateViewModel';
+import { merge } from 'lodash';
 
 type Props = {
   style: React.CSSProperties;
@@ -33,6 +42,10 @@ const SoraMap = (props: Props) => {
     landusePortalItemId,
     geozonePortalItemId
   } = mapProps;
+
+  let PCore: any;
+  const defaultTheme = useTheme();
+  const theme = PCore ? merge(defaultTheme, PCore.getEnvironmentInfo().getTheme()) : defaultTheme;
 
   const basemapPortalItemIdsArray = useMemo(() => {
     const bmIds = basemapPortalItemIds?.split(',');
@@ -54,8 +67,6 @@ const SoraMap = (props: Props) => {
   const [locateVM, setLocateVM] = useState<LocateViewModel | null>(null);
   const [locateError, setLocateError] = useState<string | null>(null);
   const checkingSignInStatus = useRef(false);
-
-  const { dismiss } = useModalContext();
 
   const checkSignInStatus = useCallback(() => {
     if (checkingSignInStatus.current) return;
@@ -180,32 +191,22 @@ const SoraMap = (props: Props) => {
 
   const { create } = useModalManager();
 
-  const locationErrorModal = (modalProps: any) => {
-    const { dismiss } = useModalContext();
+  const locationErrorModal = useCallback(() => {
     return (
-       <Modal
-          dismissible
-          actions={
-            <Button
-              label='Close'
-              onClick={() => {
-                dismiss();
-                setLocateError(null);
-              }}
-            >
-              OK
-            </Button>
-          }
-          heading='Error Getting Location'
-          center
-        >
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-            <Text>{locateError}</Text>
-            <Text>Please check your browser location settings and try again.</Text>
-          </div>
-        </Modal>
+      <Modal
+        dismissible
+        heading={locateError}
+        center
+        onAfterClose={() => {
+          setLocateError(null);
+        }}
+      >
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+          <Text>Please check your browser location settings and try again.</Text>
+        </div>
+      </Modal>
     );
-  }
+  }, [locateError]);
 
   const createMap = useCallback(() => {
     if (getView()?.map) return;
@@ -271,10 +272,9 @@ const SoraMap = (props: Props) => {
   }, []);
 
   useEffect(() => {
-    if(locateError) {
-      create(locationErrorModal);
-    }
-  }, [locateError]);
+    if (!locateError) return;
+    create(locationErrorModal);
+  }, [locateError, create, locationErrorModal]);
 
   const locateMe = useCallback(() => {
     if (locateVM) {
@@ -284,7 +284,6 @@ const SoraMap = (props: Props) => {
     }
   }, [locateVM]);
 
-  // TODO: Add tooltips to the buttons
   return (
     <>
       {signedIn ? (
@@ -305,7 +304,7 @@ const SoraMap = (props: Props) => {
                   getView().zoom = getView().zoom + 1;
                 }}
               >
-                <Icon name='plus' type='button' />
+                <Icon name='plus' />
               </Button>
               <Button
                 label='Zoom out'
@@ -320,7 +319,7 @@ const SoraMap = (props: Props) => {
                   getView().zoom = getView().zoom - 1;
                 }}
               >
-                <Icon name='minus' type='button' />
+                <Icon name='minus' />
               </Button>
               <Button
                 label='Locate Me'
@@ -334,7 +333,7 @@ const SoraMap = (props: Props) => {
                 variant='secondary'
                 onClick={locateMe}
               >
-                <Icon name='crosshairs' type='button' />
+                <Icon name='crosshairs' />
               </Button>
             </CardContent>
           </Card>
@@ -351,23 +350,27 @@ const SoraMap = (props: Props) => {
               height: '100%',
               margin: '1rem',
               padding: '1rem',
-              border: '1px solid red',
+              border: `1px solid ${theme.base.palette.urgent}`,
               gap: '0.5rem'
             }}
           >
-            <Text variant='h3' style={{ color: 'red' }}>
+            <Text variant='h3' style={{ color: theme.base.palette.urgent }}>
               Agol token may have expired!
             </Text>
-            <Text variant='h3' style={{ color: 'red' }}>
+            <Text variant='h3' style={{ color: theme.base.palette.urgent }}>
               Your token is:
             </Text>
             <Text
               variant='h3'
-              style={{ color: 'red', overflowWrap: 'break-word', inlineSize: '50%' }}
+              style={{
+                color: theme.base.palette.urgent,
+                overflowWrap: 'break-word',
+                inlineSize: '50%'
+              }}
             >
               {agolToken}
             </Text>
-            <Text variant='h3' style={{ color: 'red' }}>
+            <Text variant='h3' style={{ color: theme.base.palette.urgent }}>
               {signInError}
             </Text>
           </div>

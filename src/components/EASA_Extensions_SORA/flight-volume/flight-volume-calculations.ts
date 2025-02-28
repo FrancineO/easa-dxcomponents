@@ -9,6 +9,11 @@ import {
 
 const g = 9.81;
 
+export interface ContingencyVolumeResults {
+  contingencyVolume: __esri.Graphic;
+  contingencyVolumeHeight: number;
+}
+
 export const getContingencyVolume = ({
   flightGeography,
   sGPS,
@@ -19,47 +24,12 @@ export const getContingencyVolume = ({
   tP,
   parachute,
   rollAngle,
-  multirotor
-}: FlightVolumeParams) => {
+  multirotor,
+  hFG,
+  hAM
+}: FlightVolumeParams): ContingencyVolumeResults | null => {
   if (!flightGeography) return null;
 
-  const sR = vO * tR;
-  const sCM = multirotor
-    ? vO ** 2 / (2 * g * Math.tan((rollAngle * Math.PI) / 180))
-    : vO ** 2 / (g * Math.tan((rollAngle * Math.PI) / 180));
-
-  const sCV = sGPS + sPos + sK + sR + (parachute ? vO * tP : sCM);
-
-  const buffer = geometryEngine.buffer(flightGeography.geometry, sCV);
-  const sCVPolygon = geometryEngine.difference(buffer, flightGeography.geometry) as __esri.Polygon;
-
-  return new Graphic({
-    geometry: sCVPolygon,
-    symbol: contingencyVolumeSymbol
-  });
-};
-
-export const getGroundRiskVolume = (
-  {
-    flightGeography,
-    vO,
-    tR,
-    tP,
-    parachute,
-    multirotor,
-    hFG,
-    hAM,
-    simplified,
-    cd,
-    vWind,
-    vZ,
-    power,
-    cL,
-    gliding
-  }: FlightVolumeParams,
-  cv: __esri.Geometry
-) => {
-  if (!flightGeography) return null;
   const hR = vO * 0.7 * tR;
   let hCM = 0;
 
@@ -74,6 +44,45 @@ export const getGroundRiskVolume = (
   }
 
   const hCV = hFG + hAM + hR + hCM;
+
+  const sR = vO * tR;
+  const sCM = multirotor
+    ? vO ** 2 / (2 * g * Math.tan((rollAngle * Math.PI) / 180))
+    : vO ** 2 / (g * Math.tan((rollAngle * Math.PI) / 180));
+
+  const sCV = sGPS + sPos + sK + sR + (parachute ? vO * tP : sCM);
+
+  const buffer = geometryEngine.buffer(flightGeography.geometry, sCV);
+  const sCVPolygon = geometryEngine.difference(buffer, flightGeography.geometry) as __esri.Polygon;
+
+  return {
+    contingencyVolume: new Graphic({
+      geometry: sCVPolygon,
+      symbol: contingencyVolumeSymbol
+    }),
+    contingencyVolumeHeight: hCV
+  };
+};
+
+export const getGroundRiskVolume = (
+  {
+    flightGeography,
+    vO,
+    tP,
+    parachute,
+    multirotor,
+    simplified,
+    cd,
+    vWind,
+    vZ,
+    power,
+    cL,
+    gliding
+  }: FlightVolumeParams,
+  cv: ContingencyVolumeResults
+) => {
+  if (!flightGeography) return null;
+  const hCV = cv.contingencyVolumeHeight;
   let sGRB = simplified ? hCV + cd / 2 : (vO * Math.sqrt(2 * hCV)) / g + cd / 2;
 
   if (parachute) {
@@ -84,7 +93,10 @@ export const getGroundRiskVolume = (
     sGRB = gliding ? (cL / cd) * hCV : hCV + cd / 2;
   }
 
-  const flightPlusCVBuffer = geometryEngine.union([flightGeography.geometry, cv]);
+  const flightPlusCVBuffer = geometryEngine.union([
+    flightGeography.geometry,
+    cv.contingencyVolume.geometry
+  ]);
   const grBuffer = geometryEngine.buffer(flightPlusCVBuffer, sGRB);
   const grPolygon = geometryEngine.difference(grBuffer, flightPlusCVBuffer) as __esri.Polygon;
 

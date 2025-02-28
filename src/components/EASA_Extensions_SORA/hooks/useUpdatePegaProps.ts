@@ -1,5 +1,6 @@
 import { useCallback, useRef } from 'react';
 import type { MapState, PopulationDensity } from '../types';
+import _ from 'lodash';
 
 const useUpdatePegaProps = (
   pConnect: any,
@@ -7,7 +8,9 @@ const useUpdatePegaProps = (
   printRequest: any,
   flightPath: __esri.Geometry | null,
   mapState: MapState | null,
-  groundRisk: 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | null
+  groundRisk: 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | null,
+  errorText: string | null,
+  contingencyVolumeHeight: number | null
 ) => {
   const paramsRef = useRef({
     pConnect,
@@ -15,7 +18,9 @@ const useUpdatePegaProps = (
     printRequest,
     flightPath,
     mapState,
-    groundRisk
+    groundRisk,
+    errorText,
+    contingencyVolumeHeight
   });
   const updateInProgress = useRef(false);
 
@@ -26,7 +31,9 @@ const useUpdatePegaProps = (
     printRequest,
     flightPath,
     mapState,
-    groundRisk
+    groundRisk,
+    errorText,
+    contingencyVolumeHeight
   };
 
   // Empty dependency array since we're using ref
@@ -39,7 +46,9 @@ const useUpdatePegaProps = (
       pConnect: pC,
       groundRisk: gR,
       flightPath: fP,
-      mapState: mS
+      mapState: mS,
+      errorText: eT,
+      contingencyVolumeHeight: hCV
     } = currentParams;
 
     // if (!pD?.maxPopDensityOperationalGroundRisk || !pD?.avgPopDensityAdjacentArea || !pR || !gR)
@@ -48,6 +57,8 @@ const useUpdatePegaProps = (
     // Prevent multiple simultaneous updates
     if (updateInProgress.current) return;
     if (!pC.getValue || !pConnect) return;
+
+    const hCVRounded = hCV ? _.round(hCV) : null;
 
     // eslint-disable-next-line no-console
     console.log('sending to pega:');
@@ -61,6 +72,10 @@ const useUpdatePegaProps = (
     console.log('   flightPath', fP);
     // eslint-disable-next-line no-console
     console.log('   mapState', mS);
+    // eslint-disable-next-line no-console
+    console.log('   errorText', eT);
+    // eslint-disable-next-line no-console
+    console.log('   contingencyVolumeHeight', hCVRounded);
 
     try {
       updateInProgress.current = true;
@@ -89,10 +104,12 @@ const useUpdatePegaProps = (
             pyGUID: caseId,
             MaxPopulationVolume: pD?.maxPopDensityOperationalGroundRisk,
             AveragePopulationDensityInAdjacentArea: pD?.avgPopDensityAdjacentArea,
-            MapImageJSON: JSON.stringify(pR),
+            MapImageJSON: pR ? JSON.stringify(pR) : null,
             FlightGeometryJSON: flightGeometryJSON,
             MapStateJSON: mS ? JSON.stringify(mS) : null,
-            IntrinsicGroundRisk: gR
+            IntrinsicGroundRisk: eT ? -1 : gR,
+            ErrorText: eT,
+            ContingencyVolumeHeight: hCVRounded
           }
         }
       });

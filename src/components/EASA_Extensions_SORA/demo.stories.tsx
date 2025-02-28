@@ -152,7 +152,7 @@ export const Default: Story = {
   },
   args: {
     height: '40rem',
-    controlledGroundArea: true,
+    controlledGroundArea: false,
     mapStateJSON: null,
     // mapStateJSON:
     //   '{"center": {"latitude": 53, "longitude": 16 },"zoom": 3,"basemap": "86265e5a4bbb4187a59719cf134e0018","layerVisibility": { "PopulationDensity": false, "Geozones": true }}',
@@ -182,7 +182,7 @@ export const Default: Story = {
     // referer: https://easa.maps.arcgis.com/sharing/generateToken
     // http://localhost:6006/
     agolToken:
-      'mzFcMRqhxzPAoRJavp2MJnT86fp9vdIuHnlcY6yRjycMNMkD4n52uRAbbfniWAIwtSRzRhrap2cHxNO1oWD1BQOjsjFi4B1L2uOYs_2sCI0YSCELbXQO7Jzp6GFfGDVZmM_GtIakA4rpO7QayQSQjd5dxhgQwCpXHLwQYnbfEU4.',
+      'mzFcMRqhxzPAoRJavp2MJnT86fp9vdIuHnlcY6yRjycMNMkD4n52uRAbbfniWAIwO5OMc8qVXIiHK_wM05DW9h7muqSYL1YQsseoP7czIGueedyeuyfqDCvaxa5jeGbNjUXOeSN6WO8M5ZbPR5oBtEKwLCnxLhT9WRXZdvgBphE.',
     agolUrl: 'https://easa.maps.arcgis.com/',
     printServiceUrl:
       'https://utility.arcgisonline.com/arcgis/rest/services/Utilities/PrintingTools/GPServer/Export%20Web%20Map%20Task',

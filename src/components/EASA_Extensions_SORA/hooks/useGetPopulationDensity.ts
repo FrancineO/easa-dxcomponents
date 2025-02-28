@@ -172,9 +172,11 @@ export const useGetPopulationDensity = (flightVolume: FlightVolume | null) => {
       }
 
       setPopulationDensity(popDensity);
-    } catch (error) {
-      // eslint-disable-next-line no-console
-      console.error('Error calculating population densities:', error);
+    } catch (error: any) {
+      setPopulationDensity(null);
+      throw new Error(
+        `Error calculating population densities: \r ${error.message} \r Flight volume may be too large.`
+      );
     } finally {
       calculationInProgress.current = false;
     }

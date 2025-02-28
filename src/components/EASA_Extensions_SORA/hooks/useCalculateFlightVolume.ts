@@ -51,21 +51,22 @@ const useCalculateFlightVolume = (params: FlightVolumeParams) => {
       const cv = getContingencyVolume(currentParams);
       if (!cv) return;
 
-      const grVolume = getGroundRiskVolume(currentParams, cv.geometry);
+      const grVolume = getGroundRiskVolume(currentParams, cv);
       if (!grVolume) return;
 
-      const aa = getAdjacentArea(currentParams, cv.geometry, grVolume.geometry);
+      const aa = getAdjacentArea(currentParams, cv.contingencyVolume.geometry, grVolume.geometry);
       if (!aa) return;
 
       // Add graphics to layer
-      layer.addMany([cv, grVolume, aa]);
+      layer.addMany([cv.contingencyVolume, grVolume, aa]);
 
       // Update state with new volumes
       setFlightVolume({
-        contingencyVolume: cv,
+        contingencyVolume: cv.contingencyVolume,
         groundRiskVolume: grVolume,
         adjacentArea: aa,
-        flightGeography: currentParams.flightGeography
+        flightGeography: currentParams.flightGeography,
+        contingencyVolumeHeight: cv.contingencyVolumeHeight
       });
     } catch (error) {
       // eslint-disable-next-line no-console
