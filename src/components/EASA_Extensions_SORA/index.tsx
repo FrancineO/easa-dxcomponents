@@ -296,7 +296,10 @@ export const EasaExtensionsSORA = (props: ComponentProps) => {
                 cursor: 'pointer',
                 fontSize: '1rem'
               }}
-              onClick={() => setGeozoneInfo(null)}
+              onClick={() => {
+                setGeozoneInfo(null);
+                getView().graphics.removeAll();
+              }}
               onKeyDown={e => {
                 if (e.key === 'Escape') {
                   setGeozoneInfo(null);
@@ -313,6 +316,7 @@ export const EasaExtensionsSORA = (props: ComponentProps) => {
                 display: 'flex',
                 fontSize: '1.5rem'
               }}
+              // eslint-disable-next-line react/no-danger
               dangerouslySetInnerHTML={{ __html: geozoneInfo }}
             />
           </div>

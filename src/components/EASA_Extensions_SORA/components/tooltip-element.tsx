@@ -19,20 +19,7 @@ const TooltipElement = ({ tooltipContent, children, style }: TooltipElementProps
         {children}
       </div>
       <Tooltip content={tooltipContent} target={el}>
-        {Array.isArray(tooltipContent) ? (
-          <div>
-            {tooltipContent.map((content, index) => (
-              <div
-                key={content}
-                style={{ paddingBottom: index === tooltipContent.length - 1 ? 0 : '0.5rem' }}
-              >
-                {content}
-              </div>
-            ))}
-          </div>
-        ) : (
-          tooltipContent
-        )}
+        {Array.isArray(tooltipContent) ? tooltipContent.join('\n\n') : tooltipContent}
       </Tooltip>
     </>
   );
