@@ -160,6 +160,7 @@ const SoraMap = (props: Props) => {
           applyRenderer(layer as ImageryLayer | FeatureLayer);
           if (layer.id === LayerId.geozones) {
             (layer as FeatureLayer).popupEnabled = false;
+            (layer as FeatureLayer).outFields = ['*'];
             const hasGeozonesVisibilityProperty =
               mapState?.layerVisibility &&
               Object.prototype.hasOwnProperty.call(mapState.layerVisibility, 'Geozones');

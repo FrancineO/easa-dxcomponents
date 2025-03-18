@@ -10,7 +10,7 @@ import {
 import { merge } from 'lodash';
 import { useEffect, useState } from 'react';
 import '../create-nonce';
-import { DrawToolbar } from './tools/draw-toolbar/draw-toolbar';
+import { Toolbar } from './tools/toolbar/toolbar';
 import SearchTool from './tools/search-tool';
 import { useGetPopulationDensity } from './hooks/useGetPopulationDensity';
 import useCalculateFlightVolume from './hooks/useCalculateFlightVolume';
@@ -26,8 +26,9 @@ import LayerList from './tools/layer-list';
 import useGetIntersectingGeozones from './hooks/useGetIntersectingGeozones';
 
 import Legends from './legends/legends';
-import { getFlightGeography } from './tools/draw-toolbar/draw-utils';
+import { getFlightGeography } from './tools/toolbar/draw-utils';
 import useGetIntersectingLanduses from './hooks/useGetIntersectingLanduses';
+import { getView } from './map/view';
 
 // https://map.droneguide.be/
 // https://maptool-dipul.dfs.de/
@@ -71,6 +72,7 @@ export const EasaExtensionsSORA = (props: ComponentProps) => {
   const [mapState, setMapState] = useState<MapState | null>(null);
   const [errorText, setErrorText] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [geozoneInfo, setGeozoneInfo] = useState<string | null>(null);
 
   const pConnect = getPConnect();
   let PCore: any;
@@ -264,14 +266,57 @@ export const EasaExtensionsSORA = (props: ComponentProps) => {
           >
             <LayerList mapState={mapState} />
             <SearchTool />
-            <DrawToolbar
+            <Toolbar
               cd={cd}
               onFlightGeographyChange={setFlightGeography}
               onFlightPathChange={setFlightPath}
               flightPathJSON={flightPathJSON}
+              onGeozoneInfoChange={setGeozoneInfo}
             />
           </div>
         </div>
+        {geozoneInfo && (
+          <div
+            style={{
+              position: 'absolute',
+              top: '4rem',
+              right: '1.25rem',
+              maxWidth: '50%',
+              zIndex: 1000,
+              backgroundColor: 'white',
+              padding: '0.5rem',
+              borderRadius: '0.5rem',
+              border: `1px solid ${theme.base.palette['brand-primary']}`
+            }}
+          >
+            <div
+              style={{
+                display: 'flex',
+                justifyContent: 'flex-end',
+                cursor: 'pointer',
+                fontSize: '1rem'
+              }}
+              onClick={() => setGeozoneInfo(null)}
+              onKeyDown={e => {
+                if (e.key === 'Escape') {
+                  setGeozoneInfo(null);
+                  getView().graphics.removeAll();
+                }
+              }}
+              role='button'
+              tabIndex={0}
+            >
+              x
+            </div>
+            <div
+              style={{
+                display: 'flex',
+                fontSize: '1.5rem'
+              }}
+              dangerouslySetInnerHTML={{ __html: geozoneInfo }}
+            />
+          </div>
+        )}
         <SoraMap
           style={{ height, position: 'relative' }}
           mapState={mapState}

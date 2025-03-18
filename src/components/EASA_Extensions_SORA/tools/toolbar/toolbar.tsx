@@ -35,6 +35,7 @@ type Props = {
   onFlightGeographyChange: (graphic: Graphic | null) => void;
   flightPathJSON: string | null;
   onFlightPathChange: (path: __esri.Geometry | null) => void;
+  onGeozoneInfoChange: (info: string | null) => void;
 };
 
 const bufferGraphicsLayerId = 'easa-sora-tool-buffer-graphics';
@@ -44,15 +45,18 @@ const bufferGraphicsLayerId = 'easa-sora-tool-buffer-graphics';
  * @param props - The props for the component
  * @returns The DrawToolbar component
  */
-export const DrawToolbar = (props: Props) => {
-  const { onFlightGeographyChange, cd, flightPathJSON, onFlightPathChange } = props;
+export const Toolbar = (props: Props) => {
+  const { onFlightGeographyChange, cd, flightPathJSON, onFlightPathChange, onGeozoneInfoChange } =
+    props;
 
-  const [selectedTool, setSelectedTool] = useState<'circle' | 'polyline' | 'polygon'>();
+  const [selectedTool, setSelectedTool] = useState<'circle' | 'polyline' | 'polygon' | 'geozone'>();
   const [handleCreate, setHandleCreate] = useState<any>();
   const [handleUpdate, setHandleUpdate] = useState<any>();
   const [graphic, setGraphic] = useState<Graphic | null>(null);
   const [hasGraphic, setHasGraphic] = useState(false);
   const [sketchViewModel, setSketchViewModel] = useState<SketchViewModel | null>(null);
+  const [geozoneClickHandle, setGeozoneClickHandle] = useState<any>();
+
   const getBufferLayer = useCallback(() => {
     let l = getView().map?.findLayerById(bufferGraphicsLayerId) as GraphicsLayer;
     if (!l) {
@@ -217,6 +221,12 @@ export const DrawToolbar = (props: Props) => {
     sketchViewModel
   ]);
 
+  useEffect(() => {
+    return () => {
+      geozoneClickHandle?.remove();
+    };
+  }, [geozoneClickHandle]);
+
   const handleClear = () => {
     sketchViewModel?.layer.removeAll();
     const l = getView().map?.findLayerById(bufferGraphicsLayerId) as GraphicsLayer;
@@ -228,12 +238,44 @@ export const DrawToolbar = (props: Props) => {
     onFlightPathChange(null);
   };
 
-  const handleToolClick = (tool: 'circle' | 'polyline' | 'polygon') => {
+  const handleMapClick = (event: any) => {
+    getView()
+      .hitTest(event)
+      .then(result => {
+        getView().graphics.removeAll();
+        if (result.results.length > 0 && result.results[0].type === 'graphic') {
+          const hitGraphic = result.results[0].graphic as Graphic;
+          const attributes = hitGraphic.attributes;
+          const g = new Graphic({
+            geometry: hitGraphic.geometry,
+            symbol: getSymbol('polygon') as SimpleFillSymbol
+          });
+          getView().graphics.add(g);
+          onGeozoneInfoChange(attributes.PopupInfo);
+        } else {
+          onGeozoneInfoChange(null);
+        }
+      });
+  };
+
+  const handleToolClick = (tool: 'circle' | 'polyline' | 'polygon' | 'geozone') => {
     handleClear();
     if (tool === selectedTool) {
+      if (tool === 'geozone') {
+        geozoneClickHandle?.remove();
+        getView().graphics.removeAll();
+        onGeozoneInfoChange(null);
+      }
       setSelectedTool(undefined);
     } else {
       setSelectedTool(tool);
+      if (tool === 'geozone') {
+        geozoneClickHandle?.remove();
+        setGeozoneClickHandle(getView().on('click', handleMapClick));
+        return;
+      }
+      getView().graphics.removeAll();
+      onGeozoneInfoChange(null);
       sketchViewModel?.create(
         tool as 'circle' | 'point' | 'multipoint' | 'polyline' | 'polygon' | 'mesh' | 'rectangle'
       );
@@ -304,6 +346,16 @@ export const DrawToolbar = (props: Props) => {
         >
           <Icon name='rectangle' role='img' aria-label='rectangle icon' className='icon' />
         </Button>
+        <Button
+          variant={selectedTool === 'geozone' ? 'primary' : 'secondary'}
+          label='Get geozone info'
+          onClick={() => {
+            handleToolClick('geozone');
+          }}
+        >
+          <Icon name='waypoint' role='img' aria-label='waypoint icon' className='icon' />
+        </Button>
+
         {hasGraphic && (
           <Button
             variant='secondary'
@@ -324,4 +376,4 @@ export const DrawToolbar = (props: Props) => {
   );
 };
 
-export default DrawToolbar;
+export default Toolbar;
