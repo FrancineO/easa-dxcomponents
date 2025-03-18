@@ -1,7 +1,7 @@
 import { Tooltip, useElement } from '@pega/cosmos-react-core';
 
 interface TooltipElementProps {
-  tooltipContent?: string;
+  tooltipContent?: string | string[];
   children: React.ReactNode;
   style?: React.CSSProperties;
 }
@@ -19,7 +19,20 @@ const TooltipElement = ({ tooltipContent, children, style }: TooltipElementProps
         {children}
       </div>
       <Tooltip content={tooltipContent} target={el}>
-        {tooltipContent}
+        {Array.isArray(tooltipContent) ? (
+          <div>
+            {tooltipContent.map((content, index) => (
+              <div
+                key={content}
+                style={{ paddingBottom: index === tooltipContent.length - 1 ? 0 : '0.5rem' }}
+              >
+                {content}
+              </div>
+            ))}
+          </div>
+        ) : (
+          tooltipContent
+        )}
       </Tooltip>
     </>
   );

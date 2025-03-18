@@ -182,7 +182,7 @@ export const Default: Story = {
     // referer: https://easa.maps.arcgis.com/sharing/generateToken
     // http://localhost:6006/
     agolToken:
-      'mzFcMRqhxzPAoRJavp2MJnT86fp9vdIuHnlcY6yRjycMNMkD4n52uRAbbfniWAIwO5OMc8qVXIiHK_wM05DW9h7muqSYL1YQsseoP7czIGueedyeuyfqDCvaxa5jeGbNjUXOeSN6WO8M5ZbPR5oBtEKwLCnxLhT9WRXZdvgBphE.',
+      'mzFcMRqhxzPAoRJavp2MJnT86fp9vdIuHnlcY6yRjycMNMkD4n52uRAbbfniWAIw8NfnzgoZjsUppMgViotM5FsRvi7JyiT2Z-aylI4Un0CMPNFyWQgBreFgeG9FFe5VXesGc4z4xg9X1t3sFljAbHVl1Y19TiqkKgPtOgSz3_0.',
     agolUrl: 'https://easa.maps.arcgis.com/',
     printServiceUrl:
       'https://utility.arcgisonline.com/arcgis/rest/services/Utilities/PrintingTools/GPServer/Export%20Web%20Map%20Task',

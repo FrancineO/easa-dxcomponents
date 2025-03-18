@@ -1,6 +1,17 @@
-import { Card, CardContent, Text, Alert } from '@pega/cosmos-react-core';
+import { Card, CardContent, Text, Alert, Icon } from '@pega/cosmos-react-core';
 import { landusePopDensityLookup, landUseLabels, landuseColors } from '../renderers';
 import TooltipElement from '../components/tooltip-element';
+import * as Information from '@pega/cosmos-react-core/lib/components/Icon/icons/information.icon';
+import { registerIcon } from '@pega/cosmos-react-core';
+
+registerIcon(Information);
+
+const infoText = [
+  'The  static population density map is based on census data.',
+  'Census data registers people where they are resident therefore In some area the population density information is not accurate enough (e.g a commercial area or a sport facility or a beach are always showed as empty however in some hours of day or in some days of a year there may even be assembly of people).',
+  'The system arbitrary assigns a fictious high populaiton density value and the information that an assembly of people may be present.',
+  ' The UAS operator might then in the SORA step#3 (ground mitigation)  justify a lower population density.'
+];
 
 const LandusePopDensityLegend = ({
   intersectingLanduseClasses
@@ -56,7 +67,17 @@ const LandusePopDensityLegend = ({
             }}
             variant='urgent'
           />
-          <Text variant='h3'>Population Density by Landuse</Text>
+          <div style={{ display: 'flex', gap: '0.5rem' }}>
+            <Text variant='h3'>Population Density by Land Use</Text>
+            <TooltipElement tooltipContent={infoText}>
+              <Icon
+                name='information'
+                role='img'
+                aria-label='information circle icon'
+                className='icon'
+              />
+            </TooltipElement>
+          </div>
         </div>
         <div
           style={{
@@ -105,10 +126,9 @@ const LandusePopDensityLegend = ({
                     minWidth: '250px',
                     alignItems: 'center'
                   }}
-                  tooltipContent={`${group.landuses
+                  tooltipContent={group.landuses
                     .map(l => l.label)
-                    .sort((a, b) => a.localeCompare(b))
-                    .join(' / ')}`}
+                    .sort((a, b) => a.localeCompare(b))}
                 >
                   <div
                     style={{

@@ -23,7 +23,7 @@ const FlightVolumeLegend = ({ flightVolume }: { flightVolume: FlightVolume | nul
       color: contingencyVolumeColor
     },
     {
-      label: 'Ground Risk Volume',
+      label: 'Ground Risk Buffer',
       color: groundRiskVolumeColor
     },
     {

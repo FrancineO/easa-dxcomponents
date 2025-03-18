@@ -104,11 +104,14 @@ const SoraMap = (props: Props) => {
         layer.id = landuseLayer ? LayerId.landuseHighlight : LayerId.landuse;
         layer.visible = !landuseLayer;
         layer.renderer = rendererJsonUtils.fromJSON(landuseRenderer) as __esri.ClassBreaksRenderer;
-        layer.opacity = landuseLayer ? 1 : 0.5;
+        layer.opacity = landuseLayer ? 1 : 0.85;
       }
       if (layer.portalItem.id === geozonePortalItemId) {
         layer.id = LayerId.geozones;
         layer.renderer = rendererJsonUtils.fromJSON(geozoneRenderer) as __esri.UniqueValueRenderer;
+      }
+      if (layer.portalItem.id === popDensityPortalItemId) {
+        layer.opacity = 0.65;
       }
     },
     [popDensityPortalItemId, landusePortalItemId, geozonePortalItemId]

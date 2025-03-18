@@ -229,6 +229,7 @@ export const EasaExtensionsSORA = (props: ComponentProps) => {
   return (
     <Card style={{ height: '100%' }}>
       <CardContent style={{ height: '100%' }}>
+        {loading && <Progress variant='ring' placement='global' visible />}
         <div
           style={{
             display: 'flex',

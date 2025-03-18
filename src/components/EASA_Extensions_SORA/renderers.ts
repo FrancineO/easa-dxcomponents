@@ -178,14 +178,14 @@ export const landuseRenderer = {
 
 export const geozones = [
   {
+    value: 'prohibited',
+    label: 'Prohibited',
+    color: [233, 149, 144, 255]
+  },
+  {
     value: 'restricted',
     label: 'Restricted',
     color: [239, 210, 140, 255]
-  },
-  {
-    value: 'open',
-    label: 'Open',
-    color: [151, 225, 150, 255]
   },
   {
     value: 'U-space',
@@ -193,9 +193,9 @@ export const geozones = [
     color: [149, 203, 233, 255]
   },
   {
-    value: 'prohibited',
-    label: 'Prohibited',
-    color: [233, 149, 144, 255]
+    value: 'open',
+    label: 'Reduced Requirements',
+    color: [151, 225, 150, 255]
   }
 ];
 
