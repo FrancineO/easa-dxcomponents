@@ -15,6 +15,8 @@ export const useGetPopulationDensity = (flightVolume: FlightVolume | null) => {
 
   const getMaxDensity = useCallback(
     async (geometry: __esri.Polygon, layer: __esri.ImageryLayer) => {
+      // TODO: based on drone height we need to set the pass the ImageHistogramParameters with a pixelSize
+      // not sure if it needs to be done here as well?
       const pixelSize = {
         x: getView().resolution,
         y: getView().resolution,
@@ -45,6 +47,7 @@ export const useGetPopulationDensity = (flightVolume: FlightVolume | null) => {
         }
       };
 
+      // TODO: based on drone height we need to set the pass the ImageHistogramParameters with a pixelSize
       // Calculate operational and ground risk density
       const opStats = await layer.computeStatisticsHistograms({
         geometry,

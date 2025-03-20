@@ -177,8 +177,6 @@ export const EasaExtensionsSORA = (props: ComponentProps) => {
 
   // Call calculatePopDensities when flightVolume changes
   useEffect(() => {
-    if (!flightVolume) return;
-
     calculatePopDensities()
       .catch(error => {
         setErrorText(error.message);
