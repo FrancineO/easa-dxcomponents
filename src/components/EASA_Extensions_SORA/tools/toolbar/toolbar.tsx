@@ -16,11 +16,12 @@ import * as Circle from '@pega/cosmos-react-core/lib/components/Icon/icons/circl
 import * as SharePointUp from '@pega/cosmos-react-core/lib/components/Icon/icons/share-point-up.icon';
 import * as Rectangle from '@pega/cosmos-react-core/lib/components/Icon/icons/rectangle.icon';
 import * as Trash from '@pega/cosmos-react-core/lib/components/Icon/icons/trash.icon';
+import * as Waypoint from '@pega/cosmos-react-core/lib/components/Icon/icons/waypoint.icon';
 import * as geometryEngine from '@arcgis/core/geometry/geometryEngine';
 import * as reactiveUtils from '@arcgis/core/core/reactiveUtils';
 import VertexInfo from './vertex-info';
 
-registerIcon(Circle, SharePointUp, Rectangle, Trash);
+registerIcon(Circle, SharePointUp, Rectangle, Trash, Waypoint);
 
 /**
  * Props for the DrawToolbar component

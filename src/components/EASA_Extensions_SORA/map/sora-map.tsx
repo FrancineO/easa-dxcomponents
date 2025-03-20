@@ -18,12 +18,18 @@ import {
   useModalManager,
   Card,
   CardContent,
-  useTheme
+  useTheme,
+  registerIcon
 } from '@pega/cosmos-react-core';
 import { Icon } from '@pega/cosmos-react-core';
 import BasemapChooser from '../tools/basemap-chooser/basemap-chooser';
 import LocateViewModel from '@arcgis/core/widgets/Locate/LocateViewModel';
 import { merge } from 'lodash';
+import * as Plus from '@pega/cosmos-react-core/lib/components/Icon/icons/plus.icon';
+import * as Minus from '@pega/cosmos-react-core/lib/components/Icon/icons/minus.icon';
+import * as Crosshairs from '@pega/cosmos-react-core/lib/components/Icon/icons/crosshairs.icon';
+
+registerIcon(Plus, Minus, Crosshairs);
 
 type Props = {
   style: React.CSSProperties;
