@@ -322,16 +322,18 @@ export const Toolbar = (props: Props) => {
     <Card style={{ ...props.style, backgroundColor: 'white', padding: '6px' }}>
       <CardContent style={{ display: 'flex', flexDirection: 'row', gap: '2px' }}>
         <Button
-          variant={selectedTool === 'circle' ? 'primary' : 'secondary'}
+          variant={selectedTool === 'circle' ? 'link' : 'text'}
           label='Draw path with circle'
           onClick={() => handleToolClick('circle')}
+          compact
         >
           <Icon name='circle' role='img' aria-label='circle icon' className='icon' />
         </Button>
         <Button
-          variant={selectedTool === 'polyline' ? 'primary' : 'secondary'}
+          variant={selectedTool === 'polyline' ? 'link' : 'text'}
           label='Draw path with line'
           onClick={() => handleToolClick('polyline')}
+          compact
         >
           <Icon
             name='share-point-up'
@@ -341,25 +343,27 @@ export const Toolbar = (props: Props) => {
           />
         </Button>
         <Button
-          variant={selectedTool === 'polygon' ? 'primary' : 'secondary'}
+          variant={selectedTool === 'polygon' ? 'link' : 'text'}
           label='Draw path with polygon'
           onClick={() => handleToolClick('polygon')}
+          compact
         >
           <Icon name='rectangle' role='img' aria-label='rectangle icon' className='icon' />
         </Button>
         <Button
-          variant={selectedTool === 'geozone' ? 'primary' : 'secondary'}
+          variant={selectedTool === 'geozone' ? 'link' : 'text'}
           label='Get geozone info'
           onClick={() => {
             handleToolClick('geozone');
           }}
+          compact
         >
           <Icon name='waypoint' role='img' aria-label='waypoint icon' className='icon' />
         </Button>
 
         {hasGraphic && (
           <Button
-            variant='secondary'
+            variant='link'
             label='Clear'
             onClick={() => {
               handleClear();
@@ -367,6 +371,7 @@ export const Toolbar = (props: Props) => {
                 sketchViewModel?.create(selectedTool as 'circle' | 'polyline' | 'polygon');
               }
             }}
+            compact
           >
             <Icon name='trash' role='img' aria-label='trash icon' className='icon' />
           </Button>
