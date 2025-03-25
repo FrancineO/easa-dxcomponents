@@ -1,12 +1,13 @@
 1. send the intersecting lanuse class code, text, density, and the yes/no on the assemblies to pega and the value of the assemblies (yes/no)
 2. send the intersecting geozones to pega
-5. Need a new tool that allows the user to select a geozone and display the geozone data in an info pane.
 6. How do we do the update of the geozones and the pop density data. geozones will need an app or pega component which runs a python script to update the agol data.
 11. Send to pega the whole flight volume as a kml
-
+12. Set the pixel resolution to higher values when the drone height changes according to table from Natale.
+13. send intersecting geozones as geojson to pega
 
 3. make landuse pop density and pop density opacities better so that they are not so dark, so you can see them if they are not in the flight path. Also make sur the streets are visible through the landuse pop density layer. Maybe a transparency slider.
 4. Ground risk volume should be named ground risk buffer.
+5. Need a new tool that allows the user to select a geozone and display the geozone data in an info pane.
 7. Pop landuse legend labels are ok. make tooltip seperate lines if multiple values
 8. Geozones. Change from open to "reduced Requiremantes:. reorder Prohib, restic, uspace, Reduced Requirements
 9. Info button for population denisity legend title. see excel sheet for text

@@ -1,0 +1,278 @@
+{
+  "$id": "https://eurocae.net/ED318/DigitalInterfaces.schema.json",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "DigitalInterfacesMessages",
+  "definitions": {
+    "genericReply": {
+      "type": "object",
+      "required": ["requestProcessedTimeStamp"],
+      "properties": {
+        "requestProcessedTimeStamp": {
+          "type": "DateTimeType"
+        }
+      }
+    },
+    "subscriptionStatus": {
+      "type": "string",
+      "enum": ["PAUSED", "ACTIVE", "DELETED"]
+    },
+    "regions": {
+      "type": "array",
+      "items": {
+        "type": "integer"
+      }
+    },
+    "startDateTime": {
+      "type": "string",
+      "format": "DateTimeType"
+    },
+    "endDateTime": {
+      "type": "string",
+      "format": "DateTimeType"
+    },
+    "subscriptionID": {
+      "type": "string"
+    },
+    "publicationLocation": {
+      "type": "string",
+      "format": "uri"
+    },
+    "publicationLinkVerificationFrequency": {
+      "type": "number"
+    }
+  },
+  "UASZonesRequest": {
+    "type": "object",
+    "properties": {
+      "geometry": {
+        "$ref": "./Schema_GeoJSONGeometries.json"
+      },
+      "regions": {
+        "$ref": "#/definitions/regions"
+      },
+      "startDateTime": {
+        "$ref": "#/definitions/startDateTime"
+      },
+      "endDateTime": {
+        "$ref": "#/definitions/endDateTime"
+      }
+    }
+  },
+  "UASZonesReply": {
+    "type": "object",
+    "required": ["genericReply"],
+    "properties": {
+      "genericReply": {
+        "$ref": "#/definitions/genericReply"
+      },
+      "uasZones": {
+        "$ref": "./Schema_GeoZones.json"
+      }
+    }
+  },
+  "UASZonesUpdatesRequest": {
+    "type": "object",
+    "properties": {
+      "geometry": {
+        "$ref": "./Schema_GeoJSONGeometries.json"
+      },
+      "regions": {
+        "$ref": "#/definitions/regions"
+      },
+      "startDateTime": {
+        "$ref": "#/definitions/startDateTime"
+      },
+      "endDateTime": {
+        "$ref": "#/definitions/endDateTime"
+      },
+      "updatedAfterDateTime": {
+        "type": "string",
+        "format": "DateTimeType"
+      }
+    }
+  },
+  "UASZonesUpdatesReply": {
+    "type": "object",
+    "required": ["genericReply"],
+    "properties": {
+      "genericReply": {
+        "$ref": "#/definitions/genericReply"
+      },
+      "uasZones": {
+        "$ref": "./Schema_GeoZones.json"
+      }
+    }
+  },
+  "subscribeToUASZonesUpdatesRequest": {
+    "type": "object",
+    "properties": {
+      "geometry": {
+        "$ref": "./Schema_GeoJSONGeometries.json"
+      },
+      "regions": {
+        "$ref": "#/definitions/regions"
+      },
+      "startDateTime": {
+        "$ref": "#/definitions/startDateTime"
+      },
+      "endDateTime": {
+        "$ref": "#/definitions/endDateTime"
+      }
+    }
+  },
+  "subscribeToUASZonesUpdatesReply": {
+    "type": "object",
+    "required": ["genericReply"],
+    "properties": {
+      "genericReply": {
+        "$ref": "#/definitions/genericReply"
+      },
+      "subscriptionID": {
+        "$ref": "#/definitions/subscriptionID"
+      },
+      "publicationLocation": {
+        "$ref": "#/definitions/publicationLocation"
+      },
+      "publicationLinkVerificationFrequency": {
+        "$ref": "#/definitions/publicationLinkVerificationFrequency"
+      },
+      "subscriptionStatus": {
+        "$ref": "#/definitions/subscriptionStatus"
+      }
+    }
+  },
+  "unsubscribeToUASZonesUpdatesReply": {
+    "type": "object",
+    "required": ["genericReply"],
+    "properties": {
+      "genericReply": {
+        "$ref": "#/definitions/genericReply"
+      },
+      "subscriptionID": {
+        "type": "string"
+      },
+      "subscriptionStatus": {
+        "$ref": "#/definitions/subscriptionStatus"
+      }
+    }
+  },
+  "pauseUASZonesUpdatesSubscriptionRequest": {
+    "type": "object",
+    "required": ["subscriptionStatus"],
+    "properties": {
+      "subscriptionStatus": {
+        "type": "string",
+        "enum": ["PAUSED"]
+      }
+    }
+  },
+  "pauseUASZonesUpdatesSubscriptionReply": {
+    "type": "object",
+    "required": ["genericReply"],
+    "properties": {
+      "genericReply": {
+        "$ref": "#/definitions/genericReply"
+      },
+      "subscriptionID": {
+        "$ref": "#/definitions/subscriptionID"
+      },
+      "subscriptionStatus": {
+        "$ref": "#/definitions/subscriptionStatus"
+      }
+    }
+  },
+  "resumeUASZonesUpdatesSubscriptionRequest": {
+    "type": "object",
+    "required": ["subscriptionStatus"],
+    "properties": {
+      "subscriptionStatus": {
+        "type": "string",
+        "enum": ["ACTIVE"]
+      }
+    }
+  },
+  "resumeUASZonesUpdatesSubscriptionReply": {
+    "type": "object",
+    "required": ["genericReply"],
+    "properties": {
+      "genericReply": {
+        "$ref": "#/definitions/genericReply"
+      },
+      "subscriptionID": {
+        "$ref": "#/definitions/subscriptionID"
+      },
+      "subscriptionStatus": {
+        "$ref": "#/definitions/subscriptionStatus"
+      }
+    }
+  },
+  "getUASZonesUpdatesSubscriptionsReply": {
+    "type": "object",
+    "required": ["genericReply"],
+    "properties": {
+      "genericReply": {
+        "$ref": "#/definitions/genericReply"
+      },
+      "subscriptions": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "subscriptionID": {
+              "$ref": "#/definitions/subscriptionID"
+            },
+            "geometry": {
+              "$ref": "./Schema_GeoJSONGeometries.json"
+            },
+            "regions": {
+              "$ref": "#/definitions/regions"
+            },
+            "startDateTime": {
+              "$ref": "#/definitions/startDateTime"
+            },
+            "endDateTime": {
+              "$ref": "#/definitions/endDateTime"
+            },
+            "publicationLocation": {
+              "$ref": "#/definitions/publicationLocation"
+            },
+            "publicationLinkVerificationFrequency": {
+              "$ref": "#/definitions/publicationLinkVerificationFrequency"
+            },
+            "subscriptionStatus": {
+              "$ref": "#/definitions/subscriptionStatus"
+            }
+          }
+        }
+      }
+    }
+  },
+  "UASZoneUpdatePublication": {
+    "type": "object",
+    "required": ["uasZone"],
+    "properties": {
+      "uasZone": {
+        "$ref": "./Schema_GeoZones.json"
+      }
+    }
+  },
+  "subscriptionStatusNotification": {
+    "type": "object",
+    "required": ["subscriptionID", "subscriptionStatus", "notificationReason"],
+    "properties": {
+      "subscriptionID": {
+        "$ref": "#/definitions/subscriptionID"
+      },
+      "subscriptionStatus": {
+        "$ref": "#/definitions/subscriptionStatus"
+      },
+      "notificationReason": {
+        "type": "string",
+        "enum": ["CHANGE_BY_SUBSCRIBER", "CHANGE_BY_PROVIDER", "HEARTBEAT"]
+      },
+      "notificationReasonDescription": {
+        "type": "string"
+      }
+    }
+  }
+}

@@ -1,0 +1,982 @@
+openapi: 3.1.0
+info:
+  title: Geospatial Information Service Interfaces
+  version: 0.0.1
+  description: >-
+    Interfaces by which a Data Provider can deliver the geospatial information (UAS
+    Geographical Zones, including U-space Airspace Volumes), to users.
+    NOTE: Unless otherwise specified, fields specified in a message but not declared
+    in the API must be ignored when evaluating format validity.
+components:
+  schemas:
+    FeatureCollection:
+      description: >-
+        GeoJSON Features representing UAS Geographical Zones, plus
+        additional foreign members capturing data set information.
+      type: object
+      properties:
+        name:
+          type: string
+          examples:
+            - 'Example UAS zones'
+        type:
+          type: string
+          enum:
+            - FeatureCollection
+        bbox:
+          $ref: '#/components/schemas/BoundingBox'
+        features:
+          type: array
+          items:
+            $ref: '#/components/schemas/Feature'
+        properties:
+          $ref: '#/components/schemas/DatasetMetadata'
+
+    Feature:
+      description: A GeoJSON Feature representing a UAS Zone.
+      type: object
+      properties:
+        type:
+          type: string
+          enum:
+            - Feature
+        geometry:
+          $ref: '#/components/schemas/Geometry'
+        properties:
+          $ref: '#/components/schemas/UASZoneVersion'
+
+    UASZoneVersion:
+      description: |
+        A specific version of an airspace of defined dimensions, above the land areas
+        or territorial waters of a State, within which a particular restriction or
+        condition for UAS flights applies.
+      type: object
+      properties:
+        identifier:
+          type: string
+          maxLength: 7
+        country:
+          type: string
+          minLength: 3
+          maxLength: 3
+        name:
+          type: array
+          items:
+            $ref: '#/components/schemas/SimpleDataModels/properties/TextShortType'
+            minItems: 1
+        type:
+          $ref: '#/components/schemas/SimpleDataModels/properties/CodeZoneType'
+        variant:
+          $ref: '#/components/schemas/SimpleDataModels/properties/CodeZoneVariantType'
+        restrictionConditions:
+          type: string
+        region:
+          type: integer
+        reason:
+          $ref: '#/components/schemas/SimpleDataModels/properties/CodeZoneReasonType'
+        otherReasonInfo:
+          type: array
+          items:
+            $ref: '#/components/schemas/SimpleDataModels/properties/TextShortType'
+            minItems: 1
+        regulationExemption:
+          $ref: '#/components/schemas/SimpleDataModels/properties/CodeYesNoType'
+        message:
+          type: array
+          items:
+            $ref: '#/components/schemas/SimpleDataModels/properties/TextShortType'
+            minItems: 1
+        zoneAuthority:
+          type: array
+          items:
+            $ref: '#/components/schemas/Authority'
+            minItems: 1
+        limitedApplicability:
+          type: array
+          items:
+            $ref: '#/components/schemas/TimePeriod'
+        extendedProperties:
+          type: object
+      required:
+        - identifier
+        - country
+        - type
+        - variant
+        - zoneAuthority
+      additionalProperties: false
+
+    DatasetMetadata:
+      description: >-
+        Global information that qualifies and constrains the usage of the data
+        contained in the associated data set.
+      type: object
+      properties:
+        validFrom:
+          $ref: '#/components/schemas/SimpleDataModels/properties/DateTimeType'
+        validTo:
+          $ref: '#/components/schemas/SimpleDataModels/properties/DateTimeType'
+        provider:
+          $ref: '#/components/schemas/SimpleDataModels/properties/TextShortType'
+        issued:
+          $ref: '#/components/schemas/SimpleDataModels/properties/DateTimeType'
+        description:
+          $ref: '#/components/schemas/SimpleDataModels/properties/TextShortType'
+        technicalLimitation:
+          $ref: '#/components/schemas/SimpleDataModels/properties/TextShortType'
+
+    Authority:
+      description: |
+        A relevant authority that is in charge for authorizing, being notified or providing
+        information for UAS operations in the UAS Geographical Zone.
+      type: object
+      properties:
+        name:
+          type: array
+          items:
+            $ref: '#/components/schemas/SimpleDataModels/properties/TextShortType'
+            minItems: 1
+        service:
+          type: array
+          items:
+            $ref: '#/components/schemas/SimpleDataModels/properties/TextShortType'
+            minItems: 1
+        contactName:
+          type: array
+          items:
+            $ref: '#/components/schemas/SimpleDataModels/properties/TextShortType'
+            minItems: 1
+        siteURL:
+          type: string
+          format: uri
+        email:
+          type: string
+          format: email
+        phone:
+          type: string
+          maxLength: 200
+        purpose:
+          $ref: '#/components/schemas/SimpleDataModels/properties/CodeAuthorityRole'
+        intervalBefore:
+          description: A period of time expressed according to the ISO 8601 rules for time intervals.
+          type: string
+          format: duration
+      required:
+        - purpose
+
+    TimePeriod:
+      description: |
+        Defines, if applicable, the limited applicability dates and times of the zone,
+        including an eventual daily/weekly schedule
+      type: object
+      properties:
+        startDateTime:
+          type: string
+          format: date-time
+        endDateTime:
+          type: string
+          format: date-time
+        schedule:
+          type: array
+          items:
+            $ref: '#/components/schemas/SimpleDataModels/properties/DailyPeriod'
+          minItems: 1
+      additionalProperties: false
+      required: []
+
+    BoundingBox:
+      type: array
+      minItems: 4
+      maxItems: 4
+      items:
+        type: number
+        format: double
+      examples:
+        - [2.5, 48.9, 2.8, 49.1]
+
+    SimpleDataModels:
+      description: ED-318 specific data models as defined in chapter 4.2.5
+      type: object
+      properties:
+        CodeAuthorityRole:
+          description: |
+            Roles that an authority has in relation with the UAS zone, represented by
+            a string with an enumerated list of values.
+          type: string
+          enum:
+            - AUTHORIZATION
+            - NOTIFICATION
+            - INFORMATION
+
+        CodeDaylightEventType:
+          description: |
+            A time identified in relation with an astronomical event, such as sunrise/sunset,
+            represented by a string with an enumerated list of values.
+          type: string
+          enum:
+            - BMCT
+            - SR
+            - SS
+            - EECT
+
+        UomDistance:
+          description: |
+            The unit of measurement in which the upper and lower values are expressed.
+            If this member is not specified, the units should be assumed to be metres.
+          type: string
+          enum:
+            - m
+            - ft
+          default: m
+
+        CodeZoneIdentifierType:
+          description: |
+            A string of maximum 7 characters that uniquely identifies the area
+            within a geographical scope.
+          type: string
+          maxLength: 7
+          examples:
+            - 'EXMPL01'
+
+        CodeCountryISOType:
+          description: >-
+            A 3 letter identifier of a country or territory using the ISO 3166-1
+            alpha-3 standard.
+          type: string
+          minLength: 3
+          maxLength: 3
+          examples:
+            - 'CHE'
+
+        CodeZoneVariantType:
+          type: string
+          enum:
+            - COMMON
+            - CUSTOMIZED
+
+        CodeZoneType:
+          type: string
+          enum:
+            - USPACE
+            - PROHIBITED
+            - REQ_AUTHORIZATION
+            - CONDITIONAL
+            - NO_RESTRICTION
+
+        ConditionExpressionType:
+          description: |
+            Coded expression that provides information about what is
+            authorised / forbidden in a zone that has conditional access.
+          type: string
+          maxLength: 10000
+
+        CodeZoneReasonType:
+          description: |
+            An indication of a reason that justifies the existence of an UAS Zone,
+            represented as a string with a list of enumerated values.
+          type: array
+          maxItems: 9
+          items:
+            type: string
+            enum:
+              - AIR_TRAFFIC
+              - SENSITIVE
+              - PRIVACY
+              - POPULATION
+              - NATURE
+              - NOISE
+              - EMERGENCY
+              - DAR
+              - OTHER
+
+        TextShortType:
+          description: |
+            A free text with a maximum length of 200 characters, optionally accompanied
+            by an indication of the language in which the text is written.
+          type: object
+          properties:
+            text:
+              type: string
+              maxLength: 200
+            lang:
+              type: string
+              maxLength: 5
+              examples:
+                - 'en-GB'
+          required:
+            - lang
+
+        TextLongType:
+          description: |
+            A free text with a maximum length of 1000 characters, optionally accompanied
+            by an indication of the language in which the text is written.
+          type: object
+          properties:
+            text:
+              type: string
+              maxLength: 1000
+            lang:
+              type: string
+              maxLength: 5
+          required:
+            - lang
+
+        CodeWeekDayType:
+          description: Indicates a day of the week, represented as a string with a list of enumerated values.
+          type: string
+          enum:
+            - MON
+            - TUE
+            - WED
+            - THU
+            - FRI
+            - SAT
+            - SUN
+            - ANY
+
+        DateTimeType:
+          description: RFC3339 Datetime
+          type: string
+          format: date-time
+          examples:
+            - '2023-11-20T01:02:03'
+            - '2023-11-20T01:02:03-08:00'
+
+        TimeInterval:
+          description: |
+            A period of time represented as a string formatted according to the ISO 8601
+            rules for time intervals, in the format PnnDTnnHnnM, where:
+            - P is a mandatory character that indicates that the value is a time interval
+            - nnD is an optional block that indicates the number of days comprised in the interval
+            - T is a mandatory character that indicates the start of the time block
+            - nnH is an optional block that indicates the number of hours comprised in the interval
+            - nnM is an optional block that indicates the number of minutes comprised in the interval
+          type: string
+          maxLength: 11
+
+        TimeType:
+          description: |
+            A time instant, represented by a string in the form hh:mmS where the date and
+            time format shall follow the ISO 8601 standard, with 'S' indicating the time zone
+          type: string
+
+        CodeYesNoType:
+          description: |
+            A choice between a positive (yes) or a negative (no) applicability,
+            represented as a string with a list of enumerated values.
+          type: string
+          enum:
+            - 'YES'
+            - 'NO'
+
+        URNType:
+          description: String of characters that complies with the Uniform Resource Name (URN) scheme as specified in the RFC 2141
+          type: string
+
+        CodeGeometrySubType:
+          description: A string indicating what type of geometry sub-type is being provided. Currently supports only circle.
+          type: string
+          enum:
+            - 'Circle'
+
+        CodeVerticalReferenceType:
+          description: |
+            A code indicating a vertical reference system. Allowed values:
+            AGL = Above ground level (or above water surface, as applicable)
+            AMSL = Above Mean Sea Level
+            WGS84 = Above the surface of the WGS-84 ellipsoid (Ellipsoidal height)
+          type: string
+          enum:
+            - AGL
+            - AMSL
+            - WGS84
+
+        GeoJSONGeometryType:
+          description: Type of geometry being used to describe the feature.
+          oneOf:
+            - type: 'null'
+            - $ref: '#/components/schemas/SimpleDataModels/properties/point_with_extent'
+            - $ref: '#/components/schemas/SimpleDataModels/properties/LineString'
+            - $ref: '#/components/schemas/SimpleDataModels/properties/Polygon'
+            - $ref: '#/components/schemas/SimpleDataModels/properties/MultiPoint'
+            - $ref: '#/components/schemas/SimpleDataModels/properties/MultiLineString'
+            - $ref: '#/components/schemas/SimpleDataModels/properties/MultiPolygon'
+
+        normal_geometry:
+          description: Individual geometry entry not in a collection.
+          allOf:
+            - $ref: '#/components/schemas/SimpleDataModels/properties/GeoJSONGeometryType'
+            - $ref: '#/components/schemas/VerticalLayer'
+
+        point_with_extent:
+          description: GeoJSON Point with LayeredGeoJSON extent validation.
+          type: object
+          required:
+            - type
+            - coordinates
+          properties:
+            type:
+              type: string
+              enum:
+                - Point
+            coordinates:
+              type: array
+              minItems: 2
+              items:
+                type: number
+            bbox:
+              $ref: '#/components/schemas/BoundingBox'
+            extent:
+              $ref: '#/components/schemas/HorizontalExtent'
+
+        LineString:
+          type: object
+          required:
+            - type
+            - coordinates
+          properties:
+            type:
+              type: string
+              enum:
+                - LineString
+            coordinates:
+              type: array
+              minItems: 2
+              items:
+                type: array
+                minItems: 2
+                items:
+                  type: number
+            bbox:
+              $ref: '#/components/schemas/BoundingBox'
+
+        Polygon:
+          type: object
+          required:
+            - type
+            - coordinates
+          properties:
+            type:
+              type: string
+              enum:
+                - Polygon
+            coordinates:
+              type: array
+              items:
+                type: array
+                minItems: 4
+                items:
+                  type: array
+                  minItems: 2
+                  items:
+                    type: number
+            bbox:
+              $ref: '#/components/schemas/BoundingBox'
+
+        MultiPoint:
+          type: object
+          required:
+            - type
+            - coordinates
+          properties:
+            type:
+              type: string
+              enum:
+                - MultiPoint
+            coordinates:
+              type: array
+              items:
+                type: array
+                minItems: 2
+                items:
+                  type: number
+            bbox:
+              $ref: '#/components/schemas/BoundingBox'
+
+        MultiLineString:
+          type: object
+          required:
+            - type
+            - coordinates
+          properties:
+            type:
+              type: string
+              enum:
+                - MultiLineString
+            coordinates:
+              type: array
+              items:
+                type: array
+                minItems: 2
+                items:
+                  type: array
+                  minItems: 2
+                  items:
+                    type: number
+            bbox:
+              $ref: '#/components/schemas/BoundingBox'
+
+        MultiPolygon:
+          type: object
+          required:
+            - type
+            - coordinates
+          properties:
+            type:
+              type: string
+              enum:
+                - MultiPolygon
+            coordinates:
+              type: array
+              items:
+                type: array
+                items:
+                  type: array
+                  minItems: 4
+                  items:
+                    type: array
+                    minItems: 2
+                    items:
+                      type: number
+            bbox:
+              $ref: '#/components/schemas/BoundingBox'
+
+        GeometryCollection:
+          type: object
+          required:
+            - type
+            - geometries
+          properties:
+            type:
+              type: string
+              enum:
+                - GeometryCollection
+            geometries:
+              type: array
+              items:
+                $ref: '#/components/schemas/SimpleDataModels/properties/normal_geometry'
+            bbox:
+              $ref: '#/components/schemas/BoundingBox'
+
+    # Continuing with more schemas...
+
+    GeoJSONCoordinates:
+      anyOf:
+        - type: array
+          minItems: 1
+          items:
+            type: array
+            minItems: 1
+            items:
+              type: array
+              minItems: 2
+              maxItems: 2
+              items:
+                type: number
+                format: double
+        - type: array
+          minItems: 2
+          maxItems: 2
+          items:
+            type: number
+            format: double
+      examples:
+        - [
+            [
+              [2.585866, 49.029301],
+              [2.610414, 48.983358],
+              [2.731263, 48.987301],
+              [2.704141, 49.044704],
+              [2.585866, 49.029301]
+            ]
+          ]
+
+  DigitalInterfacesMessages:
+    description: ED-318 Digital Interface Messages Schemas
+    type: object
+    properties:
+      genericReply:
+        type: object
+        required:
+          - requestProcessedTimeStamp
+        properties:
+          requestProcessedTimeStamp:
+            $ref: '#/components/schemas/SimpleDataModels/properties/DateTimeType'
+          subscriptionStatus:
+            type: string
+            enum:
+              - PAUSED
+              - ACTIVE
+              - DELETED
+          regions:
+            type: array
+            items:
+              type: integer
+          startDateTime:
+            $ref: '#/components/schemas/SimpleDataModels/properties/DateTimeType'
+          endDateTime:
+            $ref: '#/components/schemas/SimpleDataModels/properties/DateTimeType'
+          subscriptionID:
+            type: string
+          publicationLocation:
+            type: string
+            format: uri
+          publicationLinkVerificationFrequency:
+            type: number
+
+      UASZonesRequest:
+        type: object
+        properties:
+          geometry:
+            $ref: '#/components/schemas/SimpleDataModels/properties/GeoJSONGeometryType'
+          regions:
+            $ref: '#/components/schemas/DigitalInterfacesMessages/properties/regions'
+          startDateTime:
+            $ref: '#/components/schemas/DigitalInterfacesMessages/properties/startDateTime'
+          endDateTime:
+            $ref: '#/components/schemas/DigitalInterfacesMessages/properties/endDateTime'
+
+      UASZonesReply:
+        type: object
+        required:
+          - genericReply
+        properties:
+          genericReply:
+            $ref: '#/components/schemas/DigitalInterfacesMessages/properties/genericReply'
+          uasZones:
+            $ref: '#/components/schemas/FeatureCollection'
+
+      UASZonesUpdatesRequest:
+        type: object
+        properties:
+          geometry:
+            $ref: '#/components/schemas/SimpleDataModels/properties/GeoJSONGeometryType'
+          regions:
+            $ref: '#/components/schemas/DigitalInterfacesMessages/properties/regions'
+          startDateTime:
+            $ref: '#/components/schemas/DigitalInterfacesMessages/properties/startDateTime'
+          endDateTime:
+            $ref: '#/components/schemas/DigitalInterfacesMessages/properties/endDateTime'
+          updatedAfterDateTime:
+            type: string
+            format: DateTimeType
+
+      UASZonesUpdatesReply:
+        type: object
+        required:
+          - genericReply
+        properties:
+          genericReply:
+            $ref: '#/components/schemas/DigitalInterfacesMessages/properties/genericReply'
+          uasZones:
+            $ref: '#/components/schemas/FeatureCollection'
+
+      subscribeToUASZonesUpdatesRequest:
+        type: object
+        properties:
+          geometry:
+            $ref: '#/components/schemas/SimpleDataModels/properties/GeoJSONGeometryType'
+          regions:
+            $ref: '#/components/schemas/DigitalInterfacesMessages/properties/regions'
+          startDateTime:
+            $ref: '#/components/schemas/DigitalInterfacesMessages/properties/startDateTime'
+          endDateTime:
+            $ref: '#/components/schemas/DigitalInterfacesMessages/properties/endDateTime'
+
+      subscribeToUASZonesUpdatesReply:
+        type: object
+        required:
+          - genericReply
+        properties:
+          genericReply:
+            $ref: '#/components/schemas/DigitalInterfacesMessages/properties/genericReply'
+          subscriptionID:
+            $ref: '#/components/schemas/DigitalInterfacesMessages/properties/subscriptionID'
+          publicationLocation:
+            $ref: '#/components/schemas/DigitalInterfacesMessages/properties/publicationLocation'
+          publicationLinkVerificationFrequency:
+            $ref: '#/components/schemas/DigitalInterfacesMessages/properties/publicationLinkVerificationFrequency'
+          subscriptionStatus:
+            $ref: '#/components/schemas/DigitalInterfacesMessages/properties/subscriptionStatus'
+
+      ErrorResponse:
+        description: >-
+          Human-readable string returned when an error occurs as a result of a geospatial
+          data transaction.
+        type: object
+        properties:
+          message:
+            description: Human-readable message indicating what error occurred and/or why.
+            type: string
+            examples:
+              - 'The error occurred because [...]'
+
+  securitySchemes:
+    Authority:
+      type: oauth2
+      description: >-
+        Authorization from, or on behalf of, an authorization authority. This authority
+        must issue access tokens that are JSON Web Tokens as defined in RFC 7519, using
+        the `RS256` algorithm for the signature, and publish to all providers the public key for
+        verifying that signature.
+
+        The following fields must be included in the JWT claim for access tokens issued
+        by this authority:
+        * `iss`, with the URL at which the token generation request was received.
+        * `exp`, with a time no further than 1 hour in the future.
+        * `sub`, with unique ID of the client requesting the access token.
+        * `scope`, with an array of strings indicating the scopes granted.
+
+        The tokens granted by this authority must protect against reuse of received
+        tokens to impersonate the sender to other recipients (via use of the `aud` claim or
+        other means).
+
+        When using the `aud` claim to protect against the reuse of received
+        tokens, and absent guidance on behalf of the competent authority to the
+        contrary, the JWT `aud` claim requested by the client must be included
+        in each access token and must contain the fully qualified domain name of
+        the URL the access token will be used to access.
+      flows:
+        clientCredentials:
+          tokenUrl: https://auth.example.com/oauth/token
+          scopes:
+            geospatial.data_provider: Client may provide geospatial data to data consumers.
+            geospatial.data_consumer: Client may consume geospatial data from data providers.
+
+paths:
+  /GeospatialInformationService/uas_zones:
+    post:
+      operationId: RetrieveUASZones
+      summary: Retrieve all applicable UAS Zones provided by the data provider.
+      description: >-
+        Note that some UAS Zones returned may lie entirely outside the requested ranges.
+        Note that some data providers may choose not to permit unauthorized access
+        to this endpoint, despite its definition in this specification for data providers
+        that do choose to permit unauthorized access.
+      tags:
+        - retrieval_interface
+      security:
+        - Authority:
+            - geospatial.data_consumer
+        - {}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DigitalInterfacesMessages/properties/UASZonesRequest'
+      responses:
+        '200':
+          description: UAS Zones were successfully retrieved.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DigitalInterfacesMessages/properties/UASZonesReply'
+        '400':
+          description: One or more input parameters were missing or invalid.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DigitalInterfacesMessages/properties/ErrorResponse'
+        '401':
+          description: >-
+            * Bearer access token was not provided in Authorization header and data
+            provider does not allow unauthorized access.
+            * Bearer token could not be decoded, or token was invalid.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DigitalInterfacesMessages/properties/ErrorResponse'
+        '403':
+          description: The access token was decoded successfully but did not include a scope appropriate to this endpoint.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DigitalInterfacesMessages/properties/ErrorResponse'
+        '413':
+          description: The requested area was too large.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DigitalInterfacesMessages/properties/ErrorResponse'
+
+  /GeospatialInformationService/uas_zones_update:
+    post:
+      operationId: RetrieveUASZonesUpdates
+      summary: Retrieve all applicable UAS Zones that have been updated after the required date.
+      description: >-
+        Note that some UAS Zones returned may lie entirely outside the requested ranges.
+        Note that some data providers may choose not to permit unauthorized access
+        to this endpoint, despite its definition in this specification for data providers
+        that do choose to permit unauthorized access.
+      tags:
+        - retrieval_interface
+      security:
+        - Authority:
+            - geospatial.data_consumer
+        - {}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DigitalInterfacesMessages/properties/UASZonesUpdatesRequest'
+      responses:
+        '200':
+          description: UAS Zones were successfully retrieved.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DigitalInterfacesMessages/properties/UASZonesUpdatesReply'
+        '400':
+          description: One or more input parameters were missing or invalid.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DigitalInterfacesMessages/properties/ErrorResponse'
+        '401':
+          description: >-
+            * Bearer access token was not provided in Authorization header and data
+            provider does not allow unauthorized access.
+            * Bearer token could not be decoded, or token was invalid.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DigitalInterfacesMessages/properties/ErrorResponse'
+        '403':
+          description: The access token was decoded successfully but did not include a scope appropriate to this endpoint.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DigitalInterfacesMessages/properties/ErrorResponse'
+        '413':
+          description: The requested area was too large.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DigitalInterfacesMessages/properties/ErrorResponse'
+
+  /GeospatialInformationService/subscriptions:
+    get:
+      operationId: getUASZonesUpdatesSubscription
+      summary: Retrieve all applicable subscriptions from the data provider.
+      description: >-
+        Only subscriptions belonging to the caller are returned. This endpoint
+        would be used if a data consumer lost track of subscriptions they had created
+        and/or wanted to resolve an error indicating that they had too many
+        existing subscriptions in an area.
+      tags:
+        - subscription_interface
+      security:
+        - Authority:
+            - geospatial.data_consumer
+      responses:
+        '200':
+          description: Subscriptions were retrieved successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DigitalInterfacesMessages/properties/getUASZonesUpdatesSubscriptionsReply'
+        '400':
+          description: One or more input parameters were missing or invalid.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DigitalInterfacesMessages/properties/ErrorResponse'
+        '401':
+          description: >-
+            Bearer access token was not provided in Authorization header, token
+            could not be decoded, or token was invalid.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DigitalInterfacesMessages/properties/ErrorResponse'
+        '403':
+          description: >-
+            The access token was decoded successfully but did not include a
+            scope appropriate to this endpoint.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DigitalInterfacesMessages/properties/ErrorResponse'
+        '429':
+          description: The client issued too many requests in a short period of time.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DigitalInterfacesMessages/properties/ErrorResponse'
+
+    post:
+      operationId: subscribeToUASZonesUpdates
+      summary: Express interest in receiving updates to UAS Geographical Zone information.
+      description: >-
+        This operation creates a subscription for the user, with "PAUSED" state. The
+        operation creates also a publication resource (i.e. queue) at the provider
+        infrastructure, where all information updates related to the subscription will be
+        delivered.
+      tags:
+        - subscription_interface
+      security:
+        - Authority:
+            - geospatial.data_consumer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DigitalInterfacesMessages/properties/subscribeToUASZonesUpdatesRequest'
+      responses:
+        '200':
+          description: Subscriptions request received successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DigitalInterfacesMessages/properties/subscribeToUASZonesUpdatesReply'
+        '400':
+          description: One or more input parameters were missing or invalid.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DigitalInterfacesMessages/properties/ErrorResponse'
+        '401':
+          description: >-
+            Bearer access token was not provided in Authorization header, token
+            could not be decoded, or token was invalid.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DigitalInterfacesMessages/properties/ErrorResponse'
+        '403':
+          description: >-
+            The access token was decoded successfully but did not include a
+            scope appropriate to this endpoint.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DigitalInterfacesMessages/properties/ErrorResponse'
+        '413':
+          description: The requested area was too large.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DigitalInterfacesMessages/properties/ErrorResponse'
+        '429':
+          description: The client issued too many requests in a short period of time.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DigitalInterfacesMessages/properties/ErrorResponse'
+
+security:
+  - Authority:
+      - geospatial.data_provider
+  - Authority:
+      - geospatial.data_consumer
+
+tags:
+  - name: retrieval_interface
+    description: >-
+      Endpoints that enables the synchronous retrieval of all UAS Geographical Zone
+      information for a particular timeframe, airspace and region of interest or
+      when it has been updated.
+  - name: subscription_interface
+    description: Endpoints used by providers and subscribers when using Subscriptions.

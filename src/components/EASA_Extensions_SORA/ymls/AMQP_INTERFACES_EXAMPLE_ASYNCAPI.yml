@@ -1,0 +1,60 @@
+asyncapi: 2.6.0
+info:
+  title: Geospatial Information Service Interfaces
+  version: 0.0.1
+  description: AMQP 1.0 queues where Data Providers can publish and users can subscribe. To avoid duplication, the messages which are referred to in this specification are not included in this schema. These can be found in the OpenAPI section of Appendix D of ED-318 standard.
+channels:
+  GeospatialInformationService/{subscriptionID}:
+    parameters:
+      subscriptionID:
+        description: Unique identifier for the subscription
+        schema:
+          type: string
+    subscribe:
+      message:
+        oneOf:
+          - $ref: '#/components/messages/publishUASZonesUpdates'
+          - $ref: '#/components/messages/notifySubscriptionStatus'
+    publish:
+      message:
+        oneOf:
+          - $ref: '#/components/messages/publishUASZonesUpdates'
+          - $ref: '#/components/messages/notifySubscriptionStatus'
+components:
+  messages:
+    publishUASZonesUpdates:
+      payload:
+        $ref: '#/components/schemas/UASZoneUpdatePublication'
+    notifySubscriptionStatus:
+      payload:
+        $ref: '#/components/schemas/SubscriptionStatusNotification'
+  schemas:
+    UASZoneUpdatePublication:
+      type: object
+      required:
+        - uasZone
+      properties:
+        uasZone:
+          $ref: '#/components/schemas/FeatureCollection'
+    SubscriptionStatusNotification:
+      type: object
+      properties:
+        subscriptionID:
+          type: string
+        subscriptionStatus:
+          type: string
+          enum:
+            - PAUSED
+            - ACTIVE
+            - DELETED
+        notificationReason:
+          type: string
+          enum:
+            - CHANGE_BY_SUPERVISOR
+            - CHANGE_BY_PROVIDER
+            - HEARTBEAT
+        notificationReasonDescription:
+          type: string
+    FeatureCollection:
+      type: object
+      description: FeatureCollection as per RFC 7946 specification. See https://datatracker.ietf.org/doc/html/rfc7946#section-3.3
