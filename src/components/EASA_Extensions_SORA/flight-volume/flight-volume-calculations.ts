@@ -30,30 +30,130 @@ export const getContingencyVolume = ({
 }: FlightVolumeParams): ContingencyVolumeResults | null => {
   if (!flightGeography) return null;
 
+  // console log the input params in a readable format in rgb(238, 191, 82)
+  const color = 'rgb(238, 191, 82)';
+  // eslint-disable-next-line no-console
+  console.log('%c--------------------------------', `color: ${color}`);
+  // eslint-disable-next-line no-console
+  console.log('%cContingency Volume Params:', `color: ${color}`);
+  // eslint-disable-next-line no-console
+  console.log(
+    `%c${`${JSON.stringify(
+      { sGPS, sPos, sK, vO, tR, tP, parachute, rollAngle, multirotor, hFG, hAM },
+      null,
+      2
+    )}`}`,
+    `color: ${color}`
+  );
+
   const hR = vO * 0.7 * tR;
   let hCM = 0;
 
+  // eslint-disable-next-line no-console
+  console.log('%cContingency Volume Calculations:', `color: ${color}`);
+  // eslint-disable-next-line no-console
+  console.log(`%c hR: ${hR}`, `color: ${color}`);
+  // eslint-disable-next-line no-console
+  console.log('%c   vO * 0.7 * tR ', `color: ${color}`);
+  // eslint-disable-next-line no-console
+  console.log(`%c   ${vO} * 0.7 * ${tR}`, `color: ${color}`);
+
   if (multirotor) {
     hCM = vO ** 2 / (2 * g);
+    // eslint-disable-next-line no-console
+    console.log(`%c hCM: ${hCM}`, `color: ${color}`);
+    // eslint-disable-next-line no-console
+    console.log('%c   multirotor === true', `color: ${color}`);
+    // eslint-disable-next-line no-console
+    console.log('%c   vO ** 2 / (2 * g)', `color: ${color}`);
+    // eslint-disable-next-line no-console
+    console.log(`%c   ${vO} ** 2 / (2 * ${g})`, `color: ${color}`);
   } else {
     hCM = vO ** 2 / g;
+    // eslint-disable-next-line no-console
+    console.log(`%c hCM: ${hCM}`, `color: ${color}`);
+    // eslint-disable-next-line no-console
+    console.log('%c   multirotor === false', `color: ${color}`);
+    // eslint-disable-next-line no-console
+    console.log('%c   vO ** 2 / g', `color: ${color}`);
+    // eslint-disable-next-line no-console
+    console.log(`%c   ${vO} ** 2 / ${g}`, `color: ${color}`);
   }
 
   if (parachute) {
     hCM = vO * tP * 0.7;
+
+    // eslint-disable-next-line no-console
+    console.log(`%c hCM: ${hCM} (recalculated due to parachute === true)`, `color: ${color}`);
+    // eslint-disable-next-line no-console
+    console.log('%c   vO * tP * 0.7', `color: ${color}`);
+    // eslint-disable-next-line no-console
+    console.log(`%c   ${vO} * ${tP} * 0.7`, `color: ${color}`);
   }
 
   const hCV = hFG + hAM + hR + hCM;
+  // eslint-disable-next-line no-console
+  console.log(`%c hCV: ${hCV}`, `color: ${color}`);
+  // eslint-disable-next-line no-console
+  console.log('%c   hFG + hAM + hR + hCM', `color: ${color}`);
+  // eslint-disable-next-line no-console
+  console.log(`%c   ${hFG} + ${hAM} + ${hR} + ${hCM}`, `color: ${color}`);
 
   const sR = vO * tR;
+  // eslint-disable-next-line no-console
+  console.log(`%c sR: ${sR}`, `color: ${color}`);
+  // eslint-disable-next-line no-console
+  console.log('%c   vO * tR', `color: ${color}`);
+  // eslint-disable-next-line no-console
+  console.log(`%c   ${vO} * ${tR}`, `color: ${color}`);
+
   const sCM = multirotor
     ? vO ** 2 / (2 * g * Math.tan((rollAngle * Math.PI) / 180))
     : vO ** 2 / (g * Math.tan((rollAngle * Math.PI) / 180));
+  // eslint-disable-next-line no-console
+  console.log(`%c sCM: ${sCM} (multirotor === ${multirotor})`, `color: ${color}`);
+  if (multirotor) {
+    // eslint-disable-next-line no-console
+    console.log(
+      '%c   vO ** 2 / (2 * g * Math.tan((rollAngle * Math.PI) / 180)) ',
+      `color: ${color}`
+    );
+    // eslint-disable-next-line no-console
+    console.log(
+      `%c   ${vO} ** 2 / (2 * ${g} * Math.tan((${rollAngle} * Math.PI) / 180))`,
+      `color: ${color}`
+    );
+  } else {
+    // eslint-disable-next-line no-console
+    console.log('%c   vO ** 2 / (g * Math.tan((rollAngle * Math.PI) / 180)) ', `color: ${color}`);
+    // eslint-disable-next-line no-console
+    console.log(
+      `%c   ${vO} ** 2 / (${g} * Math.tan((${rollAngle} * Math.PI) / 180))`,
+      `color: ${color}`
+    );
+  }
 
   const sCV = sGPS + sPos + sK + sR + (parachute ? vO * tP : sCM);
+  // eslint-disable-next-line no-console
+  console.log(`%c sCV: ${sCV} (parachute === ${parachute})`, `color: ${color}`);
+  if (parachute) {
+    // eslint-disable-next-line no-console
+    console.log('%c   sGPS + sPos + sK + sR + vO * tP ', `color: ${color}`);
+    // eslint-disable-next-line no-console
+    console.log(`%c   ${sGPS} + ${sPos} + ${sK} + ${sR} + ${vO} * ${tP}`, `color: ${color}`);
+  } else {
+    // eslint-disable-next-line no-console
+    console.log('%c   sGPS + sPos + sK + sR + sCM ', `color: ${color}`);
+    // eslint-disable-next-line no-console
+    console.log(`%c   ${sGPS} + ${sPos} + ${sK} + ${sR} + ${sCM}`, `color: ${color}`);
+  }
 
   const buffer = geometryEngine.buffer(flightGeography.geometry, sCV);
+
   const sCVPolygon = geometryEngine.difference(buffer, flightGeography.geometry) as __esri.Polygon;
+
+  // eslint-disable-next-line no-console
+  console.log('%c--------------------------------', `color: ${color}`);
 
   return {
     contingencyVolume: new Graphic({
@@ -82,16 +182,71 @@ export const getGroundRiskVolume = (
   cv: ContingencyVolumeResults
 ) => {
   if (!flightGeography) return null;
+
+  const color = 'rgb(181, 45, 62)';
+  // eslint-disable-next-line no-console
+  console.log('%c--------------------------------', `color: ${color}`);
+  // eslint-disable-next-line no-console
+  console.log('%cGround Risk Volume Params:', `color: ${color}`);
+  // eslint-disable-next-line no-console
+  console.log(
+    `%c${JSON.stringify({ vO, tP, parachute, multirotor, simplified, cd, vWind, vZ, power, cL, gliding }, null, 2)}`,
+    `color: ${color}`
+  );
+
   const hCV = cv.contingencyVolumeHeight;
   let sGRB = simplified ? hCV + cd / 2 : (vO * Math.sqrt(2 * hCV)) / g + cd / 2;
+  // eslint-disable-next-line no-console
+  console.log(
+    `%c hCV: ${hCV} (input contingency volume height from Contingency Volume Calculations)`,
+    `color: ${color}`
+  );
+
+  // eslint-disable-next-line no-console
+  console.log(`%c sGRB: ${sGRB} (simplified === ${simplified})`, `color: ${color}`);
+  if (simplified) {
+    // eslint-disable-next-line no-console
+    console.log('%c   hCV + cd / 2', `color: ${color}`);
+    // eslint-disable-next-line no-console
+    console.log(`%c   ${hCV} + ${cd} / 2`, `color: ${color}`);
+  } else {
+    // eslint-disable-next-line no-console
+    console.log('%c   (vO * Math.sqrt(2 * hCV)) / g + cd / 2', `color: ${color}`);
+    // eslint-disable-next-line no-console
+    console.log(`%c   (${vO} * Math.sqrt(2 * ${hCV})) / ${g} + ${cd} / 2`, `color: ${color}`);
+  }
 
   if (parachute) {
     sGRB = vO * tP + vWind * (hCV / vZ);
+    // eslint-disable-next-line no-console
+    console.log(`%c sGRB: ${sGRB} (recalculated due to parachute === true)`, `color: ${color}`);
+    // eslint-disable-next-line no-console
+    console.log('%c   vO * tP + vWind * (hCV / vZ)', `color: ${color}`);
+    // eslint-disable-next-line no-console
+    console.log(`%c   ${vO} * ${tP} + ${vWind} * (${hCV} / ${vZ})`, `color: ${color}`);
   }
 
   if (!multirotor && !power) {
     sGRB = gliding ? (cL / cd) * hCV : hCV + cd / 2;
+    // eslint-disable-next-line no-console
+    console.log(
+      `%c sGRB: ${sGRB} (recalculated due to multirotor === false and power === false and gliding === ${gliding})`,
+      `color: ${color}`
+    );
+    if (gliding) {
+      // eslint-disable-next-line no-console
+      console.log('%c   (cL / cd) * hCV', `color: ${color}`);
+      // eslint-disable-next-line no-console
+      console.log(`%c   (${cL} / ${cd}) * ${hCV}`, `color: ${color}`);
+    } else {
+      // eslint-disable-next-line no-console
+      console.log('%c   hCV + cd / 2', `color: ${color}`);
+      // eslint-disable-next-line no-console
+      console.log(`%c   ${hCV} + ${cd} / 2`, `color: ${color}`);
+    }
   }
+  // eslint-disable-next-line no-console
+  console.log('%c--------------------------------', `color: ${color}`);
 
   const flightPlusCVBuffer = geometryEngine.union([
     flightGeography.geometry,
@@ -112,12 +267,56 @@ export const getAdjacentArea = (
   grVolume: __esri.Geometry
 ) => {
   if (!flightGeography) return null;
+  const color = 'rgb(98, 128, 177)';
+  // eslint-disable-next-line no-console
+  console.log('%c--------------------------------', `color: ${color}`);
+  // eslint-disable-next-line no-console
+  console.log('%cAdjacent Area Params:', `color: ${color}`);
+  // eslint-disable-next-line no-console
+  console.log(`%c${JSON.stringify({ vO }, null, 2)}`, `color: ${color}`);
+
   let adjacentBufferDistance = 5000;
   const threeMinRange = (vO * 3) / 60;
+  // eslint-disable-next-line no-console
+  console.log(
+    `%c adjacentBufferDistance: ${adjacentBufferDistance} (hardcoded)`,
+    `color: ${color}`
+  );
+  // eslint-disable-next-line no-console
+  console.log(`%c threeMinRange: ${threeMinRange}`, `color: ${color}`);
+  // eslint-disable-next-line no-console
+  console.log('%c   (vO * 3) / 60', `color: ${color}`);
+  // eslint-disable-next-line no-console
+  console.log(`%c   ${vO} * 3 / 60`, `color: ${color}`);
 
   if (threeMinRange > 5000) {
     adjacentBufferDistance = threeMinRange > 35000 ? 35000 : threeMinRange;
+    // eslint-disable-next-line no-console
+    console.log(
+      `%c adjacentBufferDistance: ${adjacentBufferDistance} (recalculated due to threeMinRange > 5000)`,
+      `color: ${color}`
+    );
+    if (threeMinRange > 35000) {
+      // eslint-disable-next-line no-console
+      console.log('%c   threeMinRange > 35000', `color: ${color}`);
+      // eslint-disable-next-line no-console
+      console.log(`%c   ${threeMinRange} > 35000`, `color: ${color}`);
+    } else {
+      // eslint-disable-next-line no-console
+      console.log('%c   threeMinRange <= 35000', `color: ${color}`);
+      // eslint-disable-next-line no-console
+      console.log(`%c   ${threeMinRange} <= 35000`, `color: ${color}`);
+    }
+  } else {
+    // eslint-disable-next-line no-console
+    console.log(
+      `%c adjacentBufferDistance: ${adjacentBufferDistance} (not recalculated due to threeMinRange <= 5000)`,
+      `color: ${color}`
+    );
   }
+
+  // eslint-disable-next-line no-console
+  console.log('%c--------------------------------', `color: ${color}`);
 
   const flightPlusGroundRisk = geometryEngine.union([flightGeography.geometry, cv, grVolume]);
 
