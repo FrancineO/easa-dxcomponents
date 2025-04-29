@@ -44,13 +44,13 @@ const useCalculateFlightVolume = (params: FlightVolumeParams) => {
     // Clear existing graphics
     layer.removeAll();
 
+    // TODO: get rid of this try catch and push it higher
     try {
       calculationInProgress.current = true;
 
       // Calculate volumes
       const cv = getContingencyVolume(currentParams);
       if (!cv) return;
-
       const grVolume = getGroundRiskVolume(currentParams, cv);
       if (!grVolume) return;
 
@@ -69,9 +69,8 @@ const useCalculateFlightVolume = (params: FlightVolumeParams) => {
         contingencyVolumeHeight: cv.contingencyVolumeHeight
       });
     } catch (error) {
-      // eslint-disable-next-line no-console
-      console.error('Error calculating flight volume:', error);
       setFlightVolume(null);
+      throw error;
     } finally {
       calculationInProgress.current = false;
     }

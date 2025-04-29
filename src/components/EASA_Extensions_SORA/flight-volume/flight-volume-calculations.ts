@@ -28,7 +28,10 @@ export const getContingencyVolume = ({
   hFG,
   hAM
 }: FlightVolumeParams): ContingencyVolumeResults | null => {
-  if (!flightGeography) return null;
+  if (!flightGeography)
+    throw new Error(
+      'Error calculating contingency volume. Flight geography is undefined. Please check the console for more information.'
+    );
 
   // console log the input params in a readable format in rgb(238, 191, 82)
   const color = 'rgb(238, 191, 82)';
@@ -148,7 +151,15 @@ export const getContingencyVolume = ({
     console.log(`%c   ${sGPS} + ${sPos} + ${sK} + ${sR} + ${sCM}`, `color: ${color}`);
   }
 
+  if (sCV === Infinity) {
+    throw new Error('sCV is Infinity. Please check the console for more information.');
+  }
+
   const buffer = geometryEngine.buffer(flightGeography.geometry, sCV);
+
+  if (!buffer) {
+    throw new Error('Error calculating buffer. Please check the console for more information.');
+  }
 
   const sCVPolygon = geometryEngine.difference(buffer, flightGeography.geometry) as __esri.Polygon;
 
@@ -181,7 +192,10 @@ export const getGroundRiskVolume = (
   }: FlightVolumeParams,
   cv: ContingencyVolumeResults
 ) => {
-  if (!flightGeography) return null;
+  if (!flightGeography)
+    throw new Error(
+      'Error calculating ground risk volume. Flight geography is undefined. Please check the console for more information.'
+    );
 
   const color = 'rgb(181, 45, 62)';
   // eslint-disable-next-line no-console
@@ -266,7 +280,11 @@ export const getAdjacentArea = (
   cv: __esri.Geometry,
   grVolume: __esri.Geometry
 ) => {
-  if (!flightGeography) return null;
+  if (!flightGeography)
+    throw new Error(
+      'Error calculating adjacent area. Flight geography is undefined. Please check the console for more information.'
+    );
+
   const color = 'rgb(98, 128, 177)';
   // eslint-disable-next-line no-console
   console.log('%c--------------------------------', `color: ${color}`);

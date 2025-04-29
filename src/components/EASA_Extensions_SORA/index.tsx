@@ -89,7 +89,12 @@ export const EasaExtensionsSORA = (props: ComponentProps) => {
       if (flightGeography) {
         setLoading(true);
       }
-      calculateVolume();
+      try {
+        calculateVolume();
+      } catch (error: any) {
+        setErrorText(error.message);
+        setLoading(false);
+      }
     },
     300,
     [flightGeography, props, layersAdded, calculateVolume]
@@ -164,6 +169,7 @@ export const EasaExtensionsSORA = (props: ComponentProps) => {
   // Set up the effect for map state
   const updatedMapState = useMapState(mapState);
 
+  // Set up the effect for print request
   useEffect(() => {
     if (!flightVolume) return;
     getPrintRequest();
@@ -177,6 +183,7 @@ export const EasaExtensionsSORA = (props: ComponentProps) => {
 
   // Call calculatePopDensities when flightVolume changes
   useEffect(() => {
+    if (!flightVolume) return;
     calculatePopDensities()
       .catch(error => {
         setErrorText(error.message);

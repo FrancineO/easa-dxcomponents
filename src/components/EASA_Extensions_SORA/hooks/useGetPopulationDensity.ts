@@ -177,8 +177,10 @@ export const useGetPopulationDensity = (flightVolume: FlightVolume | null) => {
       setPopulationDensity(popDensity);
     } catch (error: any) {
       setPopulationDensity(null);
+      const message = error?.details?.messages?.join(' ') ?? error?.message ?? 'Unknown error';
+
       throw new Error(
-        `Error calculating population densities: \r ${error.message} \r Flight volume may be too large.`
+        `Error calculating population densities: \r ${message} \r Flight volume may be too large.`
       );
     } finally {
       calculationInProgress.current = false;
