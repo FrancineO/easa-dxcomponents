@@ -5,17 +5,18 @@ import type { FlightVolume, PopulationDensity } from '../types';
 import { landusePopDensityLookup } from '../renderers';
 import _ from 'lodash';
 
-const pixelSizes: { maxHeight: number; resolution: number }[] = [
-  { maxHeight: 152, resolution: 200 },
-  { maxHeight: 305, resolution: 400 },
-  { maxHeight: 762, resolution: 1000 },
-  { maxHeight: 1524, resolution: 2000 },
-  { maxHeight: 3048, resolution: 4000 },
-  { maxHeight: 6096, resolution: 5000 },
-  { maxHeight: 18288, resolution: 10000 }
-];
+// const pixelSizes: { maxHeight: number; resolution: number }[] = [
+//   { maxHeight: 152, resolution: 200 },
+//   { maxHeight: 305, resolution: 400 },
+//   { maxHeight: 762, resolution: 1000 },
+//   { maxHeight: 1524, resolution: 2000 },
+//   { maxHeight: 3048, resolution: 4000 },
+//   { maxHeight: 6096, resolution: 5000 },
+//   { maxHeight: 18288, resolution: 10000 }
+// ];
 
-const getPixelSize = (height: number) => {
+// const getPixelSize = (height: number) => {
+const getPixelSize = () => {
   // const pixelSizeDef = pixelSizes.find(size => size.maxHeight >= height);
   // if (!pixelSizeDef) {
   return {
@@ -51,7 +52,8 @@ export const useGetPopulationDensity = (flightVolume: FlightVolume | null, hFG: 
         );
       }
 
-      const pixelSize = getPixelSize(hFG);
+      // const pixelSize = getPixelSize(hFG);
+      const pixelSize = getPixelSize();
       const adjacentStats = await layer.computeStatisticsHistograms({
         geometry,
         pixelSize
@@ -73,7 +75,8 @@ export const useGetPopulationDensity = (flightVolume: FlightVolume | null, hFG: 
         );
       }
 
-      const pixelSize = getPixelSize(hFG);
+      // const pixelSize = getPixelSize(hFG);
+      const pixelSize = getPixelSize();
 
       const opStats = await layer.computeStatisticsHistograms({
         geometry,
@@ -132,7 +135,8 @@ export const useGetPopulationDensity = (flightVolume: FlightVolume | null, hFG: 
 
       // get the max population density in the Operational Ground Risk area
       const opAndGr = getOperationalAndGroundRiskGeometry();
-      const pixelSize = getPixelSize(hFG);
+      // const pixelSize = getPixelSize(hFG);
+      const pixelSize = getPixelSize();
       const landuseHistograms = await layer.computeHistograms({
         geometry: opAndGr as __esri.Polygon,
         pixelSize
