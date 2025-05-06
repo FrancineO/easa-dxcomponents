@@ -71,14 +71,20 @@ const calculateGroundRisk = (
     [7, 8, null, null, null] // > 50,000
   ];
 
+  const color = 'rgb(179, 66, 151)';
   // eslint-disable-next-line no-console
-  console.log('densityCategory', densityCategory);
+  console.log('%c--------------------------------', `color: ${color}`);
   // eslint-disable-next-line no-console
-  console.log('dimensionCategory', dimensionCategory);
+  console.log('%cGround Risk Calculations:', `color: ${color}`);
+
   // eslint-disable-next-line no-console
-  console.log('speedCategory', speedCategory);
+  console.log(`%c   densityCategory: ${densityCategory}`, `color: ${color}`);
   // eslint-disable-next-line no-console
-  console.log('criticalAreaCategory', criticalAreaCategory);
+  console.log(`%c   dimensionCategory: ${dimensionCategory}`, `color: ${color}`);
+  // eslint-disable-next-line no-console
+  console.log(`%c   speedCategory: ${speedCategory}`, `color: ${color}`);
+  // eslint-disable-next-line no-console
+  console.log(`%c   criticalAreaCategory: ${criticalAreaCategory}`, `color: ${color}`);
 
   // Get the ground risk values from the matrix for both dimension and speed
   const groundRiskByDimension = groundRiskMatrix[densityCategory][dimensionCategory] ?? -1;
@@ -106,11 +112,11 @@ const calculateGroundRisk = (
   );
 
   // eslint-disable-next-line no-console
-  console.log('groundRiskByDimension', groundRiskByDimension);
+  console.log(`%c   groundRiskByDimension: ${groundRiskByDimension}`, `color: ${color}`);
   // eslint-disable-next-line no-console
-  console.log('groundRiskBySpeed', groundRiskBySpeed);
+  console.log(`%c   groundRiskBySpeed: ${groundRiskBySpeed}`, `color: ${color}`);
   // eslint-disable-next-line no-console
-  console.log('groundRiskByCriticalArea', groundRiskByCriticalArea);
+  console.log(`%c   groundRiskByCriticalArea: ${groundRiskByCriticalArea}`, `color: ${color}`);
 
   // if the critical area is not null, then use the critical area value
   if (groundRiskByCriticalArea !== null) {
@@ -136,7 +142,9 @@ const calculateGroundRisk = (
   }
 
   // eslint-disable-next-line no-console
-  console.log('output iGRC', groundRisk);
+  console.log(`%c   output iGRC: ${groundRisk}`, `color: ${color}`);
+  // eslint-disable-next-line no-console
+  console.log('%c--------------------------------', `color: ${color}`);
 
   return groundRisk as 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | null;
 };

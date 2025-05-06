@@ -140,9 +140,6 @@ const LandusePopDensityLegend = ({
                       border: `1px solid rgba(${group.color.join(',')})`
                     }}
                   />
-                  {
-                    // TODO: @Francine how can i add a tooltip to the text?
-                  }
                   <div
                     style={{
                       display: 'flex',

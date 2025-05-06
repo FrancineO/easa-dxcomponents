@@ -12,6 +12,17 @@ const g = 9.81;
 export interface ContingencyVolumeResults {
   contingencyVolume: __esri.Graphic;
   contingencyVolumeHeight: number;
+  contingencyVolumeWidth: number;
+}
+
+export interface GroundRiskVolumeResults {
+  groundRiskVolume: __esri.Graphic;
+  groundRiskBufferWidth: number;
+}
+
+export interface AdjacentAreaResults {
+  adjacentArea: __esri.Graphic;
+  adjacentAreaWidth: number;
 }
 
 export const getContingencyVolume = ({
@@ -171,7 +182,8 @@ export const getContingencyVolume = ({
       geometry: sCVPolygon,
       symbol: contingencyVolumeSymbol
     }),
-    contingencyVolumeHeight: hCV
+    contingencyVolumeHeight: hCV,
+    contingencyVolumeWidth: sCV
   };
 };
 
@@ -191,7 +203,7 @@ export const getGroundRiskVolume = (
     gliding
   }: FlightVolumeParams,
   cv: ContingencyVolumeResults
-) => {
+): GroundRiskVolumeResults | null => {
   if (!flightGeography)
     throw new Error(
       'Error calculating ground risk volume. Flight geography is undefined. Please check the console for more information.'
@@ -208,6 +220,8 @@ export const getGroundRiskVolume = (
     `color: ${color}`
   );
 
+  // eslint-disable-next-line no-console
+  console.log('%cGround Risk Volume Calculations:', `color: ${color}`);
   const hCV = cv.contingencyVolumeHeight;
   let sGRB = simplified ? hCV + cd / 2 : (vO * Math.sqrt(2 * hCV)) / g + cd / 2;
   // eslint-disable-next-line no-console
@@ -269,17 +283,20 @@ export const getGroundRiskVolume = (
   const grBuffer = geometryEngine.buffer(flightPlusCVBuffer, sGRB);
   const grPolygon = geometryEngine.difference(grBuffer, flightPlusCVBuffer) as __esri.Polygon;
 
-  return new Graphic({
-    geometry: grPolygon,
-    symbol: groundRiskVolumeSymbol
-  });
+  return {
+    groundRiskVolume: new Graphic({
+      geometry: grPolygon,
+      symbol: groundRiskVolumeSymbol
+    }),
+    groundRiskBufferWidth: sGRB
+  };
 };
 
 export const getAdjacentArea = (
   { flightGeography, vO }: FlightVolumeParams,
   cv: __esri.Geometry,
   grVolume: __esri.Geometry
-) => {
+): AdjacentAreaResults | null => {
   if (!flightGeography)
     throw new Error(
       'Error calculating adjacent area. Flight geography is undefined. Please check the console for more information.'
@@ -293,6 +310,8 @@ export const getAdjacentArea = (
   // eslint-disable-next-line no-console
   console.log(`%c${JSON.stringify({ vO }, null, 2)}`, `color: ${color}`);
 
+  // eslint-disable-next-line no-console
+  console.log('%cAdjacent Area Calculations:', `color: ${color}`);
   let adjacentBufferDistance = 5000;
   const threeMinRange = (vO * 3) / 60;
   // eslint-disable-next-line no-console
@@ -341,8 +360,11 @@ export const getAdjacentArea = (
   const adjacentBuffer = geometryEngine.buffer(flightPlusGroundRisk, adjacentBufferDistance);
   const aa = geometryEngine.difference(adjacentBuffer, flightPlusGroundRisk) as __esri.Polygon;
 
-  return new Graphic({
-    geometry: aa,
-    symbol: adjacentAreaSymbol
-  });
+  return {
+    adjacentArea: new Graphic({
+      geometry: aa,
+      symbol: adjacentAreaSymbol
+    }),
+    adjacentAreaWidth: adjacentBufferDistance
+  };
 };

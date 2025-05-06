@@ -5,7 +5,37 @@ import type { FlightVolume, PopulationDensity } from '../types';
 import { landusePopDensityLookup } from '../renderers';
 import _ from 'lodash';
 
-export const useGetPopulationDensity = (flightVolume: FlightVolume | null) => {
+const pixelSizes: { maxHeight: number; resolution: number }[] = [
+  { maxHeight: 152, resolution: 200 },
+  { maxHeight: 305, resolution: 400 },
+  { maxHeight: 762, resolution: 1000 },
+  { maxHeight: 1524, resolution: 2000 },
+  { maxHeight: 3048, resolution: 4000 },
+  { maxHeight: 6096, resolution: 5000 },
+  { maxHeight: 18288, resolution: 10000 }
+];
+
+const getPixelSize = (height: number) => {
+  // const pixelSizeDef = pixelSizes.find(size => size.maxHeight >= height);
+  // if (!pixelSizeDef) {
+  return {
+    x: getView().resolution,
+    y: getView().resolution,
+    spatialReference: {
+      wkid: getView().spatialReference.wkid
+    }
+  };
+  // }
+  // return {
+  //   x: pixelSizeDef.resolution,
+  //   y: pixelSizeDef.resolution,
+  //   spatialReference: {
+  //     wkid: getView().spatialReference.wkid
+  //   }
+  // };
+};
+
+export const useGetPopulationDensity = (flightVolume: FlightVolume | null, hFG: number) => {
   const [populationDensity, setPopulationDensity] = useState<PopulationDensity | null>(null);
   const calculationInProgress = useRef(false);
   const flightVolumeRef = useRef(flightVolume);
@@ -15,15 +45,13 @@ export const useGetPopulationDensity = (flightVolume: FlightVolume | null) => {
 
   const getMaxDensity = useCallback(
     async (geometry: __esri.Polygon, layer: __esri.ImageryLayer) => {
-      // TODO: based on drone height we need to set the pass the ImageHistogramParameters with a pixelSize
-      // not sure if it needs to be done here as well?
-      const pixelSize = {
-        x: getView().resolution,
-        y: getView().resolution,
-        spatialReference: {
-          wkid: getView().spatialReference.wkid
-        }
-      };
+      if (!hFG) {
+        throw new Error(
+          'Cannot calculate population density without a height. Height is required.'
+        );
+      }
+
+      const pixelSize = getPixelSize(hFG);
       const adjacentStats = await layer.computeStatisticsHistograms({
         geometry,
         pixelSize
@@ -39,16 +67,14 @@ export const useGetPopulationDensity = (flightVolume: FlightVolume | null) => {
 
   const getAvgDensity = useCallback(
     async (geometry: __esri.Polygon, layer: __esri.ImageryLayer) => {
-      const pixelSize = {
-        x: getView().resolution,
-        y: getView().resolution,
-        spatialReference: {
-          wkid: getView().spatialReference.wkid
-        }
-      };
+      if (!hFG) {
+        throw new Error(
+          'Cannot calculate population density without a height. Height is required.'
+        );
+      }
 
-      // TODO: based on drone height we need to set the pass the ImageHistogramParameters with a pixelSize
-      // Calculate operational and ground risk density
+      const pixelSize = getPixelSize(hFG);
+
       const opStats = await layer.computeStatisticsHistograms({
         geometry,
         pixelSize
@@ -98,10 +124,18 @@ export const useGetPopulationDensity = (flightVolume: FlightVolume | null) => {
 
   const getLanduseMaxPopDensityOperationalGroundrisk = useCallback(
     async (layer: __esri.ImageryLayer) => {
+      if (!hFG) {
+        throw new Error(
+          'Cannot calculate population density without a height. Height is required.'
+        );
+      }
+
       // get the max population density in the Operational Ground Risk area
       const opAndGr = getOperationalAndGroundRiskGeometry();
+      const pixelSize = getPixelSize(hFG);
       const landuseHistograms = await layer.computeHistograms({
-        geometry: opAndGr as __esri.Polygon
+        geometry: opAndGr as __esri.Polygon,
+        pixelSize
       });
       const intersectedLanduseClasses: number[] = [];
       const counts = landuseHistograms.histograms?.[0]?.counts;

@@ -170,7 +170,7 @@ export const Default: Story = {
     multirotor: true,
     rollAngle: 25,
     hFG: 100,
-    hAM: 3,
+    hAM: 1,
     simplified: true,
     cd: 1,
     vWind: 10,

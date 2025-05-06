@@ -10,7 +10,12 @@ const useUpdatePegaProps = (
   mapState: MapState | null,
   groundRisk: 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | null,
   errorText: string | null,
-  contingencyVolumeHeight: number | null
+  contingencyVolumeHeight: number | null,
+  adjacentVolumeWidth: number | null,
+  contingencyVolumeWidth: number | null,
+  groundRiskBufferWidth: number | null,
+  impactedGeoZones: string[] | null,
+  impactedLandUse: string[] | null
 ) => {
   const paramsRef = useRef({
     pConnect,
@@ -20,7 +25,12 @@ const useUpdatePegaProps = (
     mapState,
     groundRisk,
     errorText,
-    contingencyVolumeHeight
+    contingencyVolumeHeight,
+    adjacentVolumeWidth,
+    contingencyVolumeWidth,
+    groundRiskBufferWidth,
+    impactedGeoZones,
+    impactedLandUse
   });
   const updateInProgress = useRef(false);
 
@@ -33,7 +43,12 @@ const useUpdatePegaProps = (
     mapState,
     groundRisk,
     errorText,
-    contingencyVolumeHeight
+    contingencyVolumeHeight,
+    adjacentVolumeWidth,
+    contingencyVolumeWidth,
+    groundRiskBufferWidth,
+    impactedGeoZones,
+    impactedLandUse
   };
 
   // Empty dependency array since we're using ref
@@ -48,7 +63,12 @@ const useUpdatePegaProps = (
       flightPath: fP,
       mapState: mS,
       errorText: eT,
-      contingencyVolumeHeight: hCV
+      contingencyVolumeHeight: hCV,
+      adjacentVolumeWidth: aVW,
+      contingencyVolumeWidth: cVW,
+      groundRiskBufferWidth: gRW,
+      impactedGeoZones: iGZ,
+      impactedLandUse: iLU
     } = currentParams;
 
     // if (!pD?.maxPopDensityOperationalGroundRisk || !pD?.avgPopDensityAdjacentArea || !pR || !gR)
@@ -60,30 +80,50 @@ const useUpdatePegaProps = (
 
     const hCVRounded = hCV ? _.round(hCV) : null;
 
+    const color = 'rgb(3, 124, 26)';
+    const errorColor = 'rgb(194, 52, 52)';
     // eslint-disable-next-line no-console
-    console.log('sending to pega:');
+    console.log('%c--------------------------------', `color: ${color}`);
     // eslint-disable-next-line no-console
-    console.log('   groundRisk', gR);
+    console.log('%c Props to send to pega:', `color: ${color}`);
     // eslint-disable-next-line no-console
-    console.log('   populationDensity', pD);
+    console.log('%c   groundRisk:', `color: ${color}`, gR);
     // eslint-disable-next-line no-console
-    console.log('   printRequest', pR);
+    console.log('%c   populationDensity:', `color: ${color}`, pD);
     // eslint-disable-next-line no-console
-    console.log('   flightPath', fP);
+    console.log('%c   printRequest:', `color: ${color}`, pR);
     // eslint-disable-next-line no-console
-    console.log('   mapState', mS);
+    console.log('%c   flightPath:', `color: ${color}`, fP);
     // eslint-disable-next-line no-console
-    console.log('   errorText', eT);
+    console.log('%c   mapState:', `color: ${color}`, mS);
     // eslint-disable-next-line no-console
-    console.log('   contingencyVolumeHeight', hCVRounded);
+    console.log('%c   errorText:', `color: ${color}`, eT);
+    // eslint-disable-next-line no-console
+    console.log('%c   contingencyVolumeHeight:', `color: ${color}`, hCVRounded);
+    // eslint-disable-next-line no-console
+    console.log('%c   adjacentVolumeWidth:', `color: ${color}`, aVW);
+    // eslint-disable-next-line no-console
+    console.log('%c   contingencyVolumeWidth:', `color: ${color}`, cVW);
+    // eslint-disable-next-line no-console
+    console.log('%c   groundRiskBufferWidth:', `color: ${color}`, gRW);
+    // eslint-disable-next-line no-console
+    console.log('%c   impactedGeoZones:', `color: ${color}`, iGZ);
+    // eslint-disable-next-line no-console
+    console.log('%c   impactedLandUse:', `color: ${color}`, iLU);
 
     try {
+      // eslint-disable-next-line no-console
+      console.log('%c Updating Pega props...', `color: ${color}`);
       updateInProgress.current = true;
       const caseId = pC.getValue('.pyID');
 
       if (!caseId) {
         // eslint-disable-next-line no-console
-        console.warn("Could not get caseId '.pyID'");
+        console.log("%c   Could not get caseId '.pyID'", `color: ${errorColor}`);
+        // eslint-disable-next-line no-console
+        console.log('%c   Props will not be sent to pega', `color: ${errorColor}`);
+        // eslint-disable-next-line no-console
+        console.log('%c--------------------------------', `color: ${color}`);
         return;
       }
 
@@ -109,13 +149,24 @@ const useUpdatePegaProps = (
             MapStateJSON: mS ? JSON.stringify(mS) : null,
             IntrinsicGroundRisk: eT ? -1 : gR,
             ErrorText: eT,
-            ContingencyVolumeHeight: hCVRounded
+            ContingencyVolumeHeight: hCVRounded,
+            AdjacentVolumeWidth: aVW,
+            ContingencyVolumeWidth: cVW,
+            GroundRiskBufferWidth: gRW,
+            ImpactedGeoZones: null, // iGZ,
+            ImpactedLandUse: null // iLU
           }
         }
       });
+      // eslint-disable-next-line no-console
+      console.log('%c   Pega props updated', `color: ${color}`);
+      // eslint-disable-next-line no-console
+      console.log('%c--------------------------------', `color: ${color}`);
     } catch (error) {
       // eslint-disable-next-line no-console
-      console.error('Error updating Pega props:', error);
+      console.error('Error updating Pega props:', `color: ${errorColor}`, error);
+      // eslint-disable-next-line no-console
+      console.log('%c--------------------------------', `color: ${color}`);
     } finally {
       updateInProgress.current = false;
     }

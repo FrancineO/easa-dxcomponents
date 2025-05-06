@@ -29,12 +29,15 @@ import Legends from './legends/legends';
 import { getFlightGeography } from './tools/toolbar/draw-utils';
 import useGetIntersectingLanduses from './hooks/useGetIntersectingLanduses';
 import { getView } from './map/view';
+import { geozoneRenderer, geozones, landUseLabels } from './renderers';
 
 // https://map.droneguide.be/
 // https://maptool-dipul.dfs.de/
 
 // geozones in the future will be updateable by an api
 // - they will then be single files from each member states which will then mean single layers for each member state, or the api can update the whole layer.
+
+// TODO: can we make an interactive map of the resulting flight volume
 
 // TODO: change the pop density layers from a resolution of 200m resolution to another value based on the drone height.
 // See table in screenshot from alberto.
@@ -57,6 +60,7 @@ export const EasaExtensionsSORA = (props: ComponentProps) => {
     mapStateJSON,
     cd,
     vO,
+    hFG,
     criticalArea,
     controlledGroundArea,
     printServiceUrl,
@@ -107,7 +111,8 @@ export const EasaExtensionsSORA = (props: ComponentProps) => {
           ...flightVolume,
           flightGeography
         }
-      : null
+      : null,
+    hFG
   );
 
   // Set up the hook to get the intersecting landuses
@@ -154,7 +159,22 @@ export const EasaExtensionsSORA = (props: ComponentProps) => {
     mapState,
     groundRisk,
     errorText,
-    flightVolume?.contingencyVolumeHeight ?? null
+    flightVolume?.contingencyVolumeHeight ?? null,
+    flightVolume?.adjacentVolumeWidth ?? null,
+    flightVolume?.contingencyVolumeWidth ?? null,
+    flightVolume?.groundRiskBufferWidth ?? null,
+    intersectingGeozones
+      ?.map(geozone => {
+        return (
+          geozones.find(g => g.value === geozone.attributes[geozoneRenderer.field1])?.label ?? ''
+        );
+      })
+      .filter((value, index, self) => self.indexOf(value) === index) ?? null,
+    intersectingLanduseClasses
+      ?.map(landuse => {
+        return landUseLabels[landuse];
+      })
+      .filter((value, index, self) => self.indexOf(value) === index) ?? null
   );
 
   // Set up the effect for flight geometry which comes in as a parameter

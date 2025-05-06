@@ -137,3 +137,4 @@ dist
 
 # Devcontainer certs
 .devcontainer/root_ca.crt
+src/easa-dxcomponents.code-workspace

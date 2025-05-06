@@ -272,12 +272,19 @@ const SoraMap = (props: Props) => {
 
   useEffect(() => {
     return () => {
+      const color = 'rgb(225, 152, 83)';
       // eslint-disable-next-line no-console
-      console.log('destroying view');
+      console.log('%c--------------------------------', `color: ${color}`);
+      // eslint-disable-next-line no-console
+      console.log('%c Recreating view', `color: ${color}`);
       getView()?.destroy();
       // eslint-disable-next-line no-console
-      console.log('view destroyed');
+      console.log('%c   View destroyed', `color: ${color}`);
       getNewView();
+      // eslint-disable-next-line no-console
+      console.log('%c   New view created', `color: ${color}`);
+      // eslint-disable-next-line no-console
+      console.log('%c--------------------------------', `color: ${color}`);
     };
   }, []);
 
