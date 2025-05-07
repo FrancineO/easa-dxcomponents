@@ -37,6 +37,7 @@ type Props = {
   flightPathJSON: string | null;
   onFlightPathChange: (path: __esri.Geometry | null) => void;
   onGeozoneInfoChange: (info: string | null) => void;
+  enabled: boolean;
 };
 
 const bufferGraphicsLayerId = 'easa-sora-tool-buffer-graphics';
@@ -47,8 +48,14 @@ const bufferGraphicsLayerId = 'easa-sora-tool-buffer-graphics';
  * @returns The DrawToolbar component
  */
 export const Toolbar = (props: Props) => {
-  const { onFlightGeographyChange, cd, flightPathJSON, onFlightPathChange, onGeozoneInfoChange } =
-    props;
+  const {
+    onFlightGeographyChange,
+    cd,
+    flightPathJSON,
+    onFlightPathChange,
+    onGeozoneInfoChange,
+    enabled
+  } = props;
 
   const [selectedTool, setSelectedTool] = useState<'circle' | 'polyline' | 'polygon' | 'geozone'>();
   const [handleCreate, setHandleCreate] = useState<any>();
@@ -326,6 +333,7 @@ export const Toolbar = (props: Props) => {
           label='Draw path with circle'
           onClick={() => handleToolClick('circle')}
           compact
+          disabled={!enabled}
         >
           <Icon name='circle' role='img' aria-label='circle icon' className='icon' />
         </Button>
@@ -334,6 +342,7 @@ export const Toolbar = (props: Props) => {
           label='Draw path with line'
           onClick={() => handleToolClick('polyline')}
           compact
+          disabled={!enabled}
         >
           <Icon
             name='share-point-up'
@@ -347,6 +356,7 @@ export const Toolbar = (props: Props) => {
           label='Draw path with polygon'
           onClick={() => handleToolClick('polygon')}
           compact
+          disabled={!enabled}
         >
           <Icon name='rectangle' role='img' aria-label='rectangle icon' className='icon' />
         </Button>
@@ -357,6 +367,7 @@ export const Toolbar = (props: Props) => {
             handleToolClick('geozone');
           }}
           compact
+          disabled={!enabled}
         >
           <Icon name='waypoint' role='img' aria-label='waypoint icon' className='icon' />
         </Button>
@@ -372,6 +383,7 @@ export const Toolbar = (props: Props) => {
               }
             }}
             compact
+            disabled={!enabled}
           >
             <Icon name='trash' role='img' aria-label='trash icon' className='icon' />
           </Button>

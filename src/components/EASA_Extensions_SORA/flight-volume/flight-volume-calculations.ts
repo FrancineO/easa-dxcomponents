@@ -223,13 +223,12 @@ export const getGroundRiskVolume = (
   // eslint-disable-next-line no-console
   console.log('%cGround Risk Volume Calculations:', `color: ${color}`);
   const hCV = cv.contingencyVolumeHeight;
-  let sGRB = simplified ? hCV + cd / 2 : (vO * Math.sqrt(2 * hCV)) / g + cd / 2;
   // eslint-disable-next-line no-console
   console.log(
     `%c hCV: ${hCV} (input contingency volume height from Contingency Volume Calculations)`,
     `color: ${color}`
   );
-
+  let sGRB = simplified ? hCV + cd / 2 : (vO * Math.sqrt(2 * hCV)) / g + cd / 2;
   // eslint-disable-next-line no-console
   console.log(`%c sGRB: ${sGRB} (simplified === ${simplified})`, `color: ${color}`);
   if (simplified) {
@@ -241,7 +240,7 @@ export const getGroundRiskVolume = (
     // eslint-disable-next-line no-console
     console.log('%c   (vO * Math.sqrt(2 * hCV)) / g + cd / 2', `color: ${color}`);
     // eslint-disable-next-line no-console
-    console.log(`%c   (${vO} * Math.sqrt(2 * ${hCV})) / ${g} + ${cd} / 2`, `color: ${color}`);
+    console.log(`%c   (${vO} * Math.sqrt(2 * ${hCV}) / ${g} + ${cd} / 2`, `color: ${color}`);
   }
 
   if (parachute) {

@@ -30,10 +30,6 @@ export const useHighlightIntersectingLanduse = (flightVolume: FlightVolume | nul
       flightVolume?.groundRiskVolume?.geometry as __esri.Polygon
     ]) as __esri.Polygon;
 
-    const area = geometryEngine.planarArea(operationalAndGroundRiskGeometry);
-    // eslint-disable-next-line no-console
-    console.log('area highlight', area);
-
     landuseHighlightLayer.rasterFunction = rasterFunctionUtils.clip({
       geometry: operationalAndGroundRiskGeometry,
       keepOutside: false

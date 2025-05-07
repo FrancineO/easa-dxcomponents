@@ -14,7 +14,7 @@ import { Toolbar } from './tools/toolbar/toolbar';
 import SearchTool from './tools/search-tool';
 import { useGetPopulationDensity } from './hooks/useGetPopulationDensity';
 import useCalculateFlightVolume from './hooks/useCalculateFlightVolume';
-import type { ComponentProps, MapState } from './types';
+import { validateComponentProps, type ComponentProps, type MapState } from './types';
 import useUpdatePegaProps from './hooks/useUpdatePegaProps';
 import useDebouncedEffect from './hooks/useDebouncedEffect';
 import useGetPrintRequest from './hooks/useGetPrintRequest';
@@ -53,6 +53,8 @@ import { geozoneRenderer, geozones, landUseLabels } from './renderers';
 // TODO: need to handle the geozones correctly. Only have geozones for portugal at the moment.
 
 export const EasaExtensionsSORA = (props: ComponentProps) => {
+  // check that the props are valid by testing the values against their types
+
   const {
     getPConnect,
     height,
@@ -77,18 +79,31 @@ export const EasaExtensionsSORA = (props: ComponentProps) => {
   const [errorText, setErrorText] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [geozoneInfo, setGeozoneInfo] = useState<string | null>(null);
+  const [propsValid, setPropsValid] = useState(false);
 
   const pConnect = getPConnect();
   let PCore: any;
   const defaultTheme = useTheme();
   const theme = PCore ? merge(defaultTheme, PCore.getEnvironmentInfo().getTheme()) : defaultTheme;
 
+  useEffect(() => {
+    try {
+      validateComponentProps(props);
+      setPropsValid(true);
+    } catch (error: any) {
+      setErrorText(error.message);
+      // eslint-disable-next-line no-console
+      console.error(error);
+      setPropsValid(false);
+    }
+  }, [props]);
+
   const { flightVolume, calculateVolume } = useCalculateFlightVolume({ ...props, flightGeography });
 
   // Replace the existing useEffect with useDebouncedEffect
   useDebouncedEffect(
     () => {
-      if (!layersAdded) return;
+      if (!layersAdded || !propsValid) return;
       setErrorText(null);
       if (flightGeography) {
         setLoading(true);
@@ -98,6 +113,8 @@ export const EasaExtensionsSORA = (props: ComponentProps) => {
       } catch (error: any) {
         setErrorText(error.message);
         setLoading(false);
+        // eslint-disable-next-line no-console
+        console.error(error);
       }
     },
     300,
@@ -207,6 +224,8 @@ export const EasaExtensionsSORA = (props: ComponentProps) => {
     calculatePopDensities()
       .catch(error => {
         setErrorText(error.message);
+        // eslint-disable-next-line no-console
+        console.error(error);
       })
       .finally(() => {
         setLoading(false);
@@ -229,6 +248,8 @@ export const EasaExtensionsSORA = (props: ComponentProps) => {
       if (error instanceof GroundRiskError) {
         setErrorText(`Error calculating ground risk: ${error.message}`);
       }
+      // eslint-disable-next-line no-console
+      console.error(error);
     }
   }, [populationDensity, cd, vO, layersAdded, calculateIntrinsicGroundRisk]);
 
@@ -291,13 +312,32 @@ export const EasaExtensionsSORA = (props: ComponentProps) => {
           >
             <LayerList mapState={mapState} />
             <SearchTool />
-            <Toolbar
-              cd={cd}
-              onFlightGeographyChange={setFlightGeography}
-              onFlightPathChange={setFlightPath}
-              flightPathJSON={flightPathJSON}
-              onGeozoneInfoChange={setGeozoneInfo}
-            />
+            <div
+              style={{
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center'
+              }}
+            >
+              {!propsValid && (
+                <Text
+                  variant='secondary'
+                  style={{
+                    color: theme.base.palette.urgent
+                  }}
+                >
+                  Tools disabled!
+                </Text>
+              )}
+              <Toolbar
+                cd={cd}
+                onFlightGeographyChange={setFlightGeography}
+                onFlightPathChange={setFlightPath}
+                flightPathJSON={flightPathJSON}
+                onGeozoneInfoChange={setGeozoneInfo}
+                enabled={propsValid}
+              />
+            </div>
           </div>
         </div>
         {geozoneInfo && (

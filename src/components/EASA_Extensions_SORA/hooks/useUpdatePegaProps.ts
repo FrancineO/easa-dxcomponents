@@ -153,8 +153,8 @@ const useUpdatePegaProps = (
             AdjacentVolumeWidth: aVW,
             ContingencyVolumeWidth: cVW,
             GroundRiskBufferWidth: gRW,
-            ImpactedGeoZones: null, // iGZ,
-            ImpactedLandUse: null // iLU
+            ImpactedGeoZones: iGZ,
+            ImpactedLandUse: iLU
           }
         }
       });
