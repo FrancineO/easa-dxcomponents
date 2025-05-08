@@ -46,10 +46,8 @@ export const useGetPopulationDensity = (flightVolume: FlightVolume | null, hFG: 
 
   const getMaxDensity = useCallback(
     async (geometry: __esri.Polygon, layer: __esri.ImageryLayer) => {
-      if (!hFG) {
-        throw new Error(
-          'Cannot calculate population density without a height. Height is required.'
-        );
+      if (hFG < 0) {
+        throw new Error('Cannot calculate population density with a negative height.');
       }
 
       // const pixelSize = getPixelSize(hFG);
@@ -69,10 +67,8 @@ export const useGetPopulationDensity = (flightVolume: FlightVolume | null, hFG: 
 
   const getAvgDensity = useCallback(
     async (geometry: __esri.Polygon, layer: __esri.ImageryLayer) => {
-      if (!hFG) {
-        throw new Error(
-          'Cannot calculate population density without a height. Height is required.'
-        );
+      if (hFG < 0) {
+        throw new Error('Cannot calculate population density with a negative height.');
       }
 
       // const pixelSize = getPixelSize(hFG);
@@ -127,10 +123,8 @@ export const useGetPopulationDensity = (flightVolume: FlightVolume | null, hFG: 
 
   const getLanduseMaxPopDensityOperationalGroundrisk = useCallback(
     async (layer: __esri.ImageryLayer) => {
-      if (!hFG) {
-        throw new Error(
-          'Cannot calculate population density without a height. Height is required.'
-        );
+      if (hFG < 0) {
+        throw new Error('Cannot calculate population density with a negative height.');
       }
 
       // get the max population density in the Operational Ground Risk area
@@ -217,9 +211,7 @@ export const useGetPopulationDensity = (flightVolume: FlightVolume | null, hFG: 
       setPopulationDensity(null);
       const message = error?.details?.messages?.join(' ') ?? error?.message ?? 'Unknown error';
 
-      throw new Error(
-        `Error calculating population densities: \r ${message} \r Flight volume may be too large.`
-      );
+      throw new Error(`Error calculating population densities: \r ${message}`);
     } finally {
       calculationInProgress.current = false;
     }

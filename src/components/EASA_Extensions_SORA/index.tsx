@@ -88,12 +88,18 @@ export const EasaExtensionsSORA = (props: ComponentProps) => {
 
   useEffect(() => {
     try {
+      // eslint-disable-next-line no-console
+      console.log('%cValidating props:', `color: ${'rgb(125, 205, 248)'}`);
+      // eslint-disable-next-line no-console
+      console.log(props);
       validateComponentProps(props);
       setPropsValid(true);
+      // eslint-disable-next-line no-console
+      console.log('%cProps are valid!', `color: ${'rgb(93, 255, 153)'}`);
     } catch (error: any) {
       setErrorText(error.message);
       // eslint-disable-next-line no-console
-      console.error(error);
+      console.error('Error validating props:', error);
       setPropsValid(false);
     }
   }, [props]);
