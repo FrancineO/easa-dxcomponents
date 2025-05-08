@@ -190,7 +190,7 @@ export const Default: Story = {
     printHeight: 300,
     printFormat: 'jpg',
     printDpi: 300,
-    popDensityPortalItemId: '8d51480776bf4e93975c07b5ebce4cf1',
+    popDensityPortalItemId: '80efb859d34a4a8f9141a31768b3fa65',
     basemapPortalItemIds:
       '979c6cc89af9449cbeb5342a439c6a76,86265e5a4bbb4187a59719cf134e0018,67372ff42cd145319639a99152b15bc3',
     landusePortalItemId: '87919279e9394adb9ba4f3f8009e1360',
