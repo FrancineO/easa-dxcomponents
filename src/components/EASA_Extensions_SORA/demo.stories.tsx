@@ -193,7 +193,7 @@ export const Default: Story = {
     popDensityPortalItemId: '80efb859d34a4a8f9141a31768b3fa65',
     basemapPortalItemIds:
       '979c6cc89af9449cbeb5342a439c6a76,86265e5a4bbb4187a59719cf134e0018,67372ff42cd145319639a99152b15bc3',
-    landusePortalItemId: '87919279e9394adb9ba4f3f8009e1360',
+    landusePortalItemId: 'a6fa763a7a47418b892c1c340f968193',
     geozonePortalItemId: 'e632deb3526647aaa864e2b89e92c738'
   }
 };

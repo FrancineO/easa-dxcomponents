@@ -31,8 +31,11 @@ export const populationDensityRenderer = {
 };
 
 export const landuseColors: Record<number, Array<number>> = {
+  1111: [200, 157, 236, 255], // New, using Urban vegetation color
+  1121: [200, 157, 236, 255], // New, using Urban vegetation color
   1130: [200, 157, 236, 255],
   1210: [200, 157, 236, 255],
+  1221: [200, 157, 236, 255], // New, using Urban vegetation color
   1222: [200, 157, 236, 255],
   1230: [200, 157, 236, 255],
   1242: [152, 118, 198, 255],
@@ -40,12 +43,23 @@ export const landuseColors: Record<number, Array<number>> = {
   1410: [200, 157, 236, 255],
   1421: [224, 176, 255, 255],
   1422: [75, 0, 130, 255],
-  3310: [75, 0, 130, 255]
+  3310: [75, 0, 130, 255],
+  3311: [75, 0, 130, 255], // New, using Beaches color
+  3312: [75, 0, 130, 255], // New
+  3313: [75, 0, 130, 255], // New
+  3314: [75, 0, 130, 255], // New
+  3315: [75, 0, 130, 255], // New
+  3316: [75, 0, 130, 255], // New
+  3317: [75, 0, 130, 255], // New
+  3318: [75, 0, 130, 255]  // New
 };
 
 export const landusePopDensityLookup: Record<number, number> = {
+  1111: 10000,
+  1121: 5000,
   1130: 10000,
   1210: 10000,
+  1221: 10000,
   1222: 10000,
   1230: 10000,
   1242: 20000,
@@ -53,12 +67,23 @@ export const landusePopDensityLookup: Record<number, number> = {
   1410: 10000,
   1421: 5000,
   1422: 50000,
-  3310: 50000
+  3310: 50000,
+  3311: 50000,
+  3312: 50000,
+  3313: 50000,
+  3314: 50000,
+  3315: 50000,
+  3316: 50000,
+  3317: 50000,
+  3318: 50000
 };
 
 export const landUseLabels: Record<number, string> = {
+  1111: 'Urban fabric', // New, generic label
+  1121: 'Urban fabric', // New, generic label
   1130: 'Urban vegetation',
   1210: 'Industrial or commercial units',
+  1221: 'Transport infrastructure', // New, generic label
   1222: 'Major stations',
   1230: 'Port areas',
   1242: 'Airport terminals',
@@ -66,7 +91,15 @@ export const landUseLabels: Record<number, string> = {
   1410: 'Green urban areas',
   1421: 'Sport and leisure green',
   1422: 'Sport and leisure built-up',
-  3310: 'Beaches, dunes and sand plains'
+  3310: 'Beaches, dunes and sand plains',
+  3311: 'Beaches, dunes and sand plains', // New, generic label
+  3312: 'Beaches, dunes and sand plains', // New
+  3313: 'Beaches, dunes and sand plains', // New
+  3314: 'Beaches, dunes and sand plains', // New
+  3315: 'Beaches, dunes and sand plains', // New
+  3316: 'Beaches, dunes and sand plains', // New
+  3317: 'Beaches, dunes and sand plains', // New
+  3318: 'Beaches, dunes and sand plains'  // New
 };
 
 export const landuseRenderer = {
