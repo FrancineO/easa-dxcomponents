@@ -246,6 +246,8 @@ export const Toolbar = (props: Props) => {
     onFlightPathChange(null);
   };
 
+  const rowStyle = 'display: flex; flex-direction: row; justify-content: space-between;';
+  const labelStyle = 'padding-right: 8px;';
   const handleMapClick = (event: any) => {
     getView()
       .hitTest(event)
@@ -259,7 +261,19 @@ export const Toolbar = (props: Props) => {
             symbol: getSymbol('polygon') as SimpleFillSymbol
           });
           getView().graphics.add(g);
-          onGeozoneInfoChange(attributes.PopupInfo);
+          onGeozoneInfoChange(
+            `<div style="font-size: 12px; line-height: 1.5; display: flex; flex-direction: column; gap: 4px; flex-grow: 1;">
+              ${attributes.Name ? `<div style="${rowStyle}"><div style="${labelStyle}">Name:</div><div>${attributes.Name ?? '-'}</div></div>` : ''}
+              ${attributes.Type ? `<div style="${rowStyle}"><div style="${labelStyle}">Type:</div><div>${attributes.Type}</div></div>` : ''}
+              ${attributes.NOTAMS_url ? `<div style="${rowStyle}"><div style="${labelStyle}">NOTAMS:</div><div><a href="${attributes.NOTAMS_url}" target="_blank">Link</a></div></div>` : ''}
+              ${attributes.Unit ? `<div style="${rowStyle}"><div style="${labelStyle}">Unit:</div><div>${attributes.Unit}</div></div>` : ''}
+              ${attributes.Requirements ? `<div style="${rowStyle}"><div style="${labelStyle}">Requirements:</div><div>${attributes.Requirements}</div></div>` : ''}
+              ${attributes.Category ? `<div style="${rowStyle}"><div style="${labelStyle}">Category:</div><div>${attributes.Category}</div></div>` : ''}
+              ${attributes.Area_Type ? `<div style="${rowStyle}"><div style="${labelStyle}">Area Type:</div><div>${attributes.Area_Type}</div></div>` : ''}
+              ${attributes.Bufferzone ? `<div style="${rowStyle}"><div style="${labelStyle}">Bufferzone:</div><div>${attributes.Bufferzone}</div></div>` : ''}
+              ${attributes.Restricted ? `<div style="${rowStyle}"><div style="${labelStyle}">Restricted:</div><div>${attributes.Restricted}</div></div>` : ''}
+            </div>`
+          );
         } else {
           onGeozoneInfoChange(null);
         }

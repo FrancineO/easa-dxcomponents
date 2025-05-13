@@ -4,7 +4,7 @@ import * as geometryEngine from '@arcgis/core/geometry/geometryEngine';
 import { getView } from '../map/view';
 
 const useGetIntersectingGeozones = (flightVolume: FlightVolume | null) => {
-  const [intersectingGeozones, setIntersectingGeozones] = useState<any[]>([]);
+  const [intersectingGeozones, setIntersectingGeozones] = useState<__esri.Graphic[]>([]);
 
   const queryIntersectingGeozones = useCallback(async () => {
     if (

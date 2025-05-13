@@ -51,7 +51,7 @@ export const landuseColors: Record<number, Array<number>> = {
   3315: [75, 0, 130, 255], // New
   3316: [75, 0, 130, 255], // New
   3317: [75, 0, 130, 255], // New
-  3318: [75, 0, 130, 255]  // New
+  3318: [75, 0, 130, 255] // New
 };
 
 export const landusePopDensityLookup: Record<number, number> = {
@@ -99,7 +99,7 @@ export const landUseLabels: Record<number, string> = {
   3315: 'Beaches, dunes and sand plains', // New
   3316: 'Beaches, dunes and sand plains', // New
   3317: 'Beaches, dunes and sand plains', // New
-  3318: 'Beaches, dunes and sand plains'  // New
+  3318: 'Beaches, dunes and sand plains' // New
 };
 
 export const landuseRenderer = {
@@ -232,20 +232,20 @@ export const geozones = [
   }
 ];
 
-export const geozoneRenderer = {
-  type: 'uniqueValue',
-  field1: 'Restriction',
-  uniqueValueInfos: geozones.map(zone => ({
-    symbol: {
-      type: 'esriSFS',
-      color: zone.color,
-      style: 'esriSFSSolid'
-    },
-    value: zone.value,
-    label: zone.label
-  })),
-  fieldDelimiter: ','
-};
+// export const geozoneRenderer = {
+//   type: 'uniqueValue',
+//   field1: 'Restriction',
+//   uniqueValueInfos: geozones.map(zone => ({
+//     symbol: {
+//       type: 'esriSFS',
+//       color: zone.color,
+//       style: 'esriSFSSolid'
+//     },
+//     value: zone.value,
+//     label: zone.label
+//   })),
+//   fieldDelimiter: ','
+// };
 
 // export const getLanduseHighlightRendererJson = () => {
 //   const landuseHighlightRendererCopy = { ...landuseRenderer };

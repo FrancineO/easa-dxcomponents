@@ -7,7 +7,7 @@ import Basemap from '@arcgis/core/Basemap';
 import PortalItem from '@arcgis/core/portal/PortalItem';
 import Map from '@arcgis/core/Map';
 import Point from '@arcgis/core/geometry/Point';
-import { geozoneRenderer, landuseRenderer, populationDensityRenderer } from '../renderers';
+import { landuseRenderer, populationDensityRenderer } from '../renderers';
 import Layer from '@arcgis/core/layers/Layer';
 import FeatureLayer from '@arcgis/core/layers/FeatureLayer';
 import * as rendererJsonUtils from '@arcgis/core/renderers/support/jsonUtils.js';
@@ -28,6 +28,7 @@ import { merge } from 'lodash';
 import * as Plus from '@pega/cosmos-react-core/lib/components/Icon/icons/plus.icon';
 import * as Minus from '@pega/cosmos-react-core/lib/components/Icon/icons/minus.icon';
 import * as Crosshairs from '@pega/cosmos-react-core/lib/components/Icon/icons/crosshairs.icon';
+import * as reactiveUtils from '@arcgis/core/core/reactiveUtils';
 
 registerIcon(Plus, Minus, Crosshairs);
 
@@ -36,10 +37,11 @@ type Props = {
   mapProps: MapProps;
   mapState: MapState | null;
   onLayersAdded: () => void;
+  onGeozonesLoaded: (renderer: __esri.UniqueValueRenderer) => void;
 };
 
 const SoraMap = (props: Props) => {
-  const { style, mapProps, mapState, onLayersAdded } = props;
+  const { style, mapProps, mapState, onLayersAdded, onGeozonesLoaded } = props;
   const {
     agolUrl,
     agolToken,
@@ -114,7 +116,6 @@ const SoraMap = (props: Props) => {
       }
       if (layer.portalItem.id === geozonePortalItemId) {
         layer.id = LayerId.geozones;
-        layer.renderer = rendererJsonUtils.fromJSON(geozoneRenderer) as __esri.UniqueValueRenderer;
       }
       if (layer.portalItem.id === popDensityPortalItemId) {
         layer.opacity = 0.65;
@@ -174,6 +175,11 @@ const SoraMap = (props: Props) => {
             if (hasGeozonesVisibilityProperty) {
               layer.visible = mapState?.layerVisibility?.Geozones as boolean;
             }
+            reactiveUtils
+              .whenOnce(() => layer.loaded)
+              .then(() => {
+                onGeozonesLoaded((layer as FeatureLayer).renderer as __esri.UniqueValueRenderer);
+              });
           }
           if (layer.id === LayerId.populationDensity || layer.id === LayerId.landuse) {
             const hasPopulationDensityVisibilityProperty =
@@ -195,7 +201,8 @@ const SoraMap = (props: Props) => {
       applyRenderer,
       agolUrl,
       onLayersAdded,
-      mapState
+      mapState,
+      onGeozonesLoaded
     ]
   );
 

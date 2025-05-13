@@ -1,53 +1,72 @@
 import { Alert, Card, CardContent, Text } from '@pega/cosmos-react-core';
-import { geozoneRenderer, geozones } from '../renderers';
 import TooltipElement from '../components/tooltip-element';
+import * as cimSymbolUtils from '@arcgis/core/symbols/support/cimSymbolUtils.js';
+import type { CIMSymbol } from '@arcgis/core/symbols';
 
-const GeozonesLegend = ({ intersectingGeozones }: { intersectingGeozones: __esri.Graphic[] }) => {
+const GeozonesLegend = ({
+  intersectingGeozones,
+  geozonesRenderer
+}: {
+  intersectingGeozones: __esri.Graphic[];
+  geozonesRenderer: __esri.UniqueValueRenderer | null;
+}) => {
+  const getRgba = (symbol: __esri.CIMSymbol) => {
+    const color = cimSymbolUtils.getCIMSymbolColor(symbol);
+    return `${color.r},${color.g},${color.b},${color.a}`;
+  };
+
   return (
     <Card>
       <CardContent>
-        <div style={{ display: 'flex', gap: '0.5rem' }}>
-          <Alert style={{ visibility: 'hidden' }} variant='urgent' />
-          <Text variant='h3'>GeoZones</Text>
-        </div>
-        <div
-          style={{
-            display: 'flex',
-            flexDirection: 'column',
-            gap: '0.5rem',
-            marginTop: '0.5rem'
-          }}
-        >
-          {geozones.map(zone => (
-            <div key={zone.value} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              <TooltipElement
-                tooltipContent={`The Flight Path Intersects with ${zone.label} GeoZone`}
-              >
-                <Alert
-                  style={{
-                    visibility: intersectingGeozones.some(
-                      gz => gz.attributes[geozoneRenderer.field1] === zone.value
-                    )
-                      ? 'visible'
-                      : 'hidden'
-                  }}
-                  variant='urgent'
-                />
-              </TooltipElement>
-              <div
-                style={{
-                  width: '1rem',
-                  height: '1rem',
-                  minWidth: '1rem',
-                  minHeight: '1rem',
-                  backgroundColor: `rgba(${zone.color[0]},${zone.color[1]},${zone.color[2]},${zone.color[3] / 255})`,
-                  border: `1px solid rgba(${zone.color[0]},${zone.color[1]},${zone.color[2]},${zone.color[3] / 255})`
-                }}
-              />
-              <Text>{zone.label}</Text>
+        {geozonesRenderer && (
+          <>
+            <div style={{ display: 'flex', gap: '0.5rem' }}>
+              <Alert style={{ visibility: 'hidden' }} variant='urgent' />
+              <Text variant='h3'>GeoZones</Text>
             </div>
-          ))}
-        </div>
+            <div
+              style={{
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '0.5rem',
+                marginTop: '0.5rem'
+              }}
+            >
+              {geozonesRenderer.uniqueValueInfos?.map(zone => (
+                <div
+                  key={zone.value}
+                  style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}
+                >
+                  <TooltipElement
+                    tooltipContent={`The Flight Path Intersects with ${zone.label} GeoZone`}
+                  >
+                    <Alert
+                      style={{
+                        visibility: intersectingGeozones.some(
+                          gz => gz.attributes[geozonesRenderer?.field] === zone.value
+                        )
+                          ? 'visible'
+                          : 'hidden'
+                      }}
+                      variant='urgent'
+                    />
+                  </TooltipElement>
+                  <div
+                    style={{
+                      width: '1rem',
+                      height: '1rem',
+                      minWidth: '1rem',
+                      minHeight: '1rem',
+                      backgroundColor: `rgba(${getRgba(zone.symbol as __esri.CIMSymbol)})`,
+                      border: `1px solid rgba(${getRgba(zone.symbol as __esri.CIMSymbol)})`
+                    }}
+                  />
+                  <Text>{zone.label}</Text>
+                </div>
+              ))}
+            </div>
+          </>
+        )}
       </CardContent>
     </Card>
   );

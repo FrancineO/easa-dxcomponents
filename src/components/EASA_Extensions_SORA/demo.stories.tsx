@@ -178,11 +178,11 @@ export const Default: Story = {
     power: true,
     cL: 0.5,
     gliding: true,
-    // to get token for agol use postman
+    // to get token for agol use POSTMAN
     // referer: https://easa.maps.arcgis.com/sharing/generateToken
     // http://localhost:6006/
     agolToken:
-      'mzFcMRqhxzPAoRJavp2MJnT86fp9vdIuHnlcY6yRjycMNMkD4n52uRAbbfniWAIwuPqd9XK0nszBQkjsipRZXLydF4Gpe6k7-Q9NhBaS3_0Ki8PLhov9VhKuUZdG29jByVjydAt_8k7qm4bPFursXtews78XJBYpKdWh92Omc2M.',
+      'mzFcMRqhxzPAoRJavp2MJnT86fp9vdIuHnlcY6yRjycMNMkD4n52uRAbbfniWAIwMT0Jf-nKSPjV6ROqrXbkk33zBu0qYAsJywwtszcpgYMY3WXUYzSp5EuECJTeDJIoecs7WJ0EfsiBttRRsF4zt1rZ56DRM-hqVLHs6VaSXOQ.',
     agolUrl: 'https://easa.maps.arcgis.com/',
     printServiceUrl:
       'https://utility.arcgisonline.com/arcgis/rest/services/Utilities/PrintingTools/GPServer/Export%20Web%20Map%20Task',
@@ -193,7 +193,7 @@ export const Default: Story = {
     popDensityPortalItemId: '80efb859d34a4a8f9141a31768b3fa65',
     basemapPortalItemIds:
       '979c6cc89af9449cbeb5342a439c6a76,86265e5a4bbb4187a59719cf134e0018,67372ff42cd145319639a99152b15bc3',
-    landusePortalItemId: 'a6fa763a7a47418b892c1c340f968193',
-    geozonePortalItemId: 'e632deb3526647aaa864e2b89e92c738'
+    landusePortalItemId: '87919279e9394adb9ba4f3f8009e1360',
+    geozonePortalItemId: 'a0bdecf836b843a9ad3d2eadcb590dc6'
   }
 };

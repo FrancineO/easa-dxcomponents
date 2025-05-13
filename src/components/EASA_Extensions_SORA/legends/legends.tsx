@@ -7,6 +7,7 @@ interface LegendsProps {
   flightVolume: any;
   intersectingLanduseClasses: any[];
   intersectingGeozones: any[];
+  geozonesRenderer: __esri.Renderer | null;
   style: React.CSSProperties;
 }
 
@@ -14,6 +15,7 @@ const Legends = ({
   flightVolume,
   intersectingLanduseClasses,
   intersectingGeozones,
+  geozonesRenderer,
   style
 }: LegendsProps) => {
   return (
@@ -21,7 +23,10 @@ const Legends = ({
       <FlightVolumeLegend flightVolume={flightVolume} />
       <PopDensityLegend />
       <LandusePopDensityLegend intersectingLanduseClasses={intersectingLanduseClasses} />
-      <GeozonesLegend intersectingGeozones={intersectingGeozones} />
+      <GeozonesLegend
+        intersectingGeozones={intersectingGeozones}
+        geozonesRenderer={geozonesRenderer as __esri.UniqueValueRenderer}
+      />
     </div>
   );
 };

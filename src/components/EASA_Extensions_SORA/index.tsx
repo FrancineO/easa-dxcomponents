@@ -29,7 +29,7 @@ import Legends from './legends/legends';
 import { getFlightGeography } from './tools/toolbar/draw-utils';
 import useGetIntersectingLanduses from './hooks/useGetIntersectingLanduses';
 import { getView } from './map/view';
-import { geozoneRenderer, geozones, landUseLabels } from './renderers';
+import { geozones, landUseLabels } from './renderers';
 
 // https://map.droneguide.be/
 // https://maptool-dipul.dfs.de/
@@ -80,6 +80,7 @@ export const EasaExtensionsSORA = (props: ComponentProps) => {
   const [loading, setLoading] = useState(false);
   const [geozoneInfo, setGeozoneInfo] = useState<string | null>(null);
   const [propsValid, setPropsValid] = useState(false);
+  const [geozonesRenderer, setGeozonesRenderer] = useState<__esri.UniqueValueRenderer | null>(null);
 
   const pConnect = getPConnect();
   let PCore: any;
@@ -187,11 +188,13 @@ export const EasaExtensionsSORA = (props: ComponentProps) => {
     flightVolume?.contingencyVolumeWidth ?? null,
     flightVolume?.groundRiskBufferWidth ?? null,
     intersectingGeozones
-      ?.map(geozone => {
-        return (
-          geozones.find(g => g.value === geozone.attributes[geozoneRenderer.field1])?.label ?? ''
-        );
+      ?.map((geozone: __esri.Graphic) => {
+        return geozonesRenderer
+          ? (geozones.find(g => g.value === geozone.attributes[geozonesRenderer?.field])?.label ??
+              '')
+          : null;
       })
+      .filter(gz => gz !== null)
       .filter((value, index, self) => self.indexOf(value) === index) ?? null,
     intersectingLanduseClasses
       ?.map(landuse => {
@@ -357,30 +360,46 @@ export const EasaExtensionsSORA = (props: ComponentProps) => {
               backgroundColor: 'white',
               padding: '0.5rem',
               borderRadius: '0.5rem',
-              border: `1px solid ${theme.base.palette['brand-primary']}`
+              border: `1px solid ${theme.base.palette['brand-primary']}`,
+              minWidth: '14rem',
+              display: 'flex',
+              flexDirection: 'column'
             }}
           >
             <div
               style={{
                 display: 'flex',
-                justifyContent: 'flex-end',
-                cursor: 'pointer',
-                fontSize: '1rem'
+                flexDirection: 'row',
+                justifyContent: 'space-between',
+                gap: '1rem',
+                paddingBottom: '0.5rem'
               }}
-              onClick={() => {
-                setGeozoneInfo(null);
-                getView().graphics.removeAll();
-              }}
-              onKeyDown={e => {
-                if (e.key === 'Escape') {
+            >
+              <Text variant='h3'>GeoZone Info</Text>
+              <div
+                style={{
+                  display: 'flex',
+                  justifyContent: 'flex-end',
+                  cursor: 'pointer',
+                  fontSize: '1rem',
+                  marginBottom: '-0.5rem',
+                  marginRight: '-0.25rem'
+                }}
+                onClick={() => {
                   setGeozoneInfo(null);
                   getView().graphics.removeAll();
-                }
-              }}
-              role='button'
-              tabIndex={0}
-            >
-              x
+                }}
+                onKeyDown={e => {
+                  if (e.key === 'Escape') {
+                    setGeozoneInfo(null);
+                    getView().graphics.removeAll();
+                  }
+                }}
+                role='button'
+                tabIndex={0}
+              >
+                x
+              </div>
             </div>
             <div
               style={{
@@ -397,6 +416,7 @@ export const EasaExtensionsSORA = (props: ComponentProps) => {
           mapState={mapState}
           mapProps={props}
           onLayersAdded={() => setLayersAdded(true)}
+          onGeozonesLoaded={(renderer: __esri.UniqueValueRenderer) => setGeozonesRenderer(renderer)}
         />
         <div
           style={{
@@ -438,6 +458,7 @@ export const EasaExtensionsSORA = (props: ComponentProps) => {
             flightVolume={flightVolume}
             intersectingGeozones={intersectingGeozones}
             intersectingLanduseClasses={intersectingLanduseClasses}
+            geozonesRenderer={geozonesRenderer}
           />
         </div>
       </CardContent>

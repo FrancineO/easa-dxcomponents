@@ -127,6 +127,8 @@ const LandusePopDensityLegend = ({
                     alignItems: 'center'
                   }}
                   tooltipContent={group.landuses
+                    // filter duplicate labels
+                    .filter((l, index, self) => index === self.findIndex(t => t.label === l.label))
                     .map(l => l.label)
                     .sort((a, b) => a.localeCompare(b))}
                 >
@@ -156,6 +158,10 @@ const LandusePopDensityLegend = ({
                         width: '15rem'
                       }}
                     >{`${group.landuses
+                      // filter duplicate labels
+                      .filter(
+                        (l, index, self) => index === self.findIndex(t => t.label === l.label)
+                      )
                       .map(l => l.label)
                       .sort((a, b) => a.localeCompare(b))
                       .join(' / ')}`}</Text>
