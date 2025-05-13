@@ -1,7 +1,6 @@
 import { Alert, Card, CardContent, Text } from '@pega/cosmos-react-core';
 import TooltipElement from '../components/tooltip-element';
 import * as cimSymbolUtils from '@arcgis/core/symbols/support/cimSymbolUtils.js';
-import type { CIMSymbol } from '@arcgis/core/symbols';
 
 const GeozonesLegend = ({
   intersectingGeozones,
