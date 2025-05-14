@@ -39,17 +39,20 @@ export type ComponentProps = {
   tR: number;
   tP: number;
   parachute: boolean;
-  rollAngle: number;
+  maxRollAngle: number;
+  maxPitchAngle: number;
   multirotor: boolean;
   hFG: number;
   hAM: number;
   simplified: boolean;
+  ballisticApproach: boolean;
   cd: number;
   vWind: number;
   vZ: number;
   power: boolean;
   cL: number;
   gliding: boolean;
+  E: number;
   controlledGroundArea: boolean;
   criticalArea: number | null;
 } & MapProps;
@@ -191,17 +194,20 @@ export function validateComponentProps(obj: any): asserts obj is ComponentProps 
     'tR',
     'tP',
     'parachute',
-    'rollAngle',
+    'maxRollAngle',
+    'maxPitchAngle',
     'multirotor',
     'hFG',
     'hAM',
     'simplified',
+    'ballisticApproach',
     'cd',
     'vWind',
     'vZ',
     'power',
     'cL',
     'gliding',
+    'E',
     'controlledGroundArea',
     'criticalArea',
     // MapProps keys:
@@ -238,17 +244,25 @@ export function validateComponentProps(obj: any): asserts obj is ComponentProps 
   assertType(typeof obj.tR === 'number', 'tR', 'number', obj.tR);
   assertType(typeof obj.tP === 'number', 'tP', 'number', obj.tP);
   assertType(typeof obj.parachute === 'boolean', 'parachute', 'boolean', obj.parachute);
-  assertType(typeof obj.rollAngle === 'number', 'rollAngle', 'number', obj.rollAngle);
+  assertType(typeof obj.maxRollAngle === 'number', 'maxRollAngle', 'number', obj.maxRollAngle);
+  assertType(typeof obj.maxPitchAngle === 'number', 'maxPitchAngle', 'number', obj.maxPitchAngle);
   assertType(typeof obj.multirotor === 'boolean', 'multirotor', 'boolean', obj.multirotor);
   assertType(typeof obj.hFG === 'number', 'hFG', 'number', obj.hFG);
   assertType(typeof obj.hAM === 'number', 'hAM', 'number', obj.hAM);
   assertType(typeof obj.simplified === 'boolean', 'simplified', 'boolean', obj.simplified);
+  assertType(
+    typeof obj.ballisticApproach === 'boolean',
+    'ballisticApproach',
+    'boolean',
+    obj.ballisticApproach
+  );
   assertType(typeof obj.cd === 'number', 'cd', 'number', obj.cd);
   assertType(typeof obj.vWind === 'number', 'vWind', 'number', obj.vWind);
   assertType(typeof obj.vZ === 'number', 'vZ', 'number', obj.vZ);
   assertType(typeof obj.power === 'boolean', 'power', 'boolean', obj.power);
   assertType(typeof obj.cL === 'number', 'cL', 'number', obj.cL);
   assertType(typeof obj.gliding === 'boolean', 'gliding', 'boolean', obj.gliding);
+  assertType(typeof obj.E === 'number', 'E', 'number', obj.E);
   assertType(
     typeof obj.controlledGroundArea === 'boolean',
     'controlledGroundArea',

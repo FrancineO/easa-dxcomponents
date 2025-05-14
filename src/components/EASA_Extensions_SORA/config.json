@@ -77,8 +77,13 @@
       "format": "PROPERTY"
     },
     {
-      "name": "rollAngle",
-      "label": "Roll angle in degrees",
+      "name": "maxRollAngle",
+      "label": "Maximum roll angle in degrees",
+      "format": "PROPERTY"
+    },
+    {
+      "name": "maxPitchAngle",
+      "label": "Maximum pitch angle in degrees",
       "format": "PROPERTY"
     },
     {
@@ -94,6 +99,11 @@
     {
       "name": "simplified",
       "label": "Whether to use simplified calculation",
+      "format": "PROPERTY"
+    },
+    {
+      "name": "ballisticApproach",
+      "label": "Whether to use ballistic approach",
       "format": "PROPERTY"
     },
     {
@@ -124,6 +134,11 @@
     {
       "name": "gliding",
       "label": "Whether the drone is gliding",
+      "format": "PROPERTY"
+    },
+    {
+      "name": "E",
+      "label": "Glide ratio",
       "format": "PROPERTY"
     },
     {
@@ -211,16 +226,19 @@
     "tP": 2,
     "parachute": true,
     "multirotor": true,
-    "rollAngle": 25,
+    "maxRollAngle": 25,
+    "maxPitchAngle": 25,
     "hFG": 100,
     "hAM": 3,
     "simplified": true,
+    "ballisticApproach": false,
     "cd": 1,
     "vWind": 10,
     "vZ": 10,
     "power": true,
     "cL": 0.5,
     "gliding": true,
+    "E": 10,
     "agolToken": "mzFcMRqhxzPAoRJavp2MJnT86fp9vdIuHnlcY6yRjycMNMkD4n52uRAbbfniWAIwMT0Jf-nKSPjV6ROqrXbkk33zBu0qYAsJywwtszcpgYMY3WXUYzSp5EuECJTeDJIoecs7WJ0EfsiBttRRsF4zt1rZ56DRM-hqVLHs6VaSXOQ.",
     "agolUrl": "https://easa.maps.arcgis.com/",
     "printServiceUrl": "https://utility.arcgisonline.com/arcgis/rest/services/Utilities/PrintingTools/GPServer/Export%20Web%20Map%20Task",

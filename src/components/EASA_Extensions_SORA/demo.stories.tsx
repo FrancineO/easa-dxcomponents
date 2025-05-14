@@ -168,16 +168,19 @@ export const Default: Story = {
     tP: 2,
     parachute: true,
     multirotor: true,
-    rollAngle: 25,
+    maxRollAngle: 25,
+    maxPitchAngle: 25,
     hFG: 100,
     hAM: 1,
     simplified: true,
+    ballisticApproach: false,
     cd: 1,
     vWind: 10,
     vZ: 10,
     power: true,
     cL: 0.5,
     gliding: true,
+    E: 10,
     // to get token for agol use POSTMAN
     // referer: https://easa.maps.arcgis.com/sharing/generateToken
     // http://localhost:6006/

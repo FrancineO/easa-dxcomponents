@@ -17,7 +17,7 @@ import { contingencyVolumeSymbol } from './flight-volume-symbols';
  * @param tP - Parachute deployment time in seconds
  * @param parachute - Whether flight is terminated with parachute
  * @param multirotor - Whether drone is multirotor
- * @param rollAngle - Roll angle in degrees
+ * @param maxRollAngle - Roll angle in degrees
  * @param hFG - Flight geography height in meters
  * @param hAM - Airspace management height in meters
  * @param simplified - Whether to use simplified calculation
@@ -38,7 +38,7 @@ interface Props {
   tP: number; // parachute deployment time
   parachute: boolean; // terminated with parachute
   multirotor: boolean; // multirotor
-  rollAngle: number; // roll angle
+  maxRollAngle: number; // roll angle
   hFG: number; // flight geography height
   hAM: number; // airspace management height
   simplified: boolean; // whether to use simplified calculation
@@ -70,7 +70,7 @@ const FlightVolumeCalculator: FC<Props> = props => {
     tR,
     tP,
     parachute,
-    rollAngle,
+    maxRollAngle,
     hFG,
     hAM,
     multirotor,
@@ -93,8 +93,8 @@ const FlightVolumeCalculator: FC<Props> = props => {
 
     const sR = vO * tR;
     const sCM = multirotor
-      ? vO ** 2 / (2 * g * Math.tan((rollAngle * Math.PI) / 180))
-      : vO ** 2 / (g * Math.tan((rollAngle * Math.PI) / 180));
+      ? vO ** 2 / (2 * g * Math.tan((maxRollAngle * Math.PI) / 180))
+      : vO ** 2 / (g * Math.tan((maxRollAngle * Math.PI) / 180));
 
     const sCV = sGPS + sPos + sK + sR + (parachute ? vO * tP : sCM);
 
@@ -108,7 +108,7 @@ const FlightVolumeCalculator: FC<Props> = props => {
       geometry: sCVPolygon,
       symbol: contingencyVolumeSymbol
     });
-  }, [flightGeography, sGPS, sPos, sK, vO, tR, tP, parachute, rollAngle, multirotor]);
+  }, [flightGeography, sGPS, sPos, sK, vO, tR, tP, parachute, maxRollAngle, multirotor]);
 
   const getGroundRiskVolume = useCallback(
     (cv: __esri.Geometry) => {
@@ -228,7 +228,7 @@ const FlightVolumeCalculator: FC<Props> = props => {
     tR,
     tP,
     parachute,
-    rollAngle,
+    maxRollAngle,
     sGPS,
     sPos,
     sK,
