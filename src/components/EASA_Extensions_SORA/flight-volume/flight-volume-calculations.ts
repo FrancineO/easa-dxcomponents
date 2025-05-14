@@ -83,15 +83,15 @@ export const getContingencyVolume = ({
     // eslint-disable-next-line no-console
     console.log(`%c   ${vO} ** 2 / (2 * ${g})`, `color: ${color}`);
   } else {
-    hCM = vO ** 2 / g;
+    hCM = (vO ** 2 / g) * 0.3;
     // eslint-disable-next-line no-console
     console.log(`%c hCM: ${hCM}`, `color: ${color}`);
     // eslint-disable-next-line no-console
     console.log('%c   multirotor === false', `color: ${color}`);
     // eslint-disable-next-line no-console
-    console.log('%c   vO ** 2 / g', `color: ${color}`);
+    console.log('%c   (vO ** 2 / g) * 0.3', `color: ${color}`);
     // eslint-disable-next-line no-console
-    console.log(`%c   ${vO} ** 2 / ${g}`, `color: ${color}`);
+    console.log(`%c   (${vO} ** 2 / ${g}) * 0.3`, `color: ${color}`);
   }
 
   if (parachute) {
@@ -121,6 +121,7 @@ export const getContingencyVolume = ({
   // eslint-disable-next-line no-console
   console.log(`%c   ${vO} * ${tR}`, `color: ${color}`);
 
+  // TODO: use pitchAngle instead of rollAngle when multirotor === true. If false continue using rollAngle
   const sCM = multirotor
     ? vO ** 2 / (2 * g * Math.tan((rollAngle * Math.PI) / 180))
     : vO ** 2 / (g * Math.tan((rollAngle * Math.PI) / 180));
@@ -228,7 +229,21 @@ export const getGroundRiskVolume = (
     `%c hCV: ${hCV} (input contingency volume height from Contingency Volume Calculations)`,
     `color: ${color}`
   );
-  let sGRB = simplified ? hCV + cd / 2 : (vO * Math.sqrt(2 * hCV)) / g + cd / 2;
+
+  // TODO: pega will send a new "ballistic" parameter in addition to "simplified"
+  // validate that one of the ballistic, simplified are true, or new "E" parameter is  > 0 or power is false
+  // if none are true, throw an error
+
+  // let sGRB = -1
+  // if(simplified) {
+  //   sGRB = hCV + cd / 2;
+  // }
+
+  // if(ballistic){
+  //   sGRB = vO * Math.sqrt((2 * hCV) / g) + cd / 2;
+  // }
+
+  let sGRB = simplified ? hCV + cd / 2 : vO * Math.sqrt((2 * hCV) / g) + cd / 2;
   // eslint-disable-next-line no-console
   console.log(`%c sGRB: ${sGRB} (simplified === ${simplified})`, `color: ${color}`);
   if (simplified) {
@@ -238,9 +253,9 @@ export const getGroundRiskVolume = (
     console.log(`%c   ${hCV} + ${cd} / 2`, `color: ${color}`);
   } else {
     // eslint-disable-next-line no-console
-    console.log('%c   (vO * Math.sqrt(2 * hCV)) / g + cd / 2', `color: ${color}`);
+    console.log('%c   (vO * Math.sqrt(2 * hCV / g)) + cd / 2', `color: ${color}`);
     // eslint-disable-next-line no-console
-    console.log(`%c   (${vO} * Math.sqrt(2 * ${hCV}) / ${g} + ${cd} / 2`, `color: ${color}`);
+    console.log(`%c   (${vO} * Math.sqrt(2 * ${hCV} / ${g})) + ${cd} / 2`, `color: ${color}`);
   }
 
   if (parachute) {
@@ -253,7 +268,8 @@ export const getGroundRiskVolume = (
     console.log(`%c   ${vO} * ${tP} + ${vWind} * (${hCV} / ${vZ})`, `color: ${color}`);
   }
 
-  if (!multirotor && !power) {
+  // TODO: Pega will send a new "E" parameter instead of "gliding" and the sGRB will be E*hCV
+  if (!power) {
     sGRB = gliding ? (cL / cd) * hCV : hCV + cd / 2;
     // eslint-disable-next-line no-console
     console.log(

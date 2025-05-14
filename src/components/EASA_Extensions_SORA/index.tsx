@@ -37,8 +37,6 @@ import { geozones, landUseLabels } from './renderers';
 // geozones in the future will be updateable by an api
 // - they will then be single files from each member states which will then mean single layers for each member state, or the api can update the whole layer.
 
-// TODO: can we make an interactive map of the resulting flight volume
-
 // TODO: change the pop density layers from a resolution of 200m resolution to another value based on the drone height.
 // See table in screenshot from alberto.
 // Should write a script which fetches the data from the url this url: https://jrcbox.jrc.ec.europa.eu/index.php/s/QN29mKagdLqnfnT
@@ -47,8 +45,6 @@ import { geozones, landUseLabels } from './renderers';
 // For visualizing on the map, we probably always want to show the 200m resolution (confirm with alberto)
 
 // TODO: allow the user to upload a gpx or kml. low priority
-
-// TODO: ask Piotr about the parameters that are text and if we want to add them to the pega database. such as portal url, print service url, etc.
 
 // TODO: need to handle the geozones correctly. Only have geozones for portugal at the moment.
 
