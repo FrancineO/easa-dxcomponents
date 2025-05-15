@@ -265,10 +265,6 @@ export const getGroundRiskVolume = (
     `color: ${color}`
   );
 
-  // TODO: pega will send a new "ballistic" parameter in addition to "simplified"
-  // validate that one of the ballistic, simplified are true, or new "E" parameter is  > 0 or power is false
-  // if none are true, throw an error
-
   let sGRB = -1;
   if (simplified) {
     sGRB = hCV + cd / 2;
