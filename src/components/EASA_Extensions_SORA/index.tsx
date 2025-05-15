@@ -48,7 +48,7 @@ import { geozones, landUseLabels } from './renderers';
 
 // TODO: allow the user to upload a gpx or kml. low priority
 
-// TODO: need to handle the geozones correctly. Only have geozones for portugal at the moment.
+// TODO: need to handle the geozones correctly. Only have geozones for denmark at the moment.
 
 export const EasaExtensionsSORA = (props: ComponentProps) => {
   // check that the props are valid by testing the values against their types
