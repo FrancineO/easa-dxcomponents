@@ -58,7 +58,7 @@
     },
     {
       "name": "tR",
-      "label": "Reaction time (s)",
+      "label": "Manual procedures reaction time (s)",
       "format": "PROPERTY"
     },
     {

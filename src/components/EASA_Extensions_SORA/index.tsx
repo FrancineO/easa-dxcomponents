@@ -31,8 +31,7 @@ import useGetIntersectingLanduses from './hooks/useGetIntersectingLanduses';
 import { getView } from './map/view';
 import { geozones, landUseLabels } from './renderers';
 
-// eslint-disable-next-line no-console
-console.log('%c Parachute Termination', `color: ${'rgb(255, 0, 195)'}`);
+// console.log('%c Parachute Termination', `color: ${'rgb(255, 0, 195)'}`);
 
 // https://map.droneguide.be/
 // https://maptool-dipul.dfs.de/
@@ -302,7 +301,8 @@ export const EasaExtensionsSORA = (props: ComponentProps) => {
                 border: `1px solid ${theme.base.palette.urgent}`,
                 padding: '0.5rem',
                 borderRadius: '0.5rem',
-                fontSize: '10'
+                fontSize: '10',
+                whiteSpace: 'pre-line'
               }}
             >
               {errorText}

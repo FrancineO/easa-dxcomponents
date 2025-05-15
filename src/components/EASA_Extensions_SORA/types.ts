@@ -1,3 +1,5 @@
+import config from './config.json';
+
 export type MapProps = {
   flightPathJSON: string | null;
   mapStateJSON: string | null;
@@ -37,7 +39,7 @@ export type ComponentProps = {
   sK: number;
   vO: number;
   tR: number;
-  tP: number;
+  tP: number | '';
   terminateWithParachute: boolean;
   maxRollAngle: number;
   maxPitchAngle: number;
@@ -52,7 +54,7 @@ export type ComponentProps = {
   power: boolean;
   cL: number;
   gliding: boolean;
-  E: number;
+  E: number | '';
   controlledGroundArea: boolean;
   criticalArea: number | null;
 } & MapProps;
@@ -114,10 +116,18 @@ function getActualType(actual: any): string {
   return typeof actual;
 }
 
+function getLabel(key: string): string {
+  const property = config.properties.find((p: any) => p.name === key);
+  return property?.label || key;
+}
+
 function assertType(condition: boolean, key: string, expected: string, actual: any) {
   if (!condition) {
     const actualType = getActualType(actual);
-    throw new Error(`Invalid type for "${key}". Expected "${expected}", but got "${actualType}".`);
+    const keyLabel = getLabel(key);
+    throw new Error(
+      `Value ${actual} for "${keyLabel}" is invalid. \n Expected "${expected}", but got "${actualType}".`
+    );
   }
 }
 
@@ -242,7 +252,8 @@ export function validateComponentProps(obj: any): asserts obj is ComponentProps 
   assertType(typeof obj.sK === 'number', 'sK', 'number', obj.sK);
   assertType(typeof obj.vO === 'number', 'vO', 'number', obj.vO);
   assertType(typeof obj.tR === 'number', 'tR', 'number', obj.tR);
-  assertType(typeof obj.tP === 'number' || obj.tP === '', 'tP', 'number', obj.tP);
+
+  assertType(typeof obj.tP === 'number' || obj.tP === '', 'tP', 'number | string.Empty', obj.tP);
   assertType(
     typeof obj.terminateWithParachute === 'boolean',
     'terminateWithParachute',
@@ -267,7 +278,7 @@ export function validateComponentProps(obj: any): asserts obj is ComponentProps 
   assertType(typeof obj.power === 'boolean', 'power', 'boolean', obj.power);
   assertType(typeof obj.cL === 'number', 'cL', 'number', obj.cL);
   assertType(typeof obj.gliding === 'boolean', 'gliding', 'boolean', obj.gliding);
-  assertType(typeof obj.E === 'number' || obj.E === '', 'E', 'number', obj.E);
+  assertType(typeof obj.E === 'number' || obj.E === '', 'E', 'number | string.Empty', obj.E);
   assertType(
     typeof obj.controlledGroundArea === 'boolean',
     'controlledGroundArea',

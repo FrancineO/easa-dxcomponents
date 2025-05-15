@@ -165,7 +165,7 @@ export const Default: Story = {
     vO: 10,
     criticalArea: 7.1,
     tR: 2,
-    tP: 2,
+    tP: '',
     terminateWithParachute: true,
     multirotor: true,
     maxRollAngle: 25,
@@ -181,9 +181,15 @@ export const Default: Story = {
     cL: 0.5,
     gliding: true,
     E: 10,
-    // to get token for agol use POSTMAN
+    // To get token for agol use POSTMAN
+    // method: POST
+    // url: https://easa.maps.arcgis.com/sharing/rest/generateToken
+    // username: James Eyre
+    // password: <see keeper>
+    // f: json
     // referer: https://easa.maps.arcgis.com/sharing/generateToken
-    // http://localhost:6006/
+    // client: http://localhost:6006/
+    // expiration: 21600
     agolToken:
       'mzFcMRqhxzPAoRJavp2MJnT86fp9vdIuHnlcY6yRjycMNMkD4n52uRAbbfniWAIwMT0Jf-nKSPjV6ROqrXbkk33zBu0qYAsJywwtszcpgYMY3WXUYzSp5EuECJTeDJIoecs7WJ0EfsiBttRRsF4zt1rZ56DRM-hqVLHs6VaSXOQ.',
     agolUrl: 'https://easa.maps.arcgis.com/',

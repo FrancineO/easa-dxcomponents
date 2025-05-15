@@ -109,6 +109,11 @@ export const getContingencyVolume = ({
   }
 
   if (terminateWithParachute) {
+    if (tP === '') {
+      throw new Error(
+        'tP is an empty string.\n Expected a number, but got an empty string.\n Please check the console for more information.'
+      );
+    }
     hCM = vO * tP * 0.7;
 
     // eslint-disable-next-line no-console
@@ -164,6 +169,12 @@ export const getContingencyVolume = ({
     console.log(
       `%c   ${vO} ** 2 / (${g} * Math.tan((${maxRollAngle} * Math.PI) / 180))`,
       `color: ${color}`
+    );
+  }
+
+  if (tP === '') {
+    throw new Error(
+      'tP is an empty string.\n Expected a number, but got an empty string.\n Please check the console for more information.'
     );
   }
 
@@ -283,6 +294,11 @@ export const getGroundRiskVolume = (
   }
 
   if (terminateWithParachute) {
+    if (tP === '') {
+      throw new Error(
+        'tP is an empty string.\n Expected a number, but got an empty string.\n Please check the console for more information.'
+      );
+    }
     sGRB = vO * tP + vWind * (hCV / vZ);
     // eslint-disable-next-line no-console
     console.log(
@@ -295,7 +311,11 @@ export const getGroundRiskVolume = (
     console.log(`%c   ${vO} * ${tP} + ${vWind} * (${hCV} / ${vZ})`, `color: ${color}`);
   }
 
-  // TODO: Pega will send a new "E" parameter instead of "gliding" and the sGRB will be E*hCV
+  if (E === '') {
+    throw new Error(
+      'E is an empty string.\n Expected a number, but got an empty string.\n Please check the console for more information.'
+    );
+  }
 
   if (E > 0) {
     sGRB = E * hCV;
