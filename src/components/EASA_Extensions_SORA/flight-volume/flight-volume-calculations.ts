@@ -173,12 +173,11 @@ export const getContingencyVolume = ({
   }
 
   if (tP === '') {
-    throw new Error(
-      'tP is an empty string.\n Expected a number, but got an empty string.\n Please check the console for more information.'
-    );
+    // eslint-disable-next-line no-console
+    console.log('%c tP is an empty string. tP must be a number.', `color: ${color}`);
   }
 
-  const sCV = sGPS + sPos + sK + sR + (terminateWithParachute ? vO * tP : sCM);
+  const sCV = sGPS + sPos + sK + sR + (terminateWithParachute && tP !== '' ? vO * tP : sCM);
   // eslint-disable-next-line no-console
   console.log(
     `%c sCV: ${sCV} (terminateWithParachute === ${terminateWithParachute})`,
@@ -308,12 +307,11 @@ export const getGroundRiskVolume = (
   }
 
   if (E === '') {
-    throw new Error(
-      'E is an empty string.\n Expected a number, but got an empty string.\n Please check the console for more information.'
-    );
+    // eslint-disable-next-line no-console
+    console.log('%c E is an empty string. E must be a number greater than 0.', `color: ${color}`);
   }
 
-  if (E > 0) {
+  if (E !== '' && E > 0) {
     sGRB = E * hCV;
     // eslint-disable-next-line no-console
     console.log(`%c sGRB: ${sGRB} (recalculated due to E > 0)`, `color: ${color}`);
