@@ -38,7 +38,7 @@ export type ComponentProps = {
   vO: number;
   tR: number;
   tP: number;
-  parachute: boolean;
+  terminateWithParachute: boolean;
   maxRollAngle: number;
   maxPitchAngle: number;
   multirotor: boolean;
@@ -193,7 +193,7 @@ export function validateComponentProps(obj: any): asserts obj is ComponentProps 
     'vO',
     'tR',
     'tP',
-    'parachute',
+    'terminateWithParachute',
     'maxRollAngle',
     'maxPitchAngle',
     'multirotor',
@@ -242,8 +242,13 @@ export function validateComponentProps(obj: any): asserts obj is ComponentProps 
   assertType(typeof obj.sK === 'number', 'sK', 'number', obj.sK);
   assertType(typeof obj.vO === 'number', 'vO', 'number', obj.vO);
   assertType(typeof obj.tR === 'number', 'tR', 'number', obj.tR);
-  assertType(typeof obj.tP === 'number', 'tP', 'number', obj.tP);
-  assertType(typeof obj.parachute === 'boolean', 'parachute', 'boolean', obj.parachute);
+  assertType(typeof obj.tP === 'number' || obj.tP === '', 'tP', 'number', obj.tP);
+  assertType(
+    typeof obj.terminateWithParachute === 'boolean',
+    'terminateWithParachute',
+    'boolean',
+    obj.terminateWithParachute
+  );
   assertType(typeof obj.maxRollAngle === 'number', 'maxRollAngle', 'number', obj.maxRollAngle);
   assertType(typeof obj.maxPitchAngle === 'number', 'maxPitchAngle', 'number', obj.maxPitchAngle);
   assertType(typeof obj.multirotor === 'boolean', 'multirotor', 'boolean', obj.multirotor);
@@ -262,7 +267,7 @@ export function validateComponentProps(obj: any): asserts obj is ComponentProps 
   assertType(typeof obj.power === 'boolean', 'power', 'boolean', obj.power);
   assertType(typeof obj.cL === 'number', 'cL', 'number', obj.cL);
   assertType(typeof obj.gliding === 'boolean', 'gliding', 'boolean', obj.gliding);
-  assertType(typeof obj.E === 'number', 'E', 'number', obj.E);
+  assertType(typeof obj.E === 'number' || obj.E === '', 'E', 'number', obj.E);
   assertType(
     typeof obj.controlledGroundArea === 'boolean',
     'controlledGroundArea',

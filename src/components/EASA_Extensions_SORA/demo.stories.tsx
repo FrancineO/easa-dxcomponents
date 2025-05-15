@@ -166,7 +166,7 @@ export const Default: Story = {
     criticalArea: 7.1,
     tR: 2,
     tP: 2,
-    parachute: true,
+    terminateWithParachute: true,
     multirotor: true,
     maxRollAngle: 25,
     maxPitchAngle: 25,

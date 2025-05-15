@@ -32,7 +32,7 @@ import { getView } from './map/view';
 import { geozones, landUseLabels } from './renderers';
 
 // eslint-disable-next-line no-console
-console.log('%c Ballistic Approach', `color: ${'rgb(255, 0, 195)'}`);
+console.log('%c Parachute Termination', `color: ${'rgb(255, 0, 195)'}`);
 
 // https://map.droneguide.be/
 // https://maptool-dipul.dfs.de/

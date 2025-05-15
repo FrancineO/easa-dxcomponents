@@ -67,7 +67,7 @@
       "format": "PROPERTY"
     },
     {
-      "name": "parachute",
+      "name": "terminateWithParachute",
       "label": "Whether flight is terminated with parachute",
       "format": "PROPERTY"
     },
@@ -224,7 +224,7 @@
     "criticalArea": 1000,
     "tR": 2,
     "tP": 2,
-    "parachute": true,
+    "terminateWithParachute": true,
     "multirotor": true,
     "maxRollAngle": 25,
     "maxPitchAngle": 25,

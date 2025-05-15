@@ -33,7 +33,7 @@ export const getContingencyVolume = ({
   vO,
   tR,
   tP,
-  parachute,
+  terminateWithParachute,
   maxRollAngle,
   maxPitchAngle,
   multirotor,
@@ -54,7 +54,20 @@ export const getContingencyVolume = ({
   // eslint-disable-next-line no-console
   console.log(
     `%c${`${JSON.stringify(
-      { sGPS, sPos, sK, vO, tR, tP, parachute, maxRollAngle, maxPitchAngle, multirotor, hFG, hAM },
+      {
+        sGPS,
+        sPos,
+        sK,
+        vO,
+        tR,
+        tP,
+        terminateWithParachute,
+        maxRollAngle,
+        maxPitchAngle,
+        multirotor,
+        hFG,
+        hAM
+      },
       null,
       2
     )}`}`,
@@ -95,11 +108,14 @@ export const getContingencyVolume = ({
     console.log(`%c   (${vO} ** 2 / ${g}) * 0.3`, `color: ${color}`);
   }
 
-  if (parachute) {
+  if (terminateWithParachute) {
     hCM = vO * tP * 0.7;
 
     // eslint-disable-next-line no-console
-    console.log(`%c hCM: ${hCM} (recalculated due to parachute === true)`, `color: ${color}`);
+    console.log(
+      `%c hCM: ${hCM} (recalculated due to terminateWithParachute === true)`,
+      `color: ${color}`
+    );
     // eslint-disable-next-line no-console
     console.log('%c   vO * tP * 0.7', `color: ${color}`);
     // eslint-disable-next-line no-console
@@ -151,10 +167,13 @@ export const getContingencyVolume = ({
     );
   }
 
-  const sCV = sGPS + sPos + sK + sR + (parachute ? vO * tP : sCM);
+  const sCV = sGPS + sPos + sK + sR + (terminateWithParachute ? vO * tP : sCM);
   // eslint-disable-next-line no-console
-  console.log(`%c sCV: ${sCV} (parachute === ${parachute})`, `color: ${color}`);
-  if (parachute) {
+  console.log(
+    `%c sCV: ${sCV} (terminateWithParachute === ${terminateWithParachute})`,
+    `color: ${color}`
+  );
+  if (terminateWithParachute) {
     // eslint-disable-next-line no-console
     console.log('%c   sGPS + sPos + sK + sR + vO * tP ', `color: ${color}`);
     // eslint-disable-next-line no-console
@@ -196,7 +215,7 @@ export const getGroundRiskVolume = (
     flightGeography,
     vO,
     tP,
-    parachute,
+    terminateWithParachute,
     multirotor,
     simplified,
     ballisticApproach,
@@ -222,7 +241,7 @@ export const getGroundRiskVolume = (
   console.log('%cGround Risk Volume Params:', `color: ${color}`);
   // eslint-disable-next-line no-console
   console.log(
-    `%c${JSON.stringify({ vO, tP, parachute, multirotor, simplified, ballisticApproach, cd, vWind, vZ, power, cL, gliding, E }, null, 2)}`,
+    `%c${JSON.stringify({ vO, tP, terminateWithParachute, multirotor, simplified, ballisticApproach, cd, vWind, vZ, power, cL, gliding, E }, null, 2)}`,
     `color: ${color}`
   );
 
@@ -263,10 +282,13 @@ export const getGroundRiskVolume = (
     console.log(`%c   (${vO} * Math.sqrt(2 * ${hCV} / ${g})) + ${cd} / 2`, `color: ${color}`);
   }
 
-  if (parachute) {
+  if (terminateWithParachute) {
     sGRB = vO * tP + vWind * (hCV / vZ);
     // eslint-disable-next-line no-console
-    console.log(`%c sGRB: ${sGRB} (recalculated due to parachute === true)`, `color: ${color}`);
+    console.log(
+      `%c sGRB: ${sGRB} (recalculated due to terminateWithParachute === true)`,
+      `color: ${color}`
+    );
     // eslint-disable-next-line no-console
     console.log('%c   vO * tP + vWind * (hCV / vZ)', `color: ${color}`);
     // eslint-disable-next-line no-console

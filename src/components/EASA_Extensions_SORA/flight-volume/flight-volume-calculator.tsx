@@ -15,7 +15,7 @@ import { contingencyVolumeSymbol } from './flight-volume-symbols';
  * @param vO - Operating speed in meters per second
  * @param tR - Reaction time in seconds
  * @param tP - Parachute deployment time in seconds
- * @param parachute - Whether flight is terminated with parachute
+ * @param terminateWithParachute - Whether flight is terminated with parachute
  * @param multirotor - Whether drone is multirotor
  * @param maxRollAngle - Roll angle in degrees
  * @param hFG - Flight geography height in meters
@@ -36,7 +36,7 @@ interface Props {
   vO: number; // operating speed m/s
   tR: number; // reaction time
   tP: number; // parachute deployment time
-  parachute: boolean; // terminated with parachute
+  terminateWithParachute: boolean; // terminated with parachute
   multirotor: boolean; // multirotor
   maxRollAngle: number; // roll angle
   hFG: number; // flight geography height
@@ -69,7 +69,7 @@ const FlightVolumeCalculator: FC<Props> = props => {
     vO,
     tR,
     tP,
-    parachute,
+    terminateWithParachute,
     maxRollAngle,
     hFG,
     hAM,
@@ -96,7 +96,7 @@ const FlightVolumeCalculator: FC<Props> = props => {
       ? vO ** 2 / (2 * g * Math.tan((maxRollAngle * Math.PI) / 180))
       : vO ** 2 / (g * Math.tan((maxRollAngle * Math.PI) / 180));
 
-    const sCV = sGPS + sPos + sK + sR + (parachute ? vO * tP : sCM);
+    const sCV = sGPS + sPos + sK + sR + (terminateWithParachute ? vO * tP : sCM);
 
     const buffer = geometryEngine.buffer(flightGeography.geometry, sCV);
     const sCVPolygon = geometryEngine.difference(
@@ -108,7 +108,18 @@ const FlightVolumeCalculator: FC<Props> = props => {
       geometry: sCVPolygon,
       symbol: contingencyVolumeSymbol
     });
-  }, [flightGeography, sGPS, sPos, sK, vO, tR, tP, parachute, maxRollAngle, multirotor]);
+  }, [
+    flightGeography,
+    sGPS,
+    sPos,
+    sK,
+    vO,
+    tR,
+    tP,
+    terminateWithParachute,
+    maxRollAngle,
+    multirotor
+  ]);
 
   const getGroundRiskVolume = useCallback(
     (cv: __esri.Geometry) => {
@@ -122,14 +133,14 @@ const FlightVolumeCalculator: FC<Props> = props => {
         hCM = vO ** 2 / g;
       }
 
-      if (parachute) {
+      if (terminateWithParachute) {
         hCM = vO * tP * 0.7;
       }
 
       const hCV = hFG + hAM + hR + hCM;
       let sGRB = simplified ? hCV + cd / 2 : (vO * Math.sqrt(2 * hCV)) / g + cd / 2;
 
-      if (parachute) {
+      if (terminateWithParachute) {
         sGRB = vO * tP + vWind * (hCV / vZ);
       }
 
@@ -151,7 +162,7 @@ const FlightVolumeCalculator: FC<Props> = props => {
       vO,
       tR,
       tP,
-      parachute,
+      terminateWithParachute,
       multirotor,
       hFG,
       hAM,
@@ -227,7 +238,7 @@ const FlightVolumeCalculator: FC<Props> = props => {
     vO,
     tR,
     tP,
-    parachute,
+    terminateWithParachute,
     maxRollAngle,
     sGPS,
     sPos,
