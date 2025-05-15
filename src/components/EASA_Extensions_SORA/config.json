@@ -33,7 +33,7 @@
     },
     {
       "name": "sGPS",
-      "label": "GPS position error (meters)",
+      "label": "GNSS accuracy (meters)",
       "format": "PROPERTY"
     },
     {
