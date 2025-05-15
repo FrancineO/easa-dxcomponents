@@ -31,7 +31,8 @@ import useGetIntersectingLanduses from './hooks/useGetIntersectingLanduses';
 import { getView } from './map/view';
 import { geozones, landUseLabels } from './renderers';
 
-// console.log('%c Parachute Termination', `color: ${'rgb(255, 0, 195)'}`);
+// eslint-disable-next-line no-console
+console.log('%c Do not throw errors. Just log them.', `color: ${'rgb(255, 0, 195)'}`);
 
 // https://map.droneguide.be/
 // https://maptool-dipul.dfs.de/
