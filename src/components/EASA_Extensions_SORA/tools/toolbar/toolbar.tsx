@@ -1,4 +1,4 @@
-import { Icon } from '@pega/cosmos-react-core';
+import { Icon, useModalManager } from '@pega/cosmos-react-core';
 import { Button } from '@pega/cosmos-react-core';
 import { CardContent } from '@pega/cosmos-react-core';
 import { Card } from '@pega/cosmos-react-core';
@@ -20,6 +20,8 @@ import * as Waypoint from '@pega/cosmos-react-core/lib/components/Icon/icons/way
 import * as geometryEngine from '@arcgis/core/geometry/geometryEngine';
 import * as reactiveUtils from '@arcgis/core/core/reactiveUtils';
 import VertexInfo from './vertex-info';
+import { Modal } from '@pega/cosmos-react-core';
+import UploadFlightPath from '../../components/upload-flight-path';
 
 registerIcon(Circle, SharePointUp, Rectangle, Trash, Waypoint);
 
@@ -33,7 +35,10 @@ registerIcon(Circle, SharePointUp, Rectangle, Trash, Waypoint);
 type Props = {
   style?: React.CSSProperties;
   cd: number;
-  onFlightGeographyChange: (graphic: Graphic | null) => void;
+  onFlightGeographyChange: (
+    graphic: Graphic | null,
+    autoZoomToFlightPath?: boolean,
+  ) => void;
   flightPathJSON: string | null;
   onFlightPathChange: (path: __esri.Geometry | null) => void;
   onGeozoneInfoChange: (info: string | null) => void;
@@ -54,19 +59,26 @@ export const Toolbar = (props: Props) => {
     flightPathJSON,
     onFlightPathChange,
     onGeozoneInfoChange,
-    enabled
+    enabled,
   } = props;
 
-  const [selectedTool, setSelectedTool] = useState<'circle' | 'polyline' | 'polygon' | 'geozone'>();
+  const [selectedTool, setSelectedTool] = useState<
+    'circle' | 'polyline' | 'polygon' | 'geozone'
+  >();
   const [handleCreate, setHandleCreate] = useState<any>();
   const [handleUpdate, setHandleUpdate] = useState<any>();
   const [graphic, setGraphic] = useState<Graphic | null>(null);
   const [hasGraphic, setHasGraphic] = useState(false);
-  const [sketchViewModel, setSketchViewModel] = useState<SketchViewModel | null>(null);
+  const [sketchViewModel, setSketchViewModel] =
+    useState<SketchViewModel | null>(null);
   const [geozoneClickHandle, setGeozoneClickHandle] = useState<any>();
+  const [uploadFileModalVisible, setUploadFileModalVisible] = useState(false);
+  const [autoZoomToFlightPath, setAutoZoomToFlightPath] = useState(false);
 
   const getBufferLayer = useCallback(() => {
-    let l = getView().map?.findLayerById(bufferGraphicsLayerId) as GraphicsLayer;
+    let l = getView().map?.findLayerById(
+      bufferGraphicsLayerId,
+    ) as GraphicsLayer;
     if (!l) {
       l = new GraphicsLayer({ id: bufferGraphicsLayerId });
       getView().map?.add(l);
@@ -88,44 +100,54 @@ export const Toolbar = (props: Props) => {
         sketchViewModel?.update([event.graphic]);
       }
     },
-    [getBufferLayer, sketchViewModel]
+    [getBufferLayer, sketchViewModel],
   );
 
   const onUpdate = useCallback(
     (event: __esri.SketchUpdateEvent) => {
       if (
         event.state === 'complete' ||
-        (event.state === 'active' && event.toolEventInfo.type === 'vertex-remove')
+        (event.state === 'active' &&
+          event.toolEventInfo.type === 'vertex-remove')
       ) {
         if (event.aborted) return;
 
         // TODO: nasty hack to remove old graphics. maybe figure out a better approach
         const graphicsToRemove = sketchViewModel?.layer?.graphics?.filter(
-          g => g !== event.graphics[0]
+          (g) => g !== event.graphics[0],
         );
         if (graphicsToRemove) {
-          graphicsToRemove.forEach(g => sketchViewModel?.layer.remove(g));
+          graphicsToRemove.forEach((g) => sketchViewModel?.layer.remove(g));
         }
 
         const g = new Graphic({
           geometry: event.graphics[0].geometry,
-          symbol: event.graphics[0].symbol
+          symbol: event.graphics[0].symbol,
         });
         setGraphic(g);
         setHasGraphic(true);
         sketchViewModel?.update([event.graphics[0]]);
       }
-      if (event.state === 'active' && event.toolEventInfo.type === 'reshape-stop') {
+      if (
+        event.state === 'active' &&
+        event.toolEventInfo.type === 'reshape-stop'
+      ) {
         sketchViewModel?.complete();
       }
-      if (event.state === 'active' && event.toolEventInfo.type === 'move-stop') {
+      if (
+        event.state === 'active' &&
+        event.toolEventInfo.type === 'move-stop'
+      ) {
         sketchViewModel?.complete();
       }
-      if (event.state === 'active' && event.toolEventInfo.type === 'scale-stop') {
+      if (
+        event.state === 'active' &&
+        event.toolEventInfo.type === 'scale-stop'
+      ) {
         sketchViewModel?.complete();
       }
     },
-    [sketchViewModel]
+    [sketchViewModel],
   );
 
   useEffect(() => {
@@ -158,7 +180,7 @@ export const Toolbar = (props: Props) => {
     handleUpdate,
     onUpdate,
     getBufferLayer,
-    sketchViewModel
+    sketchViewModel,
   ]);
 
   useEffect(() => {
@@ -169,7 +191,9 @@ export const Toolbar = (props: Props) => {
           const fg = getFlightGeography(flightPathJSON);
           if (!fg) return;
 
-          setSelectedTool(fg.geometry.type as 'circle' | 'polyline' | 'polygon');
+          setSelectedTool(
+            fg.geometry.type as 'circle' | 'polyline' | 'polygon',
+          );
 
           // onCreate({
           //   state: 'complete',
@@ -187,7 +211,9 @@ export const Toolbar = (props: Props) => {
   useEffect(() => {
     if (!graphic) {
       sketchViewModel?.layer.removeAll();
-      const l = getView().map?.findLayerById(bufferGraphicsLayerId) as GraphicsLayer;
+      const l = getView().map?.findLayerById(
+        bufferGraphicsLayerId,
+      ) as GraphicsLayer;
       l?.removeAll();
       onFlightGeographyChange(null);
       onFlightPathChange(null);
@@ -195,7 +221,7 @@ export const Toolbar = (props: Props) => {
     }
 
     // ensure the graphic is added to the sketchViewModel layer
-    if (!sketchViewModel?.layer.graphics.find(g => g === graphic)) {
+    if (!sketchViewModel?.layer.graphics.find((g) => g === graphic)) {
       sketchViewModel?.layer.add(graphic);
     }
 
@@ -205,28 +231,28 @@ export const Toolbar = (props: Props) => {
 
       const buffer = geometryEngine.buffer(
         graphic.geometry as __esri.Polyline,
-        cd * 3 // minimum is 3 times the drone width as per annex
+        cd * 3, // minimum is 3 times the drone width as per annex
       ) as __esri.Polygon;
       const g = new Graphic({
         geometry: buffer,
-        symbol: getFillSymbol(false)
+        symbol: getFillSymbol(false),
       });
       l?.add(g);
-      onFlightGeographyChange(g);
+      onFlightGeographyChange(g, autoZoomToFlightPath);
     } else {
-      onFlightGeographyChange(graphic);
+      onFlightGeographyChange(graphic, autoZoomToFlightPath);
     }
     onFlightPathChange(graphic.geometry);
     // moved this to the onCreate function so it does not appear when loading a stored flight path
     // sketchViewModel?.update([graphic]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     graphic,
     selectedTool,
-    onFlightGeographyChange,
     cd,
-    onFlightPathChange,
     getBufferLayer,
-    sketchViewModel
+    sketchViewModel,
+    autoZoomToFlightPath,
   ]);
 
   useEffect(() => {
@@ -237,7 +263,9 @@ export const Toolbar = (props: Props) => {
 
   const handleClear = () => {
     sketchViewModel?.layer.removeAll();
-    const l = getView().map?.findLayerById(bufferGraphicsLayerId) as GraphicsLayer;
+    const l = getView().map?.findLayerById(
+      bufferGraphicsLayerId,
+    ) as GraphicsLayer;
     l?.removeAll();
     setGraphic(null);
     setHasGraphic(false);
@@ -246,19 +274,20 @@ export const Toolbar = (props: Props) => {
     onFlightPathChange(null);
   };
 
-  const rowStyle = 'display: flex; flex-direction: row; justify-content: space-between;';
+  const rowStyle =
+    'display: flex; flex-direction: row; justify-content: space-between;';
   const labelStyle = 'padding-right: 8px;';
   const handleMapClick = (event: any) => {
     getView()
       .hitTest(event)
-      .then(result => {
+      .then((result) => {
         getView().graphics.removeAll();
         if (result.results.length > 0 && result.results[0].type === 'graphic') {
           const hitGraphic = result.results[0].graphic as Graphic;
           const attributes = hitGraphic.attributes;
           const g = new Graphic({
             geometry: hitGraphic.geometry,
-            symbol: getSymbol('polygon') as SimpleFillSymbol
+            symbol: getSymbol('polygon') as SimpleFillSymbol,
           });
           getView().graphics.add(g);
           onGeozoneInfoChange(
@@ -272,7 +301,7 @@ export const Toolbar = (props: Props) => {
               ${attributes.Area_Type ? `<div style="${rowStyle}"><div style="${labelStyle}">Area Type:</div><div>${attributes.Area_Type}</div></div>` : ''}
               ${attributes.Bufferzone ? `<div style="${rowStyle}"><div style="${labelStyle}">Bufferzone:</div><div>${attributes.Bufferzone}</div></div>` : ''}
               ${attributes.Restricted ? `<div style="${rowStyle}"><div style="${labelStyle}">Restricted:</div><div>${attributes.Restricted}</div></div>` : ''}
-            </div>`
+            </div>`,
           );
         } else {
           onGeozoneInfoChange(null);
@@ -280,7 +309,10 @@ export const Toolbar = (props: Props) => {
       });
   };
 
-  const handleToolClick = (tool: 'circle' | 'polyline' | 'polygon' | 'geozone') => {
+  const handleToolClick = (
+    tool: 'circle' | 'polyline' | 'polygon' | 'geozone',
+  ) => {
+    setAutoZoomToFlightPath(false);
     handleClear();
     if (tool === selectedTool) {
       if (tool === 'geozone') {
@@ -299,7 +331,14 @@ export const Toolbar = (props: Props) => {
       getView().graphics.removeAll();
       onGeozoneInfoChange(null);
       sketchViewModel?.create(
-        tool as 'circle' | 'point' | 'multipoint' | 'polyline' | 'polygon' | 'mesh' | 'rectangle'
+        tool as
+          | 'circle'
+          | 'point'
+          | 'multipoint'
+          | 'polyline'
+          | 'polygon'
+          | 'mesh'
+          | 'rectangle',
       );
     }
   };
@@ -320,18 +359,45 @@ export const Toolbar = (props: Props) => {
         tool: 'reshape',
         reshapeOptions: {
           vertexOperation: 'move',
-          shapeOperation: 'move'
+          shapeOperation: 'move',
         },
         highlightOptions: {
-          enabled: false
+          enabled: false,
         },
         enableRotation: false,
-        enableScaling: true
-      }
+        enableScaling: true,
+      },
     });
 
     setSketchViewModel(skvm);
   }, [sketchViewModel]);
+
+  const fileUploadModal = useCallback(() => {
+    return (
+      <Modal
+        dismissible
+        heading='Upload KML or GeoJSON file'
+        onAfterClose={() => setUploadFileModalVisible(false)}
+        title='Upload KML or GeoJSON file'
+      >
+        <UploadFlightPath
+          onUpload={(g) => {
+            setGraphic(g);
+            setAutoZoomToFlightPath(true);
+            setUploadFileModalVisible(false);
+          }}
+        />
+      </Modal>
+    );
+  }, [setGraphic, setAutoZoomToFlightPath, setUploadFileModalVisible]);
+
+  const { create } = useModalManager();
+
+  useEffect(() => {
+    if (uploadFileModalVisible) {
+      create(fileUploadModal);
+    }
+  }, [uploadFileModalVisible, create, fileUploadModal]);
 
   // green/yellow/red -> maximum pop dens in polygons -> send back to pega
   // blue -> adjacent area - average pop dens -> send back to pega
@@ -340,71 +406,114 @@ export const Toolbar = (props: Props) => {
   // if a crowded area, then pop density set to 50000
 
   return (
-    <Card style={{ ...props.style, backgroundColor: 'white', padding: '6px' }}>
-      <CardContent style={{ display: 'flex', flexDirection: 'row', gap: '2px' }}>
-        <Button
-          variant={selectedTool === 'circle' ? 'link' : 'text'}
-          label='Draw path with circle'
-          onClick={() => handleToolClick('circle')}
-          compact
-          disabled={!enabled}
+    <>
+      <Card
+        style={{ ...props.style, backgroundColor: 'white', padding: '6px' }}
+      >
+        <CardContent
+          style={{ display: 'flex', flexDirection: 'row', gap: '2px' }}
         >
-          <Icon name='circle' role='img' aria-label='circle icon' className='icon' />
-        </Button>
-        <Button
-          variant={selectedTool === 'polyline' ? 'link' : 'text'}
-          label='Draw path with line'
-          onClick={() => handleToolClick('polyline')}
-          compact
-          disabled={!enabled}
-        >
-          <Icon
-            name='share-point-up'
-            role='img'
-            aria-label='share point up icon'
-            className='icon'
-          />
-        </Button>
-        <Button
-          variant={selectedTool === 'polygon' ? 'link' : 'text'}
-          label='Draw path with polygon'
-          onClick={() => handleToolClick('polygon')}
-          compact
-          disabled={!enabled}
-        >
-          <Icon name='rectangle' role='img' aria-label='rectangle icon' className='icon' />
-        </Button>
-        <Button
-          variant={selectedTool === 'geozone' ? 'link' : 'text'}
-          label='Get geozone info'
-          onClick={() => {
-            handleToolClick('geozone');
-          }}
-          compact
-          disabled={!enabled}
-        >
-          <Icon name='waypoint' role='img' aria-label='waypoint icon' className='icon' />
-        </Button>
-
-        {hasGraphic && (
           <Button
-            variant='link'
-            label='Clear'
+            variant='text'
+            label='Upload KML or GeoJSON file'
+            onClick={() => setUploadFileModalVisible(true)}
+            compact
+            disabled={!enabled}
+          >
+            <Icon
+              name='upload'
+              role='img'
+              aria-label='upload icon'
+              className='icon'
+            />
+          </Button>
+          <Button
+            variant={selectedTool === 'circle' ? 'link' : 'text'}
+            label='Draw path with circle'
+            onClick={() => handleToolClick('circle')}
+            compact
+            disabled={!enabled}
+          >
+            <Icon
+              name='circle'
+              role='img'
+              aria-label='circle icon'
+              className='icon'
+            />
+          </Button>
+          <Button
+            variant={selectedTool === 'polyline' ? 'link' : 'text'}
+            label='Draw path with line'
+            onClick={() => handleToolClick('polyline')}
+            compact
+            disabled={!enabled}
+          >
+            <Icon
+              name='share-point-up'
+              role='img'
+              aria-label='share point up icon'
+              className='icon'
+            />
+          </Button>
+          <Button
+            variant={selectedTool === 'polygon' ? 'link' : 'text'}
+            label='Draw path with polygon'
+            onClick={() => handleToolClick('polygon')}
+            compact
+            disabled={!enabled}
+          >
+            <Icon
+              name='rectangle'
+              role='img'
+              aria-label='rectangle icon'
+              className='icon'
+            />
+          </Button>
+          <Button
+            variant={selectedTool === 'geozone' ? 'link' : 'text'}
+            label='Get geozone info'
             onClick={() => {
-              handleClear();
-              if (selectedTool) {
-                sketchViewModel?.create(selectedTool as 'circle' | 'polyline' | 'polygon');
-              }
+              handleToolClick('geozone');
             }}
             compact
             disabled={!enabled}
           >
-            <Icon name='trash' role='img' aria-label='trash icon' className='icon' />
+            <Icon
+              name='waypoint'
+              role='img'
+              aria-label='waypoint icon'
+              className='icon'
+            />
           </Button>
-        )}
-        <VertexInfo />
-      </CardContent>
-    </Card>
+
+          {hasGraphic && (
+            <Button
+              variant='link'
+              label='Clear'
+              onClick={() => {
+                handleClear();
+                if (selectedTool) {
+                  sketchViewModel?.create(
+                    selectedTool as 'circle' | 'polyline' | 'polygon',
+                  );
+                }
+              }}
+              compact
+              disabled={!enabled}
+            >
+              <Icon
+                name='trash'
+                role='img'
+                aria-label='trash icon'
+                className='icon'
+              />
+            </Button>
+          )}
+          <VertexInfo />
+        </CardContent>
+      </Card>
+      {fileUploadModal}
+    </>
   );
 };
 

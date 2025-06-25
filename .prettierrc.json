@@ -1,1 +1,5 @@
-"@pega/prettier-config"
+{
+  "extends": "@pega/prettier-config",
+  "singleQuote": true,
+  "jsxSingleQuote": true
+}

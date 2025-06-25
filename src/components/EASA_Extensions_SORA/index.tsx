@@ -5,7 +5,7 @@ import {
   FieldValueList,
   Text,
   useTheme,
-  Progress
+  Progress,
 } from '@pega/cosmos-react-core';
 import { merge } from 'lodash';
 import { useEffect, useState } from 'react';
@@ -14,11 +14,17 @@ import { Toolbar } from './tools/toolbar/toolbar';
 import SearchTool from './tools/search-tool';
 import { useGetPopulationDensity } from './hooks/useGetPopulationDensity';
 import useCalculateFlightVolume from './hooks/useCalculateFlightVolume';
-import { validateComponentProps, type ComponentProps, type MapState } from './types';
+import {
+  validateComponentProps,
+  type ComponentProps,
+  type MapState,
+} from './types';
 import useUpdatePegaProps from './hooks/useUpdatePegaProps';
 import useDebouncedEffect from './hooks/useDebouncedEffect';
 import useGetPrintRequest from './hooks/useGetPrintRequest';
-import useGetIntrinsicGroundRisk, { GroundRiskError } from './hooks/useGetIntrinsicGroundRisk';
+import useGetIntrinsicGroundRisk, {
+  GroundRiskError,
+} from './hooks/useGetIntrinsicGroundRisk';
 import useMapState from './hooks/useMapState';
 import SoraMap from './map/sora-map';
 import useHighlightIntersectingLanduse from './hooks/useApplySpatialFilter';
@@ -32,7 +38,10 @@ import { getView } from './map/view';
 import { geozones, landUseLabels } from './renderers';
 
 // eslint-disable-next-line no-console
-console.log('%c Do not throw errors. Just log them.', `color: ${'rgb(255, 0, 195)'}`);
+console.log(
+  '%c Do not throw errors. Just log them.',
+  `color: ${'rgb(255, 0, 195)'}`,
+);
 
 // https://map.droneguide.be/
 // https://maptool-dipul.dfs.de/
@@ -68,10 +77,12 @@ export const EasaExtensionsSORA = (props: ComponentProps) => {
     printWidth,
     printHeight,
     printFormat,
-    printDpi
+    printDpi,
   } = props;
 
-  const [flightGeography, setFlightGeography] = useState<__esri.Graphic | null>(null);
+  const [flightGeography, setFlightGeography] = useState<__esri.Graphic | null>(
+    null,
+  );
   const [flightPath, setFlightPath] = useState<__esri.Geometry | null>(null);
   const [layersAdded, setLayersAdded] = useState(false);
   const [mapState, setMapState] = useState<MapState | null>(null);
@@ -79,12 +90,15 @@ export const EasaExtensionsSORA = (props: ComponentProps) => {
   const [loading, setLoading] = useState(false);
   const [geozoneInfo, setGeozoneInfo] = useState<string | null>(null);
   const [propsValid, setPropsValid] = useState(false);
-  const [geozonesRenderer, setGeozonesRenderer] = useState<__esri.UniqueValueRenderer | null>(null);
+  const [geozonesRenderer, setGeozonesRenderer] =
+    useState<__esri.UniqueValueRenderer | null>(null);
 
   const pConnect = getPConnect();
   let PCore: any;
   const defaultTheme = useTheme();
-  const theme = PCore ? merge(defaultTheme, PCore.getEnvironmentInfo().getTheme()) : defaultTheme;
+  const theme = PCore
+    ? merge(defaultTheme, PCore.getEnvironmentInfo().getTheme())
+    : defaultTheme;
 
   useEffect(() => {
     try {
@@ -104,7 +118,10 @@ export const EasaExtensionsSORA = (props: ComponentProps) => {
     }
   }, [props]);
 
-  const { flightVolume, calculateVolume } = useCalculateFlightVolume({ ...props, flightGeography });
+  const { flightVolume, calculateVolume } = useCalculateFlightVolume({
+    ...props,
+    flightGeography,
+  });
 
   // Replace the existing useEffect with useDebouncedEffect
   useDebouncedEffect(
@@ -124,7 +141,7 @@ export const EasaExtensionsSORA = (props: ComponentProps) => {
       }
     },
     300,
-    [flightGeography, props, layersAdded, calculateVolume]
+    [flightGeography, props, layersAdded, calculateVolume],
   );
 
   // Set up the hook for population density
@@ -132,10 +149,10 @@ export const EasaExtensionsSORA = (props: ComponentProps) => {
     flightVolume
       ? {
           ...flightVolume,
-          flightGeography
+          flightGeography,
         }
       : null,
-    hFG
+    hFG,
   );
 
   // Set up the hook to get the intersecting landuses
@@ -147,13 +164,14 @@ export const EasaExtensionsSORA = (props: ComponentProps) => {
     useGetIntersectingGeozones(flightVolume);
 
   // Set up the hook for ground risk
-  const { groundRisk, calculateIntrinsicGroundRisk } = useGetIntrinsicGroundRisk({
-    populationDensity,
-    cd,
-    vO,
-    controlledGroundArea,
-    criticalArea
-  });
+  const { groundRisk, calculateIntrinsicGroundRisk } =
+    useGetIntrinsicGroundRisk({
+      populationDensity,
+      cd,
+      vO,
+      controlledGroundArea,
+      criticalArea,
+    });
 
   // Set up the hook for print request
   const { printRequest, getPrintRequest } = useGetPrintRequest(
@@ -161,7 +179,7 @@ export const EasaExtensionsSORA = (props: ComponentProps) => {
     printWidth,
     printHeight,
     printFormat,
-    printDpi
+    printDpi,
   );
 
   useEffect(() => {
@@ -171,7 +189,8 @@ export const EasaExtensionsSORA = (props: ComponentProps) => {
   }, [mapStateJSON]);
 
   // Set up the hook for highlighting the intersecting landuse
-  const { highlightIntersectingLanduse } = useHighlightIntersectingLanduse(flightVolume);
+  const { highlightIntersectingLanduse } =
+    useHighlightIntersectingLanduse(flightVolume);
 
   // Set up the hook for updating Pega props
   const updatePegaProps = useUpdatePegaProps(
@@ -189,17 +208,18 @@ export const EasaExtensionsSORA = (props: ComponentProps) => {
     intersectingGeozones
       ?.map((geozone: __esri.Graphic) => {
         return geozonesRenderer
-          ? (geozones.find(g => g.value === geozone.attributes[geozonesRenderer?.field])?.label ??
-              '')
+          ? (geozones.find(
+              (g) => g.value === geozone.attributes[geozonesRenderer?.field],
+            )?.label ?? '')
           : null;
       })
-      .filter(gz => gz !== null)
+      .filter((gz) => gz !== null)
       .filter((value, index, self) => self.indexOf(value) === index) ?? null,
     intersectingLanduseClasses
-      ?.map(landuse => {
+      ?.map((landuse) => {
         return landUseLabels[landuse];
       })
-      .filter((value, index, self) => self.indexOf(value) === index) ?? null
+      .filter((value, index, self) => self.indexOf(value) === index) ?? null,
   );
 
   // Set up the effect for flight geometry which comes in as a parameter
@@ -230,7 +250,7 @@ export const EasaExtensionsSORA = (props: ComponentProps) => {
   useEffect(() => {
     if (!flightVolume) return;
     calculatePopDensities()
-      .catch(error => {
+      .catch((error) => {
         setErrorText(error.message);
         // eslint-disable-next-line no-console
         console.error(error);
@@ -271,7 +291,14 @@ export const EasaExtensionsSORA = (props: ComponentProps) => {
   useEffect(() => {
     if (!layersAdded) return;
     updatePegaProps();
-  }, [groundRisk, printRequest, layersAdded, updatePegaProps, mapState, errorText]);
+  }, [
+    groundRisk,
+    printRequest,
+    layersAdded,
+    updatePegaProps,
+    mapState,
+    errorText,
+  ]);
 
   const maxPopDensity =
     populationDensity?.maxPopDensityOperationalGroundRisk === 0
@@ -291,7 +318,7 @@ export const EasaExtensionsSORA = (props: ComponentProps) => {
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
-            flexDirection: 'row'
+            flexDirection: 'row',
           }}
         >
           {errorText && (
@@ -303,7 +330,7 @@ export const EasaExtensionsSORA = (props: ComponentProps) => {
                 padding: '0.5rem',
                 borderRadius: '0.5rem',
                 fontSize: '10',
-                whiteSpace: 'pre-line'
+                whiteSpace: 'pre-line',
               }}
             >
               {errorText}
@@ -316,7 +343,7 @@ export const EasaExtensionsSORA = (props: ComponentProps) => {
               gap: '10px',
               alignItems: 'center',
               justifyContent: 'flex-end',
-              flexGrow: 1
+              flexGrow: 1,
             }}
           >
             <LayerList mapState={mapState} />
@@ -325,14 +352,14 @@ export const EasaExtensionsSORA = (props: ComponentProps) => {
               style={{
                 display: 'flex',
                 flexDirection: 'column',
-                alignItems: 'center'
+                alignItems: 'center',
               }}
             >
               {!propsValid && (
                 <Text
                   variant='secondary'
                   style={{
-                    color: theme.base.palette.urgent
+                    color: theme.base.palette.urgent,
                   }}
                 >
                   Tools disabled!
@@ -340,7 +367,14 @@ export const EasaExtensionsSORA = (props: ComponentProps) => {
               )}
               <Toolbar
                 cd={cd}
-                onFlightGeographyChange={setFlightGeography}
+                onFlightGeographyChange={(g, autoZoomToFlightPath) => {
+                  setFlightGeography(g);
+                  if (autoZoomToFlightPath) {
+                    getView().goTo(
+                      (g?.geometry as __esri.Geometry)?.extent?.expand(1.5),
+                    );
+                  }
+                }}
                 onFlightPathChange={setFlightPath}
                 flightPathJSON={flightPathJSON}
                 onGeozoneInfoChange={setGeozoneInfo}
@@ -363,7 +397,7 @@ export const EasaExtensionsSORA = (props: ComponentProps) => {
               border: `1px solid ${theme.base.palette['brand-primary']}`,
               minWidth: '14rem',
               display: 'flex',
-              flexDirection: 'column'
+              flexDirection: 'column',
             }}
           >
             <div
@@ -372,7 +406,7 @@ export const EasaExtensionsSORA = (props: ComponentProps) => {
                 flexDirection: 'row',
                 justifyContent: 'space-between',
                 gap: '1rem',
-                paddingBottom: '0.5rem'
+                paddingBottom: '0.5rem',
               }}
             >
               <Text variant='h3'>GeoZone Info</Text>
@@ -383,13 +417,13 @@ export const EasaExtensionsSORA = (props: ComponentProps) => {
                   cursor: 'pointer',
                   fontSize: '1rem',
                   marginBottom: '-0.5rem',
-                  marginRight: '-0.25rem'
+                  marginRight: '-0.25rem',
                 }}
                 onClick={() => {
                   setGeozoneInfo(null);
                   getView().graphics.removeAll();
                 }}
-                onKeyDown={e => {
+                onKeyDown={(e) => {
                   if (e.key === 'Escape') {
                     setGeozoneInfo(null);
                     getView().graphics.removeAll();
@@ -404,7 +438,7 @@ export const EasaExtensionsSORA = (props: ComponentProps) => {
             <div
               style={{
                 display: 'flex',
-                fontSize: '1.5rem'
+                fontSize: '1.5rem',
               }}
               // eslint-disable-next-line react/no-danger
               dangerouslySetInnerHTML={{ __html: geozoneInfo }}
@@ -416,18 +450,20 @@ export const EasaExtensionsSORA = (props: ComponentProps) => {
           mapState={mapState}
           mapProps={props}
           onLayersAdded={() => setLayersAdded(true)}
-          onGeozonesLoaded={(renderer: __esri.UniqueValueRenderer) => setGeozonesRenderer(renderer)}
+          onGeozonesLoaded={(renderer: __esri.UniqueValueRenderer) =>
+            setGeozonesRenderer(renderer)
+          }
         />
         <div
           style={{
             display: 'flex',
             justifyContent: 'space-between',
-            marginTop: '0.25rem'
+            marginTop: '0.25rem',
           }}
         >
           <FieldValueList
             style={{
-              maxWidth: '30%'
+              maxWidth: '30%',
             }}
             variant='stacked'
             fields={[
@@ -437,7 +473,7 @@ export const EasaExtensionsSORA = (props: ComponentProps) => {
                   <Progress variant='ring' placement='inline' visible />
                 ) : (
                   maxPopDensity
-                )
+                ),
               },
               {
                 name: 'Average population density in adjacent area',
@@ -445,16 +481,25 @@ export const EasaExtensionsSORA = (props: ComponentProps) => {
                   <Progress variant='ring' placement='inline' visible />
                 ) : (
                   avgPopDensity
-                )
+                ),
               },
               {
                 name: 'Intrinsic ground risk',
-                value: loading ? <Progress variant='ring' placement='inline' visible /> : groundRisk
-              }
+                value: loading ? (
+                  <Progress variant='ring' placement='inline' visible />
+                ) : (
+                  groundRisk
+                ),
+              },
             ]}
           />
           <Legends
-            style={{ display: 'flex', flexWrap: 'wrap', gap: '2rem', maxWidth: '70%' }}
+            style={{
+              display: 'flex',
+              flexWrap: 'wrap',
+              gap: '2rem',
+              maxWidth: '70%',
+            }}
             flightVolume={flightVolume}
             intersectingGeozones={intersectingGeozones}
             intersectingLanduseClasses={intersectingLanduseClasses}
