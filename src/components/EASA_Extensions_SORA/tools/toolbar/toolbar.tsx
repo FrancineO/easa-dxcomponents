@@ -20,8 +20,8 @@ import * as Waypoint from '@pega/cosmos-react-core/lib/components/Icon/icons/way
 import * as geometryEngine from '@arcgis/core/geometry/geometryEngine';
 import * as reactiveUtils from '@arcgis/core/core/reactiveUtils';
 import VertexInfo from './vertex-info';
-import { Modal } from '@pega/cosmos-react-core';
-import UploadFlightPath from '../../components/upload-flight-path';
+
+import UploadModal from '../../components/upload-modal';
 
 registerIcon(Circle, SharePointUp, Rectangle, Trash, Waypoint);
 
@@ -374,22 +374,21 @@ export const Toolbar = (props: Props) => {
 
   const fileUploadModal = useCallback(() => {
     return (
-      <Modal
-        dismissible
-        heading='Upload KML or GeoJSON file'
-        onAfterClose={() => setUploadFileModalVisible(false)}
-        title='Upload KML or GeoJSON file'
-      >
-        <UploadFlightPath
-          onUpload={(g) => {
-            setGraphic(g);
-            setAutoZoomToFlightPath(true);
-            setUploadFileModalVisible(false);
-          }}
-        />
-      </Modal>
+      <UploadModal
+        onUpload={(g: __esri.Graphic) => {
+          setGraphic(g);
+          setAutoZoomToFlightPath(true);
+          setHasGraphic(true);
+        }}
+        onClose={() => setUploadFileModalVisible(false)}
+      />
     );
-  }, [setGraphic, setAutoZoomToFlightPath, setUploadFileModalVisible]);
+  }, [
+    setGraphic,
+    setAutoZoomToFlightPath,
+    setUploadFileModalVisible,
+    setHasGraphic,
+  ]);
 
   const { create } = useModalManager();
 

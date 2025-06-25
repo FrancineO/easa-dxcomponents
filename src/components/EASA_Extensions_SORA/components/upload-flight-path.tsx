@@ -84,6 +84,7 @@ export const UploadFlightPath = (props: Props) => {
         onFilesAdded={handleFileChange}
         multiple={false}
         label='Choose KML or GeoJSON file'
+        files={file ? [file] : []}
         accept='.kml .geojson'
       />
 
