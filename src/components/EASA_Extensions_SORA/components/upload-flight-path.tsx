@@ -85,7 +85,7 @@ export const UploadFlightPath = (props: Props) => {
         multiple={false}
         label='Choose KML or GeoJSON file'
         files={file ? [file] : []}
-        accept='.kml .geojson'
+        accept='.kml, .geojson'
       />
 
       <Button
