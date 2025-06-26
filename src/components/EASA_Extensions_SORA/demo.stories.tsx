@@ -1,5 +1,5 @@
-import type { StoryObj } from "@storybook/react";
-import { EasaExtensionsSORA } from "./index";
+import type { StoryObj } from '@storybook/react';
+import { EasaExtensionsSORA } from './index';
 
 type configInfo = {
   values?: Array<any>;
@@ -15,7 +15,7 @@ type info = {
 };
 
 export default {
-  title: "Templates/SORA",
+  title: 'Templates/SORA',
   argTypes: {
     getPConnect: {
       table: {
@@ -35,8 +35,8 @@ const setPCore = () => {
     createPConnect: () => ({
       getPConnect: () => ({
         getActionsApi: () => ({ updateFieldValue: () => {} }),
-        getContextName: () => "",
-        getValue: () => "C-123",
+        getContextName: () => '',
+        getValue: () => 'C-123',
         getListActions: () => {
           return {
             update: () => {},
@@ -50,37 +50,37 @@ const setPCore = () => {
 
 const genResponse = () => {
   const demoView = {
-    name: "demoView",
-    type: "View",
+    name: 'demoView',
+    type: 'View',
     config: {
-      template: "Pega_Extensions_SORA",
-      ruleClass: "Work-",
+      template: 'Pega_Extensions_SORA',
+      ruleClass: 'Work-',
       inheritedProps: [],
     },
     children: [
       {
-        name: "A",
-        type: "Region",
+        name: 'A',
+        type: 'Region',
         children: [] as Array<info>,
         getPConnect: () => {},
       },
     ],
-    classID: "Work-MyComponents",
+    classID: 'Work-MyComponents',
   };
   demoView.children[0].children = [
     {
       config: {
         values: [34, 30, 35],
-        value: "@FILTERED_LIST .Positions[].pxPositionLatitude",
+        value: '@FILTERED_LIST .Positions[].pxPositionLatitude',
       },
-      type: "ScalarList",
+      type: 'ScalarList',
     },
     {
       config: {
         values: [-118, -110, -114],
-        value: "@FILTERED_LIST .Positions[].pxPositionLongitude",
+        value: '@FILTERED_LIST .Positions[].pxPositionLongitude',
       },
-      type: "ScalarList",
+      type: 'ScalarList',
     },
   ];
 
@@ -100,7 +100,7 @@ export const Default: Story = {
     const response = genResponse();
     setPCore();
     const props = {
-      template: "SORALayout",
+      template: 'SORALayout',
       ...args,
       getPConnect: () => {
         return {
@@ -125,10 +125,10 @@ export const Default: Story = {
             return response.config.inheritedProps;
           },
           getContextName: () => {
-            return "primary";
+            return 'primary';
           },
           getTarget: () => {
-            return "caseInfo";
+            return 'caseInfo';
           },
           createComponent: (config: any) => {
             return genComponent(config);
@@ -151,7 +151,7 @@ export const Default: Story = {
     return <EasaExtensionsSORA {...props}></EasaExtensionsSORA>;
   },
   args: {
-    height: "40rem",
+    height: '40rem',
     controlledGroundArea: false,
     mapStateJSON: null,
     // mapStateJSON:
@@ -191,18 +191,18 @@ export const Default: Story = {
     // client: http://localhost:6006/
     // expiration: 21600
     agolToken:
-      "mzFcMRqhxzPAoRJavp2MJnT86fp9vdIuHnlcY6yRjycMNMkD4n52uRAbbfniWAIw4L9O_fAdS88YtSPeTBlOfvD7Iw5ZGF0HdgJIpxwsT_MFkyRLaCpTQ-Mt6UXcwLF4O_P9ptJaV0TKHGYuDAipH4LD3j9tBX4LFDfRP7tMk_c.",
-    agolUrl: "https://easa.maps.arcgis.com/",
+      'mzFcMRqhxzPAoRJavp2MJnT86fp9vdIuHnlcY6yRjycMNMkD4n52uRAbbfniWAIwN45zdfq013bCetwKzoRA1LXddPq56ZQbvpzXKfHyV8dbOrVr6PQyueMMh4oXHKbPCvb7rs_vjpfL7LDkx-JiOu0F3inoBIMdm6MoHZXEaNA.',
+    agolUrl: 'https://easa.maps.arcgis.com/',
     printServiceUrl:
-      "https://utility.arcgisonline.com/arcgis/rest/services/Utilities/PrintingTools/GPServer/Export%20Web%20Map%20Task",
+      'https://utility.arcgisonline.com/arcgis/rest/services/Utilities/PrintingTools/GPServer/Export%20Web%20Map%20Task',
     printWidth: 1000,
     printHeight: 300,
-    printFormat: "jpg",
+    printFormat: 'jpg',
     printDpi: 300,
-    popDensityPortalItemId: "80efb859d34a4a8f9141a31768b3fa65",
+    popDensityPortalItemId: '80efb859d34a4a8f9141a31768b3fa65',
     basemapPortalItemIds:
-      "979c6cc89af9449cbeb5342a439c6a76,86265e5a4bbb4187a59719cf134e0018,67372ff42cd145319639a99152b15bc3",
-    landusePortalItemId: "87919279e9394adb9ba4f3f8009e1360",
-    geozonePortalItemId: "a0bdecf836b843a9ad3d2eadcb590dc6",
+      '979c6cc89af9449cbeb5342a439c6a76,86265e5a4bbb4187a59719cf134e0018,67372ff42cd145319639a99152b15bc3',
+    landusePortalItemId: '87919279e9394adb9ba4f3f8009e1360',
+    geozonePortalItemId: 'a0bdecf836b843a9ad3d2eadcb590dc6',
   },
 };
