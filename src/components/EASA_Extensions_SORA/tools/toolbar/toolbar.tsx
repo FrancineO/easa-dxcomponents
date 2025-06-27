@@ -2,7 +2,7 @@ import { Icon, useModalManager } from '@pega/cosmos-react-core';
 import { Button } from '@pega/cosmos-react-core';
 import { CardContent } from '@pega/cosmos-react-core';
 import { Card } from '@pega/cosmos-react-core';
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useMemo } from 'react';
 import { getView } from '../../map/view';
 import SketchViewModel from '@arcgis/core/widgets/Sketch/SketchViewModel';
 import GraphicsLayer from '@arcgis/core/layers/GraphicsLayer';
@@ -64,11 +64,14 @@ export const Toolbar = (props: Props) => {
     enabled,
   } = props;
 
-  const [selectedTool, setSelectedTool] = useState<Tool>();
+  const [selectedTool, setSelectedTool] = useState<Tool | null>(null);
   const [handleCreate, setHandleCreate] = useState<any>();
   const [handleUpdate, setHandleUpdate] = useState<any>();
   const [graphic, setGraphic] = useState<Graphic | null>(null);
-  const [hasGraphic, setHasGraphic] = useState(false);
+  const hasGraphic = useMemo(() => {
+    return graphic !== null;
+  }, [graphic]);
+
   const [sketchViewModel, setSketchViewModel] =
     useState<SketchViewModel | null>(null);
   const [geozoneClickHandle, setGeozoneClickHandle] = useState<any>();
@@ -96,7 +99,6 @@ export const Toolbar = (props: Props) => {
       }
       if (event.state === 'complete') {
         setGraphic(event.graphic);
-        setHasGraphic(true);
         sketchViewModel?.update([event.graphic]);
       }
     },
@@ -125,7 +127,6 @@ export const Toolbar = (props: Props) => {
           symbol: event.graphics[0].symbol,
         });
         setGraphic(g);
-        setHasGraphic(true);
         sketchViewModel?.update([event.graphics[0]]);
       }
       if (
@@ -201,7 +202,6 @@ export const Toolbar = (props: Props) => {
           //   toolEventInfo: { type: 'reshape-stop' }
           // });
           setGraphic(fg);
-          setHasGraphic(true);
         });
     }
   }, [flightPathJSON, onUpdate, onCreate]);
@@ -244,6 +244,7 @@ export const Toolbar = (props: Props) => {
       onFlightGeographyChange(graphic, autoZoomToFlightPath);
     }
     onFlightGeographyChange(graphic, autoZoomToFlightPath);
+    setAutoZoomToFlightPath(false);
 
     // onFlightPathChange(graphic.geometry);
     // moved this to the onCreate function so it does not appear when loading a stored flight path
@@ -271,10 +272,15 @@ export const Toolbar = (props: Props) => {
     ) as GraphicsLayer;
     l?.removeAll();
     setGraphic(null);
-    setHasGraphic(false);
     sketchViewModel?.cancel();
     onFlightGeographyChange(null);
     // onFlightPathChange(null);
+  };
+
+  const getToolFromGeometry = (geometry: __esri.Geometry): Tool | null => {
+    if (geometry.type === 'polyline') return 'polyline';
+    if (geometry.type === 'polygon') return 'polygon';
+    return null;
   };
 
   const rowStyle =
@@ -321,7 +327,7 @@ export const Toolbar = (props: Props) => {
         getView().graphics.removeAll();
         onGeozoneInfoChange(null);
       }
-      setSelectedTool(undefined);
+      setSelectedTool(null);
     } else {
       setSelectedTool(tool);
       if (tool === 'geozone') {
@@ -378,9 +384,8 @@ export const Toolbar = (props: Props) => {
       <UploadModal
         onUpload={(g: __esri.Graphic) => {
           setSelectedTool(getToolFromGeometry(g.geometry));
-          setGraphic(g);
           setAutoZoomToFlightPath(true);
-          setHasGraphic(true);
+          setGraphic(g);
           sketchViewModel?.update(g);
         }}
         onClose={() => setUploadFileModalVisible(false)}
@@ -390,7 +395,6 @@ export const Toolbar = (props: Props) => {
     setGraphic,
     setAutoZoomToFlightPath,
     setUploadFileModalVisible,
-    setHasGraphic,
     sketchViewModel,
   ]);
 
@@ -401,12 +405,6 @@ export const Toolbar = (props: Props) => {
       create(fileUploadModal);
     }
   }, [uploadFileModalVisible, create, fileUploadModal]);
-
-  const getToolFromGeometry = (geometry: __esri.Geometry): Tool | null => {
-    if (geometry.type === 'polyline') return 'polyline';
-    if (geometry.type === 'polygon') return 'polygon';
-    return null;
-  };
 
   // green/yellow/red -> maximum pop dens in polygons -> send back to pega
   // blue -> adjacent area - average pop dens -> send back to pega

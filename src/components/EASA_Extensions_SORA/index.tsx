@@ -8,7 +8,7 @@ import {
   Progress,
 } from '@pega/cosmos-react-core';
 import { merge } from 'lodash';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import '../create-nonce';
 import { Toolbar } from './tools/toolbar/toolbar';
 import SearchTool from './tools/search-tool';
@@ -248,6 +248,7 @@ export const EasaExtensionsSORA = (props: ComponentProps) => {
 
   // Call calculatePopDensities when flightVolume changes
   useEffect(() => {
+    queryIntersectingLanduses();
     if (!flightVolume) return;
     calculatePopDensities()
       .catch((error) => {
@@ -258,7 +259,6 @@ export const EasaExtensionsSORA = (props: ComponentProps) => {
       .finally(() => {
         setLoading(false);
       });
-    queryIntersectingLanduses();
   }, [flightVolume, calculatePopDensities, queryIntersectingLanduses]);
 
   // highlight the intersecting landuse when flightVolume changes
@@ -300,14 +300,24 @@ export const EasaExtensionsSORA = (props: ComponentProps) => {
     errorText,
   ]);
 
-  const maxPopDensity =
-    populationDensity?.maxPopDensityOperationalGroundRisk === 0
+  const maxPopDensity = useMemo(() => {
+    if (!populationDensity || !flightGeography) return null;
+    return populationDensity?.maxPopDensityOperationalGroundRisk === 0
       ? '0'
       : populationDensity?.maxPopDensityOperationalGroundRisk;
-  const avgPopDensity =
-    populationDensity?.avgPopDensityAdjacentArea === 0
+  }, [populationDensity, flightGeography]);
+
+  const avgPopDensity = useMemo(() => {
+    if (!populationDensity || !flightGeography) return null;
+    return populationDensity?.avgPopDensityAdjacentArea === 0
       ? '0'
       : populationDensity?.avgPopDensityAdjacentArea;
+  }, [populationDensity, flightGeography]);
+
+  const groundRiskValue = useMemo(() => {
+    if (!groundRisk || !flightGeography) return null;
+    return groundRisk;
+  }, [groundRisk, flightGeography]);
 
   return (
     <Card style={{ height: '100%' }}>
@@ -488,7 +498,7 @@ export const EasaExtensionsSORA = (props: ComponentProps) => {
                 value: loading ? (
                   <Progress variant='ring' placement='inline' visible />
                 ) : (
-                  groundRisk
+                  groundRiskValue
                 ),
               },
             ]}

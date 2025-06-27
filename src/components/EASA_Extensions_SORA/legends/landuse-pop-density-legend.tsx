@@ -1,8 +1,13 @@
 import { Card, CardContent, Text, Alert, Icon } from '@pega/cosmos-react-core';
-import { landusePopDensityLookup, landUseLabels, landuseColors } from '../renderers';
+import {
+  landusePopDensityLookup,
+  landUseLabels,
+  landuseColors,
+} from '../renderers';
 import TooltipElement from '../components/tooltip-element';
 import * as Information from '@pega/cosmos-react-core/lib/components/Icon/icons/information.icon';
 import { registerIcon } from '@pega/cosmos-react-core';
+import type { FlightVolume } from '../types';
 
 registerIcon(Information);
 
@@ -10,11 +15,11 @@ const infoText = [
   'The  static population density map is based on census data.',
   'Census data registers people where they are resident therefore In some area the population density information is not accurate enough (e.g a commercial area or a sport facility or a beach are always showed as empty however in some hours of day or in some days of a year there may even be assembly of people).',
   'The system arbitrary assigns a fictious high populaiton density value and the information that an assembly of people may be present.',
-  ' The UAS operator might then in the SORA step#3 (ground mitigation)  justify a lower population density.'
+  ' The UAS operator might then in the SORA step#3 (ground mitigation)  justify a lower population density.',
 ];
 
 const LandusePopDensityLegend = ({
-  intersectingLanduseClasses
+  intersectingLanduseClasses,
 }: {
   intersectingLanduseClasses: number[];
 }) => {
@@ -26,13 +31,13 @@ const LandusePopDensityLegend = ({
         acc[colorKey] = {
           color: landuseColors[landuse as unknown as number],
           landuses: [],
-          maxDensity: 0
+          maxDensity: 0,
         };
       }
       acc[colorKey].landuses.push({
         label: landUseLabels[landuse as unknown as number],
         density,
-        landuse: Number(landuse)
+        landuse: Number(landuse),
       });
       acc[colorKey].maxDensity = Math.max(acc[colorKey].maxDensity, density);
       return acc;
@@ -48,13 +53,15 @@ const LandusePopDensityLegend = ({
         }[];
         maxDensity: number;
       }
-    >
+    >,
   );
 
   const getIntersectingLanduse = (group: {
     landuses: { label: string; density: number; landuse: number }[];
   }) => {
-    return group.landuses.filter(l => intersectingLanduseClasses?.includes(l.landuse));
+    return group.landuses.filter((l) =>
+      intersectingLanduseClasses?.includes(l.landuse),
+    );
   };
 
   return (
@@ -63,7 +70,7 @@ const LandusePopDensityLegend = ({
         <div style={{ display: 'flex', gap: '0.5rem' }}>
           <Alert
             style={{
-              visibility: 'hidden'
+              visibility: 'hidden',
             }}
             variant='urgent'
           />
@@ -87,7 +94,7 @@ const LandusePopDensityLegend = ({
             marginTop: '0.5rem',
             flexWrap: 'wrap',
             maxHeight: '200px',
-            columnGap: '2rem'
+            columnGap: '2rem',
           }}
         >
           {Object.entries(groupedEntries)
@@ -104,17 +111,22 @@ const LandusePopDensityLegend = ({
                   display: 'flex',
                   gap: '0.5rem',
                   minWidth: '250px',
-                  alignItems: 'center'
+                  alignItems: 'center',
                 }}
               >
                 <TooltipElement
-                  tooltipContent={`The Flight Path Intersects with ${getIntersectingLanduse(group)
-                    .map(l => l.label)
+                  tooltipContent={`The Flight Path Intersects with ${getIntersectingLanduse(
+                    group,
+                  )
+                    .map((l) => l.label)
                     .join(', ')}`}
                 >
                   <Alert
                     style={{
-                      visibility: getIntersectingLanduse(group).length > 0 ? 'visible' : 'hidden'
+                      visibility:
+                        getIntersectingLanduse(group).length > 0
+                          ? 'visible'
+                          : 'hidden',
                     }}
                     variant='urgent'
                   />
@@ -124,12 +136,15 @@ const LandusePopDensityLegend = ({
                     display: 'flex',
                     gap: '0.5rem',
                     minWidth: '250px',
-                    alignItems: 'center'
+                    alignItems: 'center',
                   }}
                   tooltipContent={group.landuses
                     // filter duplicate labels
-                    .filter((l, index, self) => index === self.findIndex(t => t.label === l.label))
-                    .map(l => l.label)
+                    .filter(
+                      (l, index, self) =>
+                        index === self.findIndex((t) => t.label === l.label),
+                    )
+                    .map((l) => l.label)
                     .sort((a, b) => a.localeCompare(b))}
                 >
                   <div
@@ -139,7 +154,7 @@ const LandusePopDensityLegend = ({
                       minWidth: '1rem',
                       minHeight: '1rem',
                       backgroundColor: `rgba(${group.color.join(',')})`,
-                      border: `1px solid rgba(${group.color.join(',')})`
+                      border: `1px solid rgba(${group.color.join(',')})`,
                     }}
                   />
                   <div
@@ -147,7 +162,7 @@ const LandusePopDensityLegend = ({
                       display: 'flex',
                       gap: '0.5rem',
                       justifyContent: 'space-between',
-                      flexGrow: 1
+                      flexGrow: 1,
                     }}
                   >
                     <Text
@@ -155,20 +170,21 @@ const LandusePopDensityLegend = ({
                         whiteSpace: 'nowrap',
                         overflow: 'hidden',
                         textOverflow: 'ellipsis',
-                        width: '15rem'
+                        width: '15rem',
                       }}
                     >{`${group.landuses
                       // filter duplicate labels
                       .filter(
-                        (l, index, self) => index === self.findIndex(t => t.label === l.label)
+                        (l, index, self) =>
+                          index === self.findIndex((t) => t.label === l.label),
                       )
-                      .map(l => l.label)
+                      .map((l) => l.label)
                       .sort((a, b) => a.localeCompare(b))
                       .join(' / ')}`}</Text>
                     <Text
                       style={{
                         width: '6rem',
-                        textAlign: 'right'
+                        textAlign: 'right',
                       }}
                     >{`${group.maxDensity >= 1000 ? `${group.maxDensity / 1000}K` : group.maxDensity} per km²`}</Text>
                   </div>

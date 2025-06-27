@@ -16,13 +16,15 @@ const Legends = ({
   intersectingLanduseClasses,
   intersectingGeozones,
   geozonesRenderer,
-  style
+  style,
 }: LegendsProps) => {
   return (
     <div style={style}>
       <FlightVolumeLegend flightVolume={flightVolume} />
       <PopDensityLegend />
-      <LandusePopDensityLegend intersectingLanduseClasses={intersectingLanduseClasses} />
+      <LandusePopDensityLegend
+        intersectingLanduseClasses={intersectingLanduseClasses}
+      />
       <GeozonesLegend
         intersectingGeozones={intersectingGeozones}
         geozonesRenderer={geozonesRenderer as __esri.UniqueValueRenderer}
