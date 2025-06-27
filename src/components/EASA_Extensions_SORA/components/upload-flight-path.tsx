@@ -4,10 +4,14 @@ import { useState } from 'react';
 import { kml } from '@tmcw/togeojson';
 import { geojsonToArcGIS } from '@terraformer/arcgis';
 import Graphic from '@arcgis/core/Graphic';
+import Polygon from '@arcgis/core/geometry/Polygon';
 import Polyline from '@arcgis/core/geometry/Polyline';
 import SpatialReference from '@arcgis/core/geometry/SpatialReference';
 import * as projection from '@arcgis/core/geometry/projection';
 import { merge } from '@storybook/manager-api';
+import { SimpleFillSymbol } from '@arcgis/core/symbols';
+import { getSymbol } from '../tools/toolbar/draw-utils';
+import * as geometryEngine from '@arcgis/core/geometry/geometryEngine';
 
 interface Props {
   onUpload: (flightPath: __esri.Graphic) => void;
@@ -31,6 +35,54 @@ export const UploadFlightPath = (props: Props) => {
     }
   };
 
+  const reproject = (inGeometry: __esri.Geometry): __esri.Geometry => {
+    const isPolygon = (inGeometry as any).rings !== undefined;
+
+    if (isPolygon) {
+      const polygon = inGeometry as __esri.Polygon;
+      // make sure we ignore any z-coordinates
+      polygon.rings = polygon.rings.map((path) =>
+        path.map((point) => {
+          return [point[0], point[1]];
+        }),
+      );
+      inGeometry = polygon;
+    } else {
+      const polyline = inGeometry as __esri.Polyline;
+      // make sure we ignore any z-coordinates
+      polyline.paths = polyline.paths.map((path) =>
+        path.map((point) => {
+          return [point[0], point[1]];
+        }),
+      );
+      inGeometry = polyline;
+    }
+
+    const newGeometry = isPolygon
+      ? new Polygon({
+          rings: (inGeometry as __esri.Polygon).rings,
+          spatialReference: new SpatialReference({
+            wkid: inGeometry.spatialReference.wkid,
+          }),
+        })
+      : new Polyline({
+          paths: (inGeometry as __esri.Polyline).paths,
+          spatialReference: new SpatialReference({
+            wkid: inGeometry.spatialReference.wkid,
+          }),
+        });
+
+    const prjGeometry = projection.project(
+      newGeometry,
+      new SpatialReference({ wkid: 102100 }),
+    );
+
+    if (Array.isArray(prjGeometry)) {
+      return geometryEngine.union(prjGeometry);
+    }
+
+    return prjGeometry;
+  };
   const handleUpload = () => {
     if (!file) return;
 
@@ -52,34 +104,16 @@ export const UploadFlightPath = (props: Props) => {
 
         if (geojson?.features?.length > 0) {
           const feature = geojson.features[0];
-          feature.geometry.coordinates = feature.geometry.coordinates.map(
-            (point: number[]) => [point[0], point[1]],
-          );
           const esriGraphic = geojsonToArcGIS(feature) as __esri.Graphic;
-          // esriGraphic.geometry.hasZ = false;
-          // esriGraphic.geometry.type = 'polyline';
-          const polyline = esriGraphic.geometry as __esri.Polyline;
-          polyline.paths = polyline.paths.map((path) =>
-            path.map((point) => {
-              return [point[0], point[1]];
-            }),
-          );
-          esriGraphic.geometry = polyline;
 
-          const newGeometry = new Polyline({
-            paths: polyline.paths,
-            spatialReference: new SpatialReference({
-              wkid: esriGraphic.geometry.spatialReference.wkid,
-            }),
-          });
-          const prjGeometry = projection.project(
-            newGeometry,
-            new SpatialReference({ wkid: 102100 }),
-          );
-
+          const geometry = reproject(esriGraphic.geometry);
           const graphic = new Graphic({
-            geometry: prjGeometry as __esri.Geometry,
+            geometry,
             attributes: esriGraphic.attributes,
+            symbol:
+              geometry.type === 'polygon'
+                ? (getSymbol('polygon') as SimpleFillSymbol)
+                : undefined,
           });
 
           props.onUpload(graphic);
