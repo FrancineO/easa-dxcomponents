@@ -25,6 +25,8 @@ import UploadModal from '../../components/upload-modal';
 
 registerIcon(Circle, SharePointUp, Rectangle, Trash, Waypoint);
 
+type Tool = 'circle' | 'polyline' | 'polygon' | 'geozone';
+
 /**
  * Props for the DrawToolbar component
  * @type {Props}
@@ -40,7 +42,7 @@ type Props = {
     autoZoomToFlightPath?: boolean,
   ) => void;
   flightPathJSON: string | null;
-  onFlightPathChange: (path: __esri.Geometry | null) => void;
+  // onFlightPathChange: (path: __esri.Geometry | null) => void;
   onGeozoneInfoChange: (info: string | null) => void;
   enabled: boolean;
 };
@@ -57,14 +59,12 @@ export const Toolbar = (props: Props) => {
     onFlightGeographyChange,
     cd,
     flightPathJSON,
-    onFlightPathChange,
+    // onFlightPathChange,
     onGeozoneInfoChange,
     enabled,
   } = props;
 
-  const [selectedTool, setSelectedTool] = useState<
-    'circle' | 'polyline' | 'polygon' | 'geozone'
-  >();
+  const [selectedTool, setSelectedTool] = useState<Tool>();
   const [handleCreate, setHandleCreate] = useState<any>();
   const [handleUpdate, setHandleUpdate] = useState<any>();
   const [graphic, setGraphic] = useState<Graphic | null>(null);
@@ -191,9 +191,7 @@ export const Toolbar = (props: Props) => {
           const fg = getFlightGeography(flightPathJSON);
           if (!fg) return;
 
-          setSelectedTool(
-            fg.geometry.type as 'circle' | 'polyline' | 'polygon',
-          );
+          setSelectedTool(fg.geometry.type as Tool);
 
           // onCreate({
           //   state: 'complete',
@@ -216,7 +214,7 @@ export const Toolbar = (props: Props) => {
       ) as GraphicsLayer;
       l?.removeAll();
       onFlightGeographyChange(null);
-      onFlightPathChange(null);
+      // onFlightPathChange(null);
       return;
     }
 
@@ -225,7 +223,10 @@ export const Toolbar = (props: Props) => {
       sketchViewModel?.layer.add(graphic);
     }
 
-    if (graphic?.geometry.type === 'polyline') {
+    if (
+      graphic?.geometry.type === 'polyline' ||
+      graphic?.geometry.type === 'polygon'
+    ) {
       const l = getBufferLayer();
       l?.removeAll();
 
@@ -242,7 +243,9 @@ export const Toolbar = (props: Props) => {
     } else {
       onFlightGeographyChange(graphic, autoZoomToFlightPath);
     }
-    onFlightPathChange(graphic.geometry);
+    onFlightGeographyChange(graphic, autoZoomToFlightPath);
+
+    // onFlightPathChange(graphic.geometry);
     // moved this to the onCreate function so it does not appear when loading a stored flight path
     // sketchViewModel?.update([graphic]);
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -271,7 +274,7 @@ export const Toolbar = (props: Props) => {
     setHasGraphic(false);
     sketchViewModel?.cancel();
     onFlightGeographyChange(null);
-    onFlightPathChange(null);
+    // onFlightPathChange(null);
   };
 
   const rowStyle =
@@ -309,9 +312,7 @@ export const Toolbar = (props: Props) => {
       });
   };
 
-  const handleToolClick = (
-    tool: 'circle' | 'polyline' | 'polygon' | 'geozone',
-  ) => {
+  const handleToolClick = (tool: Tool) => {
     setAutoZoomToFlightPath(false);
     handleClear();
     if (tool === selectedTool) {
@@ -376,9 +377,11 @@ export const Toolbar = (props: Props) => {
     return (
       <UploadModal
         onUpload={(g: __esri.Graphic) => {
+          setSelectedTool(getToolFromGeometry(g.geometry));
           setGraphic(g);
           setAutoZoomToFlightPath(true);
           setHasGraphic(true);
+          sketchViewModel?.update(g);
         }}
         onClose={() => setUploadFileModalVisible(false)}
       />
@@ -388,6 +391,7 @@ export const Toolbar = (props: Props) => {
     setAutoZoomToFlightPath,
     setUploadFileModalVisible,
     setHasGraphic,
+    sketchViewModel,
   ]);
 
   const { create } = useModalManager();
@@ -397,6 +401,12 @@ export const Toolbar = (props: Props) => {
       create(fileUploadModal);
     }
   }, [uploadFileModalVisible, create, fileUploadModal]);
+
+  const getToolFromGeometry = (geometry: __esri.Geometry): Tool | null => {
+    if (geometry.type === 'polyline') return 'polyline';
+    if (geometry.type === 'polygon') return 'polygon';
+    return null;
+  };
 
   // green/yellow/red -> maximum pop dens in polygons -> send back to pega
   // blue -> adjacent area - average pop dens -> send back to pega
@@ -492,9 +502,7 @@ export const Toolbar = (props: Props) => {
               onClick={() => {
                 handleClear();
                 if (selectedTool) {
-                  sketchViewModel?.create(
-                    selectedTool as 'circle' | 'polyline' | 'polygon',
-                  );
+                  sketchViewModel?.create(selectedTool as any);
                 }
               }}
               compact

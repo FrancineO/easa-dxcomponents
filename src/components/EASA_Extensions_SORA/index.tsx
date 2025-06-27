@@ -83,7 +83,7 @@ export const EasaExtensionsSORA = (props: ComponentProps) => {
   const [flightGeography, setFlightGeography] = useState<__esri.Graphic | null>(
     null,
   );
-  const [flightPath, setFlightPath] = useState<__esri.Geometry | null>(null);
+  // const [flightPath, setFlightPath] = useState<__esri.Geometry | null>(null);
   const [layersAdded, setLayersAdded] = useState(false);
   const [mapState, setMapState] = useState<MapState | null>(null);
   const [errorText, setErrorText] = useState<string | null>(null);
@@ -197,7 +197,7 @@ export const EasaExtensionsSORA = (props: ComponentProps) => {
     pConnect,
     populationDensity,
     printRequest,
-    flightPath,
+    flightGeography?.geometry ?? null,
     mapState,
     groundRisk,
     errorText,
@@ -375,7 +375,7 @@ export const EasaExtensionsSORA = (props: ComponentProps) => {
                     );
                   }
                 }}
-                onFlightPathChange={setFlightPath}
+                // onFlightPathChange={setFlightPath}
                 flightPathJSON={flightPathJSON}
                 onGeozoneInfoChange={setGeozoneInfo}
                 enabled={propsValid}
