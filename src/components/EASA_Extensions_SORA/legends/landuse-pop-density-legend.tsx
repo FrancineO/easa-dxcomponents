@@ -7,7 +7,6 @@ import {
 import TooltipElement from '../components/tooltip-element';
 import * as Information from '@pega/cosmos-react-core/lib/components/Icon/icons/information.icon';
 import { registerIcon } from '@pega/cosmos-react-core';
-import type { FlightVolume } from '../types';
 
 registerIcon(Information);
 
