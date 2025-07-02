@@ -421,19 +421,19 @@ export const Toolbar = (props: Props) => {
           style={{ display: 'flex', flexDirection: 'row', gap: '2px' }}
         >
           <Button
-            variant='text'
-            style={{ backgroundColor: 'lightgray' }}
+            variant='secondary'
             label='Upload KML or GeoJSON file'
             onClick={() => setUploadFileModalVisible(true)}
             compact
             disabled={!enabled}
           >
-            <Icon
+            Upload KML/GeoJSON
+            {/* <Icon
               name='upload'
               role='img'
               aria-label='upload icon'
               className='icon'
-            />
+            /> */}
           </Button>
           <Button
             variant={selectedTool === 'circle' ? 'link' : 'text'}
