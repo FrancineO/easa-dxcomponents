@@ -422,6 +422,7 @@ export const Toolbar = (props: Props) => {
         >
           <Button
             variant='text'
+            style={{ backgroundColor: 'lightgray' }}
             label='Upload KML or GeoJSON file'
             onClick={() => setUploadFileModalVisible(true)}
             compact
