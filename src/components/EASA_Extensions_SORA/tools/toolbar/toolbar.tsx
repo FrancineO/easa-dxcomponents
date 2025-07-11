@@ -17,13 +17,24 @@ import * as SharePointUp from '@pega/cosmos-react-core/lib/components/Icon/icons
 import * as Rectangle from '@pega/cosmos-react-core/lib/components/Icon/icons/rectangle.icon';
 import * as Trash from '@pega/cosmos-react-core/lib/components/Icon/icons/trash.icon';
 import * as Waypoint from '@pega/cosmos-react-core/lib/components/Icon/icons/waypoint.icon';
+import * as Upload from '@pega/cosmos-react-core/lib/components/Icon/icons/upload.icon';
+import * as Download from '@pega/cosmos-react-core/lib/components/Icon/icons/download.icon';
 import * as geometryEngine from '@arcgis/core/geometry/geometryEngine';
 import * as reactiveUtils from '@arcgis/core/core/reactiveUtils';
 import VertexInfo from './vertex-info';
 
 import UploadModal from '../../components/upload-modal';
+import DownloadModal from '../../components/download-modal';
 
-registerIcon(Circle, SharePointUp, Rectangle, Trash, Waypoint);
+registerIcon(
+  Circle,
+  SharePointUp,
+  Rectangle,
+  Trash,
+  Waypoint,
+  Upload,
+  Download,
+);
 
 type Tool = 'circle' | 'polyline' | 'polygon' | 'geozone';
 
@@ -76,6 +87,8 @@ export const Toolbar = (props: Props) => {
     useState<SketchViewModel | null>(null);
   const [geozoneClickHandle, setGeozoneClickHandle] = useState<any>();
   const [uploadFileModalVisible, setUploadFileModalVisible] = useState(false);
+  const [downloadFileModalVisible, setDownloadFileModalVisible] =
+    useState(false);
   const [autoZoomToFlightPath, setAutoZoomToFlightPath] = useState(false);
 
   const getBufferLayer = useCallback(() => {
@@ -398,6 +411,15 @@ export const Toolbar = (props: Props) => {
     sketchViewModel,
   ]);
 
+  const downloadFileModal = useCallback(() => {
+    return (
+      <DownloadModal
+        graphic={graphic}
+        onClose={() => setDownloadFileModalVisible(false)}
+      />
+    );
+  }, [setDownloadFileModalVisible, graphic]);
+
   const { create } = useModalManager();
 
   useEffect(() => {
@@ -405,6 +427,12 @@ export const Toolbar = (props: Props) => {
       create(fileUploadModal);
     }
   }, [uploadFileModalVisible, create, fileUploadModal]);
+
+  useEffect(() => {
+    if (downloadFileModalVisible) {
+      create(downloadFileModal);
+    }
+  }, [downloadFileModalVisible, create, downloadFileModal]);
 
   // green/yellow/red -> maximum pop dens in polygons -> send back to pega
   // blue -> adjacent area - average pop dens -> send back to pega
@@ -421,19 +449,32 @@ export const Toolbar = (props: Props) => {
           style={{ display: 'flex', flexDirection: 'row', gap: '2px' }}
         >
           <Button
-            variant='secondary'
+            variant='text'
+            label='Download KML or GeoJSON file'
+            onClick={() => setDownloadFileModalVisible(true)}
+            compact
+            disabled={!enabled || !graphic}
+          >
+            <Icon
+              name='download'
+              role='img'
+              aria-label='download icon'
+              className='icon'
+            />
+          </Button>
+          <Button
+            variant='text'
             label='Upload KML or GeoJSON file'
             onClick={() => setUploadFileModalVisible(true)}
             compact
             disabled={!enabled}
           >
-            Upload KML/GeoJSON
-            {/* <Icon
+            <Icon
               name='upload'
               role='img'
               aria-label='upload icon'
               className='icon'
-            /> */}
+            />
           </Button>
           <Button
             variant={selectedTool === 'circle' ? 'link' : 'text'}
@@ -519,6 +560,7 @@ export const Toolbar = (props: Props) => {
         </CardContent>
       </Card>
       {fileUploadModal}
+      {downloadFileModal}
     </>
   );
 };

@@ -43,6 +43,7 @@
     "@pega/cosmos-react-condition-builder": "^6.0.3",
     "@pega/cosmos-react-core": "^6.0.3",
     "@pega/cosmos-react-work": "^6.0.3",
+    "@placemarkio/tokml": "^0.3.7",
     "@terraformer/arcgis": "^2.1.2",
     "@tmcw/togeojson": "^7.1.2",
     "dagre": "^0.8.5",
