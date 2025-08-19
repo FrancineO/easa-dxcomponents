@@ -4,7 +4,7 @@ import { getView } from '../map/view';
 import {
   getAdjacentArea,
   getContingencyVolume,
-  getGroundRiskVolume
+  getGroundRiskVolume,
 } from '../flight-volume/flight-volume-calculations';
 import type { FlightVolume, FlightVolumeParams } from '../types';
 
@@ -26,7 +26,9 @@ const useCalculateFlightVolume = (params: FlightVolumeParams) => {
     // Only proceed if we have a flight geography
     if (!currentParams.flightGeography) {
       // clear the flight volume
-      const layer = getView().map?.findLayerById('flight-volumes') as GraphicsLayer;
+      const layer = getView().map?.findLayerById(
+        'flight-volumes',
+      ) as GraphicsLayer;
       if (layer) {
         layer.removeAll();
       }
@@ -35,7 +37,9 @@ const useCalculateFlightVolume = (params: FlightVolumeParams) => {
     }
 
     // Get or create the layer only once when needed
-    let layer: GraphicsLayer = getView().map?.findLayerById('flight-volumes') as GraphicsLayer;
+    let layer: GraphicsLayer = getView().map?.findLayerById(
+      'flight-volumes',
+    ) as GraphicsLayer;
     if (!layer) {
       layer = new GraphicsLayer({ id: 'flight-volumes' });
       getView().map?.add(layer);
@@ -57,7 +61,7 @@ const useCalculateFlightVolume = (params: FlightVolumeParams) => {
       const aaResult = getAdjacentArea(
         currentParams,
         cvResult.contingencyVolume.geometry,
-        grVolumeResult.groundRiskVolume.geometry
+        grVolumeResult.groundRiskVolume.geometry,
       );
       if (!aaResult) return;
 
@@ -65,7 +69,7 @@ const useCalculateFlightVolume = (params: FlightVolumeParams) => {
       layer.addMany([
         cvResult.contingencyVolume,
         grVolumeResult.groundRiskVolume,
-        aaResult.adjacentArea
+        aaResult.adjacentArea,
       ]);
 
       // Update state with new volumes
@@ -77,7 +81,7 @@ const useCalculateFlightVolume = (params: FlightVolumeParams) => {
         contingencyVolumeHeight: cvResult.contingencyVolumeHeight,
         contingencyVolumeWidth: cvResult.contingencyVolumeWidth,
         groundRiskBufferWidth: grVolumeResult.groundRiskBufferWidth,
-        adjacentVolumeWidth: aaResult.adjacentAreaWidth
+        adjacentVolumeWidth: aaResult.adjacentAreaWidth,
       });
     } catch (error) {
       setFlightVolume(null);

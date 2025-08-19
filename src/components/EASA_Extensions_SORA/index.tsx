@@ -35,7 +35,11 @@ import Legends from './legends/legends';
 import { getFlightGeography } from './tools/toolbar/draw-utils';
 import useGetIntersectingLanduses from './hooks/useGetIntersectingLanduses';
 import { getView } from './map/view';
-import { geozones, landUseLabels } from './renderers';
+import {
+  geozonesDefintions,
+  landUseLabels,
+  landusePeopleOutdoor,
+} from './renderers';
 
 // eslint-disable-next-line no-console
 console.log(
@@ -156,8 +160,11 @@ export const EasaExtensionsSORA = (props: ComponentProps) => {
   );
 
   // Set up the hook to get the intersecting landuses
-  const { intersectingLanduseClasses, queryIntersectingLanduses } =
-    useGetIntersectingLanduses(flightVolume);
+  const {
+    intersectingLanduseClasses,
+    intersectingAdjacentAreaLanduseClasses,
+    queryIntersectingLanduses,
+  } = useGetIntersectingLanduses(flightVolume);
 
   // Set up the hook to get the intersecting geozones
   const { intersectingGeozones, queryIntersectingGeozones } =
@@ -192,6 +199,17 @@ export const EasaExtensionsSORA = (props: ComponentProps) => {
   const { highlightIntersectingLanduse } =
     useHighlightIntersectingLanduse(flightVolume);
 
+  const getGeozoneLabel = (geozone: __esri.Graphic) => {
+    if (!geozone || !geozonesRenderer) return null;
+    const def = geozonesDefintions.find(
+      (g) => g.value === geozone.attributes[geozonesRenderer?.field],
+    );
+    return (
+      def?.label ??
+      `Unknown - ${geozone.attributes[geozonesRenderer?.field]} not found in geozones defintions`
+    );
+  };
+
   // Set up the hook for updating Pega props
   const updatePegaProps = useUpdatePegaProps(
     pConnect,
@@ -207,17 +225,32 @@ export const EasaExtensionsSORA = (props: ComponentProps) => {
     flightVolume?.groundRiskBufferWidth ?? null,
     intersectingGeozones
       ?.map((geozone: __esri.Graphic) => {
-        return geozonesRenderer
-          ? (geozones.find(
-              (g) => g.value === geozone.attributes[geozonesRenderer?.field],
-            )?.label ?? '')
-          : null;
+        return getGeozoneLabel(geozone);
       })
       .filter((gz) => gz !== null)
       .filter((value, index, self) => self.indexOf(value) === index) ?? null,
     intersectingLanduseClasses
       ?.map((landuse) => {
-        return landUseLabels[landuse];
+        return {
+          pyLabel: landUseLabels[landuse],
+          Code: `${landuse}`,
+          PopulationDensity:
+            populationDensity?.maxPopDensityOperationalGroundRisk ?? 0,
+          PeopleOutdoor: landusePeopleOutdoor.includes(landuse),
+          AssemblyOfPeople: landusePeopleOutdoor.includes(landuse),
+        };
+      })
+      .filter((value, index, self) => self.indexOf(value) === index) ?? null,
+    intersectingAdjacentAreaLanduseClasses
+      ?.map((landuse) => {
+        return {
+          pyLabel: landUseLabels[landuse],
+          Code: `${landuse}`,
+          PopulationDensity:
+            populationDensity?.maxPopDensityOperationalGroundRisk ?? 0,
+          PeopleOutdoor: landusePeopleOutdoor.includes(landuse),
+          AssemblyOfPeople: landusePeopleOutdoor.includes(landuse),
+        };
       })
       .filter((value, index, self) => self.indexOf(value) === index) ?? null,
   );

@@ -1,5 +1,5 @@
 import { useCallback, useRef } from 'react';
-import type { MapState, PopulationDensity } from '../types';
+import type { ImpactedLandUse, MapState, PopulationDensity } from '../types';
 import _ from 'lodash';
 
 const useUpdatePegaProps = (
@@ -15,7 +15,8 @@ const useUpdatePegaProps = (
   contingencyVolumeWidth: number | null,
   groundRiskBufferWidth: number | null,
   impactedGeoZones: string[] | null,
-  impactedLandUse: string[] | null
+  impactedLandUse: ImpactedLandUse[] | null,
+  impactedLandUseAdjacentArea: ImpactedLandUse[] | null,
 ) => {
   const paramsRef = useRef({
     pConnect,
@@ -30,7 +31,8 @@ const useUpdatePegaProps = (
     contingencyVolumeWidth,
     groundRiskBufferWidth,
     impactedGeoZones,
-    impactedLandUse
+    impactedLandUse,
+    impactedLandUseAdjacentArea,
   });
   const updateInProgress = useRef(false);
 
@@ -48,7 +50,8 @@ const useUpdatePegaProps = (
     contingencyVolumeWidth,
     groundRiskBufferWidth,
     impactedGeoZones,
-    impactedLandUse
+    impactedLandUse,
+    impactedLandUseAdjacentArea,
   };
 
   // Empty dependency array since we're using ref
@@ -68,7 +71,8 @@ const useUpdatePegaProps = (
       contingencyVolumeWidth: cVW,
       groundRiskBufferWidth: gRW,
       impactedGeoZones: iGZ,
-      impactedLandUse: iLU
+      impactedLandUse: iLU,
+      impactedLandUseAdjacentArea: iLUAA,
     } = currentParams;
 
     // if (!pD?.maxPopDensityOperationalGroundRisk || !pD?.avgPopDensityAdjacentArea || !pR || !gR)
@@ -110,6 +114,8 @@ const useUpdatePegaProps = (
     console.log('%c   impactedGeoZones:', `color: ${color}`, iGZ);
     // eslint-disable-next-line no-console
     console.log('%c   impactedLandUse:', `color: ${color}`, iLU);
+    // eslint-disable-next-line no-console
+    console.log('%c   impactedLandUseAdjacentArea:', `color: ${color}`, iLUAA);
 
     try {
       // eslint-disable-next-line no-console
@@ -119,9 +125,15 @@ const useUpdatePegaProps = (
 
       if (!caseId) {
         // eslint-disable-next-line no-console
-        console.log("%c   Could not get caseId '.pyID'", `color: ${errorColor}`);
+        console.log(
+          "%c   Could not get caseId '.pyID'",
+          `color: ${errorColor}`,
+        );
         // eslint-disable-next-line no-console
-        console.log('%c   Props will not be sent to pega', `color: ${errorColor}`);
+        console.log(
+          '%c   Props will not be sent to pega',
+          `color: ${errorColor}`,
+        );
         // eslint-disable-next-line no-console
         console.log('%c--------------------------------', `color: ${color}`);
         return;
@@ -137,13 +149,14 @@ const useUpdatePegaProps = (
 
       await PCore.getRestClient().invokeRestApi('updateDataObject', {
         queryPayload: {
-          data_view_ID: 'D_MapOutputSavable'
+          data_view_ID: 'D_MapOutputSavable',
         },
         body: {
           data: {
             pyGUID: caseId,
             MaxPopulationVolume: pD?.maxPopDensityOperationalGroundRisk,
-            AveragePopulationDensityInAdjacentArea: pD?.avgPopDensityAdjacentArea,
+            AveragePopulationDensityInAdjacentArea:
+              pD?.avgPopDensityAdjacentArea,
             MapImageJSON: pR ? JSON.stringify(pR) : null,
             FlightGeometryJSON: flightGeometryJSON,
             MapStateJSON: mS ? JSON.stringify(mS) : null,
@@ -154,9 +167,14 @@ const useUpdatePegaProps = (
             ContingencyVolumeWidth: cVW,
             GroundRiskBufferWidth: gRW,
             ImpactedGeoZones: iGZ,
-            ImpactedLandUse: iLU
-          }
-        }
+            ImpactedLandUse: iLU ? iLU.map((landuse) => landuse.pyLabel) : null,
+            ImpactedLandUseAdjacentArea: iLUAA
+              ? iLUAA.map((landuse) => landuse.pyLabel)
+              : null,
+            // ImpactedLandUse: iLU ? JSON.stringify(iLU) : null,
+            // ImpactedLandUseAdjacentArea: iLUAA ? JSON.stringify(iLUAA) : null,
+          },
+        },
       });
       // eslint-disable-next-line no-console
       console.log('%c   Pega props updated', `color: ${color}`);
@@ -164,7 +182,11 @@ const useUpdatePegaProps = (
       console.log('%c--------------------------------', `color: ${color}`);
     } catch (error) {
       // eslint-disable-next-line no-console
-      console.error('Error updating Pega props:', `color: ${errorColor}`, error);
+      console.error(
+        'Error updating Pega props:',
+        `color: ${errorColor}`,
+        error,
+      );
       // eslint-disable-next-line no-console
       console.log('%c--------------------------------', `color: ${color}`);
     } finally {

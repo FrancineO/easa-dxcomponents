@@ -4,7 +4,7 @@ export const populationDensityColors = {
   low: [173, 216, 230, 255], // Light Blue
   medium: [100, 149, 237, 255], // Medium Blue
   high: [40, 90, 200, 255], // Dark Blue
-  extreme: [0, 35, 102, 255] // Deepest Blue
+  extreme: [0, 35, 102, 255], // Deepest Blue
 };
 
 export const populationDensityClassbreaks = [
@@ -14,20 +14,20 @@ export const populationDensityClassbreaks = [
   { value: 50, color: populationDensityColors.low, label: '< 50' },
   { value: 500, color: populationDensityColors.medium, label: '< 500' },
   { value: 5000, color: populationDensityColors.high, label: '< 5,000' },
-  { value: 50000, color: populationDensityColors.extreme, label: '< 50,000' }
+  { value: 50000, color: populationDensityColors.extreme, label: '< 50,000' },
 ];
 
 export const populationDensityRenderer = {
   type: 'classBreaks',
-  classBreakInfos: populationDensityClassbreaks.map(breakInfo => ({
+  classBreakInfos: populationDensityClassbreaks.map((breakInfo) => ({
     classMaxValue: breakInfo.value,
     symbol: {
       type: 'esriSFS',
       color: breakInfo.color,
-      style: 'esriSFSSolid'
+      style: 'esriSFSSolid',
     },
-    label: breakInfo.label
-  }))
+    label: breakInfo.label,
+  })),
 };
 
 export const landuseColors: Record<number, Array<number>> = {
@@ -51,7 +51,7 @@ export const landuseColors: Record<number, Array<number>> = {
   3315: [75, 0, 130, 255], // New
   3316: [75, 0, 130, 255], // New
   3317: [75, 0, 130, 255], // New
-  3318: [75, 0, 130, 255] // New
+  3318: [75, 0, 130, 255], // New
 };
 
 export const landusePopDensityLookup: Record<number, number> = {
@@ -75,8 +75,16 @@ export const landusePopDensityLookup: Record<number, number> = {
   3315: 50000,
   3316: 50000,
   3317: 50000,
-  3318: 50000
+  3318: 50000,
 };
+
+// comes from the pdf in email the email (ExtMsg: RE: Proposal for SFSTRY0002297 M1(A) Sheltering: operating over area where people not sheltered)
+// from emiliano page 9, last column (Potential recurrent presence of assemblies of people outdoor)
+// used in type ImpactedLandUse: PeopleOutdoor: boolean; (component/types.ts)
+// use the same value for AssemblyOfPeople: boolean;
+export const landusePeopleOutdoor: Array<number> = [
+  1210, 1222, 1241, 1410, 1421, 1422, 3310,
+];
 
 export const landUseLabels: Record<number, string> = {
   1111: 'Urban fabric', // New, generic label
@@ -99,7 +107,7 @@ export const landUseLabels: Record<number, string> = {
   3315: 'Beaches, dunes and sand plains', // New
   3316: 'Beaches, dunes and sand plains', // New
   3317: 'Beaches, dunes and sand plains', // New
-  3318: 'Beaches, dunes and sand plains' // New
+  3318: 'Beaches, dunes and sand plains', // New
 };
 
 export const landuseRenderer = {
@@ -109,8 +117,8 @@ export const landuseRenderer = {
       type: 'algorithmic',
       algorithm: 'esriHSVAlgorithm',
       fromColor: [245, 245, 0, 255],
-      toColor: [255, 0, 0, 255]
-    }
+      toColor: [255, 0, 0, 255],
+    },
   },
   type: 'classBreaks',
   classBreakInfos: [
@@ -120,8 +128,8 @@ export const landuseRenderer = {
       symbol: {
         type: 'esriSFS',
         color: landuseColors[1130],
-        style: 'esriSFSSolid'
-      }
+        style: 'esriSFSSolid',
+      },
     },
     {
       label: `${landUseLabels[1210]} - ${landusePopDensityLookup[1210]}`,
@@ -129,8 +137,8 @@ export const landuseRenderer = {
       symbol: {
         type: 'esriSFS',
         color: landuseColors[1210],
-        style: 'esriSFSSolid'
-      }
+        style: 'esriSFSSolid',
+      },
     },
     {
       label: `${landUseLabels[1222]} - ${landusePopDensityLookup[1222]}`,
@@ -138,8 +146,8 @@ export const landuseRenderer = {
       symbol: {
         type: 'esriSFS',
         color: landuseColors[1222],
-        style: 'esriSFSSolid'
-      }
+        style: 'esriSFSSolid',
+      },
     },
     {
       label: `${landUseLabels[1230]} - ${landusePopDensityLookup[1230]}`,
@@ -147,8 +155,8 @@ export const landuseRenderer = {
       symbol: {
         type: 'esriSFS',
         color: landuseColors[1230],
-        style: 'esriSFSSolid'
-      }
+        style: 'esriSFSSolid',
+      },
     },
     {
       label: `${landUseLabels[1242]} - ${landusePopDensityLookup[1242]}`,
@@ -156,8 +164,8 @@ export const landuseRenderer = {
       symbol: {
         type: 'esriSFS',
         color: landuseColors[1242],
-        style: 'esriSFSSolid'
-      }
+        style: 'esriSFSSolid',
+      },
     },
     {
       label: `${landUseLabels[1330]} - ${landusePopDensityLookup[1330]}`,
@@ -165,8 +173,8 @@ export const landuseRenderer = {
       symbol: {
         type: 'esriSFS',
         color: landuseColors[1330],
-        style: 'esriSFSSolid'
-      }
+        style: 'esriSFSSolid',
+      },
     },
     {
       label: `${landUseLabels[1410]} - ${landusePopDensityLookup[1410]}`,
@@ -174,8 +182,8 @@ export const landuseRenderer = {
       symbol: {
         type: 'esriSFS',
         color: landuseColors[1410],
-        style: 'esriSFSSolid'
-      }
+        style: 'esriSFSSolid',
+      },
     },
     {
       label: `${landUseLabels[1421]} - ${landusePopDensityLookup[1421]}`,
@@ -183,8 +191,8 @@ export const landuseRenderer = {
       symbol: {
         type: 'esriSFS',
         color: landuseColors[1421],
-        style: 'esriSFSSolid'
-      }
+        style: 'esriSFSSolid',
+      },
     },
     {
       label: `${landUseLabels[1422]} - ${landusePopDensityLookup[1422]}`,
@@ -192,8 +200,8 @@ export const landuseRenderer = {
       symbol: {
         type: 'esriSFS',
         color: landuseColors[1422],
-        style: 'esriSFSSolid'
-      }
+        style: 'esriSFSSolid',
+      },
     },
     {
       label: `${landUseLabels[3310]} - ${landusePopDensityLookup[3310]}`,
@@ -201,35 +209,62 @@ export const landuseRenderer = {
       symbol: {
         type: 'esriSFS',
         color: landuseColors[3310],
-        style: 'esriSFSSolid'
-      }
-    }
+        style: 'esriSFSSolid',
+      },
+    },
   ],
   field: 'value',
-  minValue: 0
+  minValue: 0,
 };
 
-export const geozones = [
+export const geozonesDefintions = [
   {
     value: 'prohibited',
     label: 'Prohibited',
-    color: [233, 149, 144, 255]
+    color: [233, 149, 144, 255],
   },
   {
     value: 'restricted',
     label: 'Restricted',
-    color: [239, 210, 140, 255]
+    color: [239, 210, 140, 255],
   },
   {
     value: 'U-space',
     label: 'U-space',
-    color: [149, 203, 233, 255]
+    color: [149, 203, 233, 255],
   },
   {
     value: 'open',
     label: 'Reduced Requirements',
-    color: [151, 225, 150, 255]
-  }
+    color: [151, 225, 150, 255],
+  },
+  // these are for the denmark geozones data
+  {
+    value: '1',
+    label: 'Airflux protection critique area: Drone flying NOT allowed',
+    color: [0, 0, 0],
+  },
+  {
+    value: '3',
+    label: 'Natural areas: Drone flying partially prohibited',
+    color: [0, 0, 0],
+  },
+  {
+    value: '4',
+    label: 'Security critical area: Drone flying partially prohibited',
+    color: [0, 0, 0],
+  },
+  {
+    value: '5',
+    label: 'Area of attention: Drone flying allowed but showing attention',
+    color: [0, 0, 0],
+  },
+  {
+    value: null,
+    label:
+      'Restriction area: Drone flying allowed as long as zone is not active',
+    color: [0, 0, 0],
+  },
 ];
 
 // export const geozoneRenderer = {

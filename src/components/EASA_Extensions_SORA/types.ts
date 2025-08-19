@@ -1,5 +1,13 @@
 import config from './config.json';
 
+export type ImpactedLandUse = {
+  pyLabel: string;
+  Code: string;
+  PopulationDensity: number;
+  PeopleOutdoor: boolean;
+  AssemblyOfPeople: boolean;
+};
+
 export type MapProps = {
   flightPathJSON: string | null;
   mapStateJSON: string | null;
@@ -81,7 +89,7 @@ export type PopulationDensity = {
 
 export enum LayerGroupType {
   populationDensity = 'PopulationDensity',
-  geozones = 'Geozones'
+  geozones = 'Geozones',
 }
 
 export type LayerGroup = {
@@ -94,20 +102,20 @@ export enum LayerId {
   populationDensity = 'PopulationDensity',
   geozones = 'Geozones',
   landuse = 'Landuse',
-  landuseHighlight = 'LanduseHighlight'
+  landuseHighlight = 'LanduseHighlight',
 }
 
 export const layerGroups: LayerGroup[] = [
   {
     type: LayerGroupType.populationDensity,
     label: 'Population Density',
-    ids: [LayerId.populationDensity, LayerId.landuse]
+    ids: [LayerId.populationDensity, LayerId.landuse],
   },
   {
     type: LayerGroupType.geozones,
     label: 'Geozones',
-    ids: [LayerId.geozones]
-  }
+    ids: [LayerId.geozones],
+  },
 ];
 
 function getActualType(actual: any): string {
@@ -121,12 +129,17 @@ function getLabel(key: string): string {
   return property?.label || key;
 }
 
-function assertType(condition: boolean, key: string, expected: string, actual: any) {
+function assertType(
+  condition: boolean,
+  key: string,
+  expected: string,
+  actual: any,
+) {
   if (!condition) {
     const actualType = getActualType(actual);
     const keyLabel = getLabel(key);
     throw new Error(
-      `Value ${actual} for "${keyLabel}" is invalid. \n Expected "${expected}", but got "${actualType}".`
+      `Value ${actual} for "${keyLabel}" is invalid. \n Expected "${expected}", but got "${actualType}".`,
     );
   }
 }
@@ -140,7 +153,7 @@ function validateMapProps(obj: any): asserts obj is MapProps {
     'landusePortalItemId',
     'geozonePortalItemId',
     'flightPathJSON',
-    'mapStateJSON'
+    'mapStateJSON',
   ];
 
   for (const key of requiredKeys) {
@@ -148,47 +161,55 @@ function validateMapProps(obj: any): asserts obj is MapProps {
   }
 
   assertType(typeof obj.agolUrl === 'string', 'agolUrl', 'string', obj.agolUrl);
-  assertType(typeof obj.agolToken === 'string', 'agolToken', 'string', obj.agolToken);
+  assertType(
+    typeof obj.agolToken === 'string',
+    'agolToken',
+    'string',
+    obj.agolToken,
+  );
   assertType(
     typeof obj.popDensityPortalItemId === 'string',
     'popDensityPortalItemId',
     'string',
-    obj.popDensityPortalItemId
+    obj.popDensityPortalItemId,
   );
   assertType(
     typeof obj.basemapPortalItemIds === 'string',
     'basemapPortalItemIds',
     'string',
-    obj.basemapPortalItemIds
+    obj.basemapPortalItemIds,
   );
   assertType(
     typeof obj.landusePortalItemId === 'string',
     'landusePortalItemId',
     'string',
-    obj.landusePortalItemId
+    obj.landusePortalItemId,
   );
   assertType(
     typeof obj.geozonePortalItemId === 'string',
     'geozonePortalItemId',
     'string',
-    obj.geozonePortalItemId
+    obj.geozonePortalItemId,
   );
   assertType(
     typeof obj.flightPathJSON === 'string' || obj.flightPathJSON === null,
     'flightPathJSON',
     'string | null',
-    obj.flightPathJSON
+    obj.flightPathJSON,
   );
   assertType(
     typeof obj.mapStateJSON === 'string' || obj.mapStateJSON === null,
     'mapStateJSON',
     'string | null',
-    obj.mapStateJSON
+    obj.mapStateJSON,
   );
 }
 
-export function validateComponentProps(obj: any): asserts obj is ComponentProps {
-  if (typeof obj !== 'object' || obj === null) throw new Error('Input is not a valid object.');
+export function validateComponentProps(
+  obj: any,
+): asserts obj is ComponentProps {
+  if (typeof obj !== 'object' || obj === null)
+    throw new Error('Input is not a valid object.');
 
   const requiredKeys: (keyof ComponentProps)[] = [
     'height',
@@ -228,7 +249,7 @@ export function validateComponentProps(obj: any): asserts obj is ComponentProps 
     'landusePortalItemId',
     'geozonePortalItemId',
     'flightPathJSON',
-    'mapStateJSON'
+    'mapStateJSON',
   ];
 
   for (const key of requiredKeys) {
@@ -241,68 +262,129 @@ export function validateComponentProps(obj: any): asserts obj is ComponentProps 
     typeof obj.printServiceUrl === 'string',
     'printServiceUrl',
     'string',
-    obj.printServiceUrl
+    obj.printServiceUrl,
   );
-  assertType(typeof obj.printWidth === 'number', 'printWidth', 'number', obj.printWidth);
-  assertType(typeof obj.printHeight === 'number', 'printHeight', 'number', obj.printHeight);
-  assertType(typeof obj.printFormat === 'string', 'printFormat', 'string', obj.printFormat);
-  assertType(typeof obj.printDpi === 'number', 'printDpi', 'number', obj.printDpi);
+  assertType(
+    typeof obj.printWidth === 'number',
+    'printWidth',
+    'number',
+    obj.printWidth,
+  );
+  assertType(
+    typeof obj.printHeight === 'number',
+    'printHeight',
+    'number',
+    obj.printHeight,
+  );
+  assertType(
+    typeof obj.printFormat === 'string',
+    'printFormat',
+    'string',
+    obj.printFormat,
+  );
+  assertType(
+    typeof obj.printDpi === 'number',
+    'printDpi',
+    'number',
+    obj.printDpi,
+  );
   assertType(typeof obj.sGPS === 'number', 'sGPS', 'number', obj.sGPS);
   assertType(typeof obj.sPos === 'number', 'sPos', 'number', obj.sPos);
   assertType(typeof obj.sK === 'number', 'sK', 'number', obj.sK);
   assertType(typeof obj.vO === 'number', 'vO', 'number', obj.vO);
   assertType(typeof obj.tR === 'number', 'tR', 'number', obj.tR);
 
-  assertType(typeof obj.tP === 'number' || obj.tP === '', 'tP', 'number | string.Empty', obj.tP);
+  assertType(
+    typeof obj.tP === 'number' || obj.tP === '',
+    'tP',
+    'number | string.Empty',
+    obj.tP,
+  );
   assertType(
     typeof obj.terminateWithParachute === 'boolean',
     'terminateWithParachute',
     'boolean',
-    obj.terminateWithParachute
+    obj.terminateWithParachute,
   );
-  assertType(typeof obj.maxRollAngle === 'number', 'maxRollAngle', 'number', obj.maxRollAngle);
-  assertType(typeof obj.maxPitchAngle === 'number', 'maxPitchAngle', 'number', obj.maxPitchAngle);
-  assertType(typeof obj.multirotor === 'boolean', 'multirotor', 'boolean', obj.multirotor);
+  assertType(
+    typeof obj.maxRollAngle === 'number',
+    'maxRollAngle',
+    'number',
+    obj.maxRollAngle,
+  );
+  assertType(
+    typeof obj.maxPitchAngle === 'number',
+    'maxPitchAngle',
+    'number',
+    obj.maxPitchAngle,
+  );
+  assertType(
+    typeof obj.multirotor === 'boolean',
+    'multirotor',
+    'boolean',
+    obj.multirotor,
+  );
   assertType(typeof obj.hFG === 'number', 'hFG', 'number', obj.hFG);
   assertType(typeof obj.hAM === 'number', 'hAM', 'number', obj.hAM);
-  assertType(typeof obj.simplified === 'boolean', 'simplified', 'boolean', obj.simplified);
+  assertType(
+    typeof obj.simplified === 'boolean',
+    'simplified',
+    'boolean',
+    obj.simplified,
+  );
   assertType(
     typeof obj.ballisticApproach === 'boolean',
     'ballisticApproach',
     'boolean',
-    obj.ballisticApproach
+    obj.ballisticApproach,
   );
   assertType(typeof obj.cd === 'number', 'cd', 'number', obj.cd);
   assertType(typeof obj.vWind === 'number', 'vWind', 'number', obj.vWind);
   assertType(typeof obj.vZ === 'number', 'vZ', 'number', obj.vZ);
   assertType(typeof obj.power === 'boolean', 'power', 'boolean', obj.power);
   assertType(typeof obj.cL === 'number', 'cL', 'number', obj.cL);
-  assertType(typeof obj.gliding === 'boolean', 'gliding', 'boolean', obj.gliding);
-  assertType(typeof obj.E === 'number' || obj.E === '', 'E', 'number | string.Empty', obj.E);
+  assertType(
+    typeof obj.gliding === 'boolean',
+    'gliding',
+    'boolean',
+    obj.gliding,
+  );
+  assertType(
+    typeof obj.E === 'number' || obj.E === '',
+    'E',
+    'number | string.Empty',
+    obj.E,
+  );
   assertType(
     typeof obj.controlledGroundArea === 'boolean',
     'controlledGroundArea',
     'boolean',
-    obj.controlledGroundArea
+    obj.controlledGroundArea,
   );
   assertType(
     typeof obj.criticalArea === 'number' || obj.criticalArea === null,
     'criticalArea',
     'number | null',
-    obj.criticalArea
+    obj.criticalArea,
   );
 
   // Optional fields
   if ('getPConnect' in obj) {
     assertType(
-      typeof obj.getPConnect === 'function' || typeof obj.getPConnect === 'object',
+      typeof obj.getPConnect === 'function' ||
+        typeof obj.getPConnect === 'object',
       'getPConnect',
       'function | object',
-      obj.getPConnect
+      obj.getPConnect,
     );
   }
   if ('heading' in obj) {
-    assertType(typeof obj.heading === 'string', 'heading', 'string', obj.heading);
+    assertType(
+      typeof obj.heading === 'string',
+      'heading',
+      'string',
+      obj.heading,
+    );
   }
 
   // MapProps

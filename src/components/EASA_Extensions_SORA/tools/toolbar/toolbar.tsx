@@ -1,8 +1,14 @@
-import { Icon, useModalManager } from '@pega/cosmos-react-core';
+import {
+  Icon,
+  Input,
+  useModalManager,
+  useTheme,
+} from '@pega/cosmos-react-core';
 import { Button } from '@pega/cosmos-react-core';
 import { CardContent } from '@pega/cosmos-react-core';
 import { Card } from '@pega/cosmos-react-core';
-import { useEffect, useState, useCallback, useMemo } from 'react';
+import { useEffect, useState, useCallback, useMemo, useRef } from 'react';
+
 import { getView } from '../../map/view';
 import SketchViewModel from '@arcgis/core/widgets/Sketch/SketchViewModel';
 import GraphicsLayer from '@arcgis/core/layers/GraphicsLayer';
@@ -12,7 +18,7 @@ import type SimpleLineSymbol from '@arcgis/core/symbols/SimpleLineSymbol';
 import type SimpleFillSymbol from '@arcgis/core/symbols/SimpleFillSymbol';
 import type SimpleMarkerSymbol from '@arcgis/core/symbols/SimpleMarkerSymbol';
 import { registerIcon } from '@pega/cosmos-react-core';
-import * as Circle from '@pega/cosmos-react-core/lib/components/Icon/icons/circle.icon';
+import * as CircleIcon from '@pega/cosmos-react-core/lib/components/Icon/icons/circle.icon';
 import * as SharePointUp from '@pega/cosmos-react-core/lib/components/Icon/icons/share-point-up.icon';
 import * as Rectangle from '@pega/cosmos-react-core/lib/components/Icon/icons/rectangle.icon';
 import * as Trash from '@pega/cosmos-react-core/lib/components/Icon/icons/trash.icon';
@@ -21,13 +27,16 @@ import * as Upload from '@pega/cosmos-react-core/lib/components/Icon/icons/uploa
 import * as Download from '@pega/cosmos-react-core/lib/components/Icon/icons/download.icon';
 import * as geometryEngine from '@arcgis/core/geometry/geometryEngine';
 import * as reactiveUtils from '@arcgis/core/core/reactiveUtils';
+import Circle from '@arcgis/core/geometry/Circle';
 import VertexInfo from './vertex-info';
 
 import UploadModal from '../../components/upload-modal';
 import DownloadModal from '../../components/download-modal';
 
+import { merge } from '@storybook/manager-api';
+
 registerIcon(
-  Circle,
+  CircleIcon,
   SharePointUp,
   Rectangle,
   Trash,
@@ -36,7 +45,7 @@ registerIcon(
   Download,
 );
 
-type Tool = 'circle' | 'polyline' | 'polygon' | 'geozone';
+export type Tool = 'circle' | 'polyline' | 'polygon' | 'geozone';
 
 /**
  * Props for the DrawToolbar component
@@ -75,6 +84,12 @@ export const Toolbar = (props: Props) => {
     enabled,
   } = props;
 
+  let PCore: any;
+  const defaultTheme = useTheme();
+  const theme = PCore
+    ? merge(defaultTheme, PCore.getEnvironmentInfo().getTheme())
+    : defaultTheme;
+
   const [selectedTool, setSelectedTool] = useState<Tool | null>(null);
   const [handleCreate, setHandleCreate] = useState<any>();
   const [handleUpdate, setHandleUpdate] = useState<any>();
@@ -83,13 +98,76 @@ export const Toolbar = (props: Props) => {
     return graphic !== null;
   }, [graphic]);
 
-  const [sketchViewModel, setSketchViewModel] =
-    useState<SketchViewModel | null>(null);
   const [geozoneClickHandle, setGeozoneClickHandle] = useState<any>();
   const [uploadFileModalVisible, setUploadFileModalVisible] = useState(false);
   const [downloadFileModalVisible, setDownloadFileModalVisible] =
     useState(false);
   const [autoZoomToFlightPath, setAutoZoomToFlightPath] = useState(false);
+  const [isLiveUpdating, setIsLiveUpdating] = useState(false);
+  const [pendingRadius, setPendingRadius] = useState(500);
+  const pendingRadiusRef = useRef(500);
+  const radiusRef = useRef(500);
+  const sketchViewModelRef = useRef<SketchViewModel | null>(null);
+
+  useEffect(() => {
+    pendingRadiusRef.current = pendingRadius;
+  }, [pendingRadius]);
+
+  // Initialize pending radius when circle tool is selected
+  useEffect(() => {
+    if (selectedTool === 'circle') {
+      setPendingRadius(radiusRef.current);
+    }
+  }, [selectedTool]);
+
+  // Function to update circle radius
+  const updateCircleRadius = useCallback(
+    (newRadius: number) => {
+      if (selectedTool !== 'circle' || !graphic) {
+        return;
+      }
+
+      const newCircle = new Circle({
+        center: graphic.geometry.extent.center,
+        radius: newRadius,
+        radiusUnit: 'meters',
+      });
+
+      const updatedGraphic = new Graphic({
+        geometry: newCircle,
+        symbol: graphic.symbol,
+        attributes: graphic.attributes,
+      });
+
+      setGraphic(updatedGraphic);
+
+      // Update the graphic in the sketch view model
+      if (sketchViewModelRef.current?.layer) {
+        // Check if we're currently updating a graphic
+        const isUpdating = sketchViewModelRef.current.updateGraphics.length > 0;
+
+        // Remove all graphics and add the updated one
+        sketchViewModelRef.current.layer.removeAll();
+        sketchViewModelRef.current.layer.add(updatedGraphic);
+
+        // Restore edit mode if we were editing
+        if (isUpdating) {
+          sketchViewModelRef.current.update([updatedGraphic]);
+        }
+      }
+    },
+    [selectedTool, graphic, sketchViewModelRef],
+  );
+
+  // Function to apply radius changes
+  const applyRadiusChange = useCallback(() => {
+    if (pendingRadius !== radiusRef.current) {
+      radiusRef.current = pendingRadius;
+      setIsLiveUpdating(false);
+      // Update the current circle on the map with the new radius
+      updateCircleRadius(pendingRadius);
+    }
+  }, [pendingRadius, updateCircleRadius]);
 
   const getBufferLayer = useCallback(() => {
     let l = getView().map?.findLayerById(
@@ -106,20 +184,94 @@ export const Toolbar = (props: Props) => {
     (event: any) => {
       if (event.state === 'start') {
         setGraphic(null);
-        sketchViewModel?.layer.removeAll();
+        sketchViewModelRef.current?.layer.removeAll();
         const l = getBufferLayer();
         l?.removeAll();
       }
+      if (
+        event.state === 'active' &&
+        (event.tool === 'circle' || event.tool === 'polygon') &&
+        event.graphic?.geometry
+      ) {
+        // Update radius in real-time as user drags
+        const geometry = event.graphic.geometry;
+        if (geometry.type === 'polygon') {
+          // For polygon circles, calculate radius from the bounding extent
+          const extent = geometry.extent;
+          const width = extent.width;
+          const height = extent.height;
+          if (width > 0 && height > 0) {
+            // Calculate radius from extent (assuming it's roughly circular)
+            const calculatedRadius = Math.min(width, height) / 2;
+            setPendingRadius(Math.round(calculatedRadius));
+            setIsLiveUpdating(true);
+          }
+        } else if (geometry.type === 'circle') {
+          // Fallback for actual circle geometry
+          const circle = geometry as __esri.Circle;
+          const currentRadius = circle.radius;
+          if (currentRadius && currentRadius > 0) {
+            setPendingRadius(Math.round(currentRadius));
+            setIsLiveUpdating(true);
+          }
+        }
+      }
       if (event.state === 'complete') {
+        setIsLiveUpdating(false);
+        if (event.tool === 'circle') {
+          // The circle tool creates a polygon, so we need to convert it to a proper circle
+          // We'll use the current radius value for consistency
+          const polygon = event.graphic.geometry as __esri.Polygon;
+          const center = polygon.centroid;
+          const finalRadius = pendingRadiusRef.current ?? radiusRef.current;
+          radiusRef.current = finalRadius;
+
+          event.graphic.geometry = new Circle({
+            center,
+            radius: finalRadius,
+            radiusUnit: 'meters',
+          });
+
+          // No need to update radius state since we're always using the current radius
+
+          // we have to complete the circle creation because if we don't, we get a second circle graphic.
+          // the sketchviewmodel holds on to the original graphic even if we only want to update the geometry of the graphic.
+          // so we have to complete the creation and then set the flow to create circle.
+          // In this way the user can not move a circle but can create a new one on another location immediately.
+          sketchViewModelRef.current?.complete();
+          sketchViewModelRef.current?.create('circle');
+        } else {
+          sketchViewModelRef.current?.update([event.graphic]);
+        }
         setGraphic(event.graphic);
-        sketchViewModel?.update([event.graphic]);
       }
     },
-    [getBufferLayer, sketchViewModel],
+    [getBufferLayer, sketchViewModelRef, pendingRadius],
   );
 
   const onUpdate = useCallback(
     (event: __esri.SketchUpdateEvent) => {
+      // Update radius in real-time during circle scaling
+      if (
+        event.state === 'active' &&
+        event.toolEventInfo.type === 'scale' &&
+        event.graphics[0]?.geometry
+      ) {
+        const geometry = event.graphics[0].geometry;
+        if (geometry.type === 'extent') {
+          // For circles, the geometry type is 'extent' but we can calculate radius from theextent
+          const extent = geometry as __esri.Extent;
+          const width = extent.width;
+          const height = extent.height;
+          if (width > 0 && height > 0) {
+            // Calculate radius from extent (assuming it's roughly circular)
+            const calculatedRadius = Math.min(width, height) / 2;
+            setPendingRadius(Math.round(calculatedRadius));
+            setIsLiveUpdating(true);
+          }
+        }
+      }
+
       if (
         event.state === 'complete' ||
         (event.state === 'active' &&
@@ -128,40 +280,56 @@ export const Toolbar = (props: Props) => {
         if (event.aborted) return;
 
         // TODO: nasty hack to remove old graphics. maybe figure out a better approach
-        const graphicsToRemove = sketchViewModel?.layer?.graphics?.filter(
-          (g) => g !== event.graphics[0],
-        );
+        const graphicsToRemove =
+          sketchViewModelRef.current?.layer?.graphics?.filter(
+            (g) => g !== event.graphics[0],
+          );
         if (graphicsToRemove) {
-          graphicsToRemove.forEach((g) => sketchViewModel?.layer.remove(g));
+          graphicsToRemove.forEach((g) =>
+            sketchViewModelRef.current?.layer.remove(g),
+          );
         }
 
         const g = new Graphic({
-          geometry: event.graphics[0].geometry,
+          geometry: event.graphics[0].geometry.clone(),
           symbol: event.graphics[0].symbol,
         });
         setGraphic(g);
-        sketchViewModel?.update([event.graphics[0]]);
+
+        // sketchViewModelRef.current?.cancel();
+        // sketchViewModelRef.current?.layer.removeAll();
+        // sketchViewModelRef.current?.layer.add(g);
+        sketchViewModelRef.current?.update([g]);
+        // console.log('move-update', g.geometry.centroid.x);
       }
       if (
         event.state === 'active' &&
         event.toolEventInfo.type === 'reshape-stop'
       ) {
-        sketchViewModel?.complete();
+        sketchViewModelRef.current?.complete();
+      }
+      if (
+        event.state === 'active' &&
+        event.toolEventInfo.type === 'move-start'
+      ) {
+        // console.log('move-start', event.graphics[0].geometry.centroid.x);
       }
       if (
         event.state === 'active' &&
         event.toolEventInfo.type === 'move-stop'
       ) {
-        sketchViewModel?.complete();
+        // console.log('move-stop', event.graphics[0].geometry.centroid.x);
+        sketchViewModelRef.current?.complete();
       }
       if (
         event.state === 'active' &&
         event.toolEventInfo.type === 'scale-stop'
       ) {
-        sketchViewModel?.complete();
+        setIsLiveUpdating(false);
+        sketchViewModelRef.current?.complete();
       }
     },
-    [sketchViewModel],
+    [sketchViewModelRef],
   );
 
   useEffect(() => {
@@ -169,7 +337,7 @@ export const Toolbar = (props: Props) => {
       return;
     }
     if (!selectedTool) {
-      sketchViewModel?.cancel();
+      sketchViewModelRef.current?.cancel();
       return;
     }
 
@@ -179,13 +347,22 @@ export const Toolbar = (props: Props) => {
         // make sure the buffer layer is created
         getBufferLayer();
 
-        const hc = sketchViewModel?.on('create', onCreate);
-        setHandleCreate(hc);
-        const hu = sketchViewModel?.on('update', onUpdate);
-        setHandleUpdate(hu);
-        if (sketchViewModel?.layer) {
-          getView().map?.add(sketchViewModel.layer);
+        // Ensure the sketch view model layer is added to the map
+        if (sketchViewModelRef.current?.layer && getView().map) {
+          // Check if the layer is already in the map
+          const existingLayer = getView().map.findLayerById(
+            sketchViewModelRef.current.layer.id,
+          );
+          if (!existingLayer) {
+            getView().map.add(sketchViewModelRef.current.layer);
+          }
         }
+
+        // Set up event handlers
+        const hc = sketchViewModelRef.current?.on('create', onCreate);
+        setHandleCreate(hc);
+        const hu = sketchViewModelRef.current?.on('update', onUpdate);
+        setHandleUpdate(hu);
       });
   }, [
     selectedTool,
@@ -194,7 +371,7 @@ export const Toolbar = (props: Props) => {
     handleUpdate,
     onUpdate,
     getBufferLayer,
-    sketchViewModel,
+    sketchViewModelRef,
   ]);
 
   useEffect(() => {
@@ -206,14 +383,6 @@ export const Toolbar = (props: Props) => {
           if (!fg) return;
 
           setSelectedTool(fg.geometry.type as Tool);
-
-          // onCreate({
-          //   state: 'complete',
-          //   graphic: fg,
-          //   aborted: false,
-          //   tool: 'reshape',
-          //   toolEventInfo: { type: 'reshape-stop' }
-          // });
           setGraphic(fg);
         });
     }
@@ -221,7 +390,7 @@ export const Toolbar = (props: Props) => {
 
   useEffect(() => {
     if (!graphic) {
-      sketchViewModel?.layer.removeAll();
+      sketchViewModelRef.current?.layer.removeAll();
       const l = getView().map?.findLayerById(
         bufferGraphicsLayerId,
       ) as GraphicsLayer;
@@ -232,8 +401,10 @@ export const Toolbar = (props: Props) => {
     }
 
     // ensure the graphic is added to the sketchViewModel layer
-    if (!sketchViewModel?.layer.graphics.find((g) => g === graphic)) {
-      sketchViewModel?.layer.add(graphic);
+    if (
+      !sketchViewModelRef.current?.layer.graphics.find((g) => g === graphic)
+    ) {
+      sketchViewModelRef.current?.layer.add(graphic);
     }
 
     if (
@@ -256,7 +427,6 @@ export const Toolbar = (props: Props) => {
     } else {
       onFlightGeographyChange(graphic, autoZoomToFlightPath);
     }
-    onFlightGeographyChange(graphic, autoZoomToFlightPath);
     setAutoZoomToFlightPath(false);
 
     // onFlightPathChange(graphic.geometry);
@@ -268,7 +438,7 @@ export const Toolbar = (props: Props) => {
     selectedTool,
     cd,
     getBufferLayer,
-    sketchViewModel,
+    sketchViewModelRef,
     autoZoomToFlightPath,
   ]);
 
@@ -279,13 +449,14 @@ export const Toolbar = (props: Props) => {
   }, [geozoneClickHandle]);
 
   const handleClear = () => {
-    sketchViewModel?.layer.removeAll();
+    sketchViewModelRef.current?.layer.removeAll();
     const l = getView().map?.findLayerById(
       bufferGraphicsLayerId,
     ) as GraphicsLayer;
     l?.removeAll();
     setGraphic(null);
-    sketchViewModel?.cancel();
+    setIsLiveUpdating(false);
+    sketchViewModelRef.current?.cancel();
     onFlightGeographyChange(null);
     // onFlightPathChange(null);
   };
@@ -348,49 +519,152 @@ export const Toolbar = (props: Props) => {
         setGeozoneClickHandle(getView().on('click', handleMapClick));
         return;
       }
+      if (sketchViewModelRef.current) {
+        if (tool === 'circle') {
+          sketchViewModelRef.current.defaultUpdateOptions = {
+            tool: 'move',
+            highlightOptions: {
+              enabled: true,
+            },
+            enableRotation: false,
+            enableScaling: true,
+          };
+        } else {
+          sketchViewModelRef.current.defaultUpdateOptions = {
+            tool: 'reshape',
+            reshapeOptions: {
+              vertexOperation: 'move',
+              shapeOperation: 'move',
+            },
+            highlightOptions: {
+              enabled: false,
+            },
+            enableRotation: false,
+            enableScaling: true,
+          };
+        }
+      }
       getView().graphics.removeAll();
       onGeozoneInfoChange(null);
-      sketchViewModel?.create(
-        tool as
-          | 'circle'
-          | 'point'
-          | 'multipoint'
-          | 'polyline'
-          | 'polygon'
-          | 'mesh'
-          | 'rectangle',
-      );
+
+      // Ensure the sketch view model is ready before creating
+      if (sketchViewModelRef.current && sketchViewModelRef.current.layer) {
+        // Make sure the layer is in the map
+        if (
+          getView().map &&
+          !getView().map.findLayerById(sketchViewModelRef.current.layer.id)
+        ) {
+          getView().map.add(sketchViewModelRef.current.layer);
+        }
+
+        // For circle tool, ensure the radius is properly set
+        if (tool === 'circle') {
+          setPendingRadius(radiusRef.current);
+        }
+
+        // Create the drawing mode immediately if the view is ready
+        if (getView().ready) {
+          try {
+            sketchViewModelRef.current.create(
+              tool as
+                | 'circle'
+                | 'point'
+                | 'multipoint'
+                | 'polyline'
+                | 'polygon'
+                | 'mesh'
+                | 'rectangle',
+            );
+          } catch (error) {
+            // If immediate creation fails, wait for the view to be ready
+            reactiveUtils
+              .whenOnce(() => getView().ready)
+              .then(() => {
+                if (sketchViewModelRef.current) {
+                  sketchViewModelRef.current.create(
+                    tool as
+                      | 'circle'
+                      | 'point'
+                      | 'multipoint'
+                      | 'polyline'
+                      | 'polygon'
+                      | 'mesh'
+                      | 'rectangle',
+                  );
+                }
+              });
+          }
+        } else {
+          // Wait for the view to be ready before creating
+          reactiveUtils
+            .whenOnce(() => getView().ready)
+            .then(() => {
+              if (sketchViewModelRef.current) {
+                sketchViewModelRef.current.create(
+                  tool as
+                    | 'circle'
+                    | 'point'
+                    | 'multipoint'
+                    | 'polyline'
+                    | 'polygon'
+                    | 'mesh'
+                    | 'rectangle',
+                );
+              }
+            });
+        }
+      }
     }
   };
 
   useEffect(() => {
-    if (sketchViewModel) return;
+    if (sketchViewModelRef.current) return;
 
-    const skvm = new SketchViewModel({
-      view: getView(),
-      layer: new GraphicsLayer(),
-      updateOnGraphicClick: true,
-      polylineSymbol: getSymbol('polyline') as SimpleLineSymbol,
-      polygonSymbol: getSymbol('polygon') as SimpleFillSymbol,
-      pointSymbol: getSymbol('point') as SimpleMarkerSymbol,
-      activeFillSymbol: getSymbol('polygon') as SimpleFillSymbol,
+    // Wait for the view to be ready before creating the sketch view model
+    reactiveUtils
+      .whenOnce(() => getView().ready)
+      .then(() => {
+        if (sketchViewModelRef.current) return; // Check again in case it was created while waiting
 
-      defaultUpdateOptions: {
-        tool: 'reshape',
-        reshapeOptions: {
-          vertexOperation: 'move',
-          shapeOperation: 'move',
-        },
-        highlightOptions: {
-          enabled: false,
-        },
-        enableRotation: false,
-        enableScaling: true,
-      },
-    });
+        // Also wait for the map to be available
+        reactiveUtils
+          .whenOnce(() => getView().map)
+          .then(() => {
+            if (sketchViewModelRef.current) return; // Check again in case it was created while waiting
 
-    setSketchViewModel(skvm);
-  }, [sketchViewModel]);
+            const skvm = new SketchViewModel({
+              view: getView(),
+              layer: new GraphicsLayer({ id: 'easa-sora-sketch-layer' }),
+              updateOnGraphicClick: true,
+              polylineSymbol: getSymbol('polyline') as SimpleLineSymbol,
+              polygonSymbol: getSymbol('polygon') as SimpleFillSymbol,
+              pointSymbol: getSymbol('point') as SimpleMarkerSymbol,
+              activeFillSymbol: getSymbol('polygon') as SimpleFillSymbol,
+
+              defaultUpdateOptions: {
+                tool: 'reshape',
+                reshapeOptions: {
+                  vertexOperation: 'move',
+                  shapeOperation: 'move',
+                },
+                highlightOptions: {
+                  enabled: false,
+                },
+                enableRotation: false,
+                enableScaling: true,
+              },
+            });
+
+            sketchViewModelRef.current = skvm;
+
+            // Add the sketch view model's layer to the map
+            if (skvm.layer && getView().map) {
+              getView().map.add(skvm.layer);
+            }
+          });
+      });
+    // setSketchViewModel(skvm);
+  }, []);
 
   const fileUploadModal = useCallback(() => {
     return (
@@ -399,7 +673,32 @@ export const Toolbar = (props: Props) => {
           setSelectedTool(getToolFromGeometry(g.geometry));
           setAutoZoomToFlightPath(true);
           setGraphic(g);
-          sketchViewModel?.update(g);
+          if (sketchViewModelRef.current && sketchViewModelRef.current.layer) {
+            // Update immediately if the view is ready
+            if (getView().ready) {
+              try {
+                sketchViewModelRef.current.update(g);
+              } catch (error) {
+                // If immediate update fails, wait for the view to be ready
+                reactiveUtils
+                  .whenOnce(() => getView().ready)
+                  .then(() => {
+                    if (sketchViewModelRef.current) {
+                      sketchViewModelRef.current.update(g);
+                    }
+                  });
+              }
+            } else {
+              // Wait for the view to be ready before updating
+              reactiveUtils
+                .whenOnce(() => getView().ready)
+                .then(() => {
+                  if (sketchViewModelRef.current) {
+                    sketchViewModelRef.current.update(g);
+                  }
+                });
+            }
+          }
         }}
         onClose={() => setUploadFileModalVisible(false)}
       />
@@ -408,7 +707,7 @@ export const Toolbar = (props: Props) => {
     setGraphic,
     setAutoZoomToFlightPath,
     setUploadFileModalVisible,
-    sketchViewModel,
+    sketchViewModelRef,
   ]);
 
   const downloadFileModal = useCallback(() => {
@@ -541,8 +840,44 @@ export const Toolbar = (props: Props) => {
               label='Clear'
               onClick={() => {
                 handleClear();
-                if (selectedTool) {
-                  sketchViewModel?.create(selectedTool as any);
+                if (
+                  selectedTool &&
+                  sketchViewModelRef.current &&
+                  sketchViewModelRef.current.layer
+                ) {
+                  // For circle tool, ensure the radius is properly set
+                  if (selectedTool === 'circle') {
+                    setPendingRadius(radiusRef.current);
+                  }
+
+                  // Create the drawing mode immediately if the view is ready
+                  if (getView().ready) {
+                    try {
+                      sketchViewModelRef.current.create(selectedTool as any);
+                    } catch (error) {
+                      // If immediate creation fails, wait for the view to be ready
+                      reactiveUtils
+                        .whenOnce(() => getView().ready)
+                        .then(() => {
+                          if (sketchViewModelRef.current) {
+                            sketchViewModelRef.current.create(
+                              selectedTool as any,
+                            );
+                          }
+                        });
+                    }
+                  } else {
+                    // Wait for the view to be ready before creating
+                    reactiveUtils
+                      .whenOnce(() => getView().ready)
+                      .then(() => {
+                        if (sketchViewModelRef.current) {
+                          sketchViewModelRef.current.create(
+                            selectedTool as any,
+                          );
+                        }
+                      });
+                  }
                 }
               }}
               compact
@@ -561,6 +896,46 @@ export const Toolbar = (props: Props) => {
       </Card>
       {fileUploadModal}
       {downloadFileModal}
+      {selectedTool === 'circle' && (
+        <div
+          style={{
+            position: 'absolute',
+            top: '4rem',
+            right: '1.25rem',
+            maxWidth: '50%',
+            zIndex: 1000,
+            backgroundColor: 'white',
+            padding: '0.5rem',
+            borderRadius: '0.5rem',
+            border: `1px solid ${theme.base.palette['brand-primary']}`,
+            minWidth: '14rem',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '0.5rem',
+          }}
+        >
+          <Input
+            type='number'
+            label={
+              isLiveUpdating
+                ? `Radius (m) - Live (Current: ${radiusRef.current}m)`
+                : 'Radius (m)'
+            }
+            value={`${pendingRadius}`}
+            min={10}
+            max={10000}
+            onChange={(e: any) => setPendingRadius(Number(e.target.value))}
+          />
+          <Button
+            variant='primary'
+            onClick={applyRadiusChange}
+            compact
+            disabled={pendingRadius === radiusRef.current}
+          >
+            OK
+          </Button>
+        </div>
+      )}
     </>
   );
 };
