@@ -171,6 +171,7 @@ const useUpdatePegaProps = (
             ImpactedLandUseAdjacentArea: iLUAA
               ? iLUAA.map((landuse) => landuse.pyLabel)
               : null,
+            // TODO: uncomment this when we have a way to send the impacted land use as a json object
             // ImpactedLandUse: iLU ? JSON.stringify(iLU) : null,
             // ImpactedLandUseAdjacentArea: iLUAA ? JSON.stringify(iLUAA) : null,
           },

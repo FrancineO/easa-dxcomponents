@@ -246,7 +246,7 @@ export const Toolbar = (props: Props) => {
         setGraphic(event.graphic);
       }
     },
-    [getBufferLayer, sketchViewModelRef, pendingRadius],
+    [getBufferLayer, sketchViewModelRef],
   );
 
   const onUpdate = useCallback(
