@@ -1,4 +1,11 @@
-import { Card, CardContent, Text, Alert, Icon } from '@pega/cosmos-react-core';
+import {
+  Card,
+  CardContent,
+  Text,
+  Alert,
+  Icon,
+  Button,
+} from '@pega/cosmos-react-core';
 import {
   landusePopDensityLookup,
   landUseLabels,
@@ -6,9 +13,15 @@ import {
 } from '../renderers';
 import TooltipElement from '../components/tooltip-element';
 import * as Information from '@pega/cosmos-react-core/lib/components/Icon/icons/information.icon';
+import * as CaretDown from '@pega/cosmos-react-core/lib/components/Icon/icons/caret-down.icon';
+import * as CaretUp from '@pega/cosmos-react-core/lib/components/Icon/icons/caret-up.icon';
 import { registerIcon } from '@pega/cosmos-react-core';
+import { useState } from 'react';
+import getLanduseIcon from './landuse-icons';
 
 registerIcon(Information);
+registerIcon(CaretDown);
+registerIcon(CaretUp);
 
 const infoText = [
   'The  static population density map is based on census data.',
@@ -22,6 +35,20 @@ const LandusePopDensityLegend = ({
 }: {
   intersectingLanduseClasses: number[];
 }) => {
+  // State to track which groups are expanded
+  const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
+
+  // Toggle expanded state for a group
+  const toggleGroup = (colorKey: string) => {
+    const newExpanded = new Set(expandedGroups);
+    if (newExpanded.has(colorKey)) {
+      newExpanded.delete(colorKey);
+    } else {
+      newExpanded.add(colorKey);
+    }
+    setExpandedGroups(newExpanded);
+  };
+
   // Group entries by color
   const groupedEntries = Object.entries(landusePopDensityLookup).reduce(
     (acc, [landuse, density]) => {
@@ -63,6 +90,8 @@ const LandusePopDensityLegend = ({
     );
   };
 
+  const isGroupExpanded = (colorKey: string) => expandedGroups.has(colorKey);
+
   return (
     <Card>
       <CardContent>
@@ -91,9 +120,6 @@ const LandusePopDensityLegend = ({
             flexDirection: 'column',
             gap: '0.5rem',
             marginTop: '0.5rem',
-            flexWrap: 'wrap',
-            maxHeight: '200px',
-            columnGap: '2rem',
           }}
         >
           {Object.entries(groupedEntries)
@@ -103,93 +129,209 @@ const LandusePopDensityLegend = ({
               const color2Sum = group2.color.reduce((a, b) => a + b, 0);
               return color1Sum - color2Sum;
             })
-            .map(([colorKey, group]) => (
-              <div
-                key={colorKey}
-                style={{
-                  display: 'flex',
-                  gap: '0.5rem',
-                  minWidth: '250px',
-                  alignItems: 'center',
-                }}
-              >
-                <TooltipElement
-                  tooltipContent={`The Flight Path Intersects with ${getIntersectingLanduse(
-                    group,
-                  )
-                    .map((l) => l.label)
-                    .join(', ')}`}
-                >
-                  <Alert
-                    style={{
-                      visibility:
-                        getIntersectingLanduse(group).length > 0
-                          ? 'visible'
-                          : 'hidden',
-                    }}
-                    variant='urgent'
-                  />
-                </TooltipElement>
-                <TooltipElement
-                  style={{
-                    display: 'flex',
-                    gap: '0.5rem',
-                    minWidth: '250px',
-                    alignItems: 'center',
-                  }}
-                  tooltipContent={group.landuses
-                    // filter duplicate labels
-                    .filter(
-                      (l, index, self) =>
-                        index === self.findIndex((t) => t.label === l.label),
-                    )
-                    .map((l) => l.label)
-                    .sort((a, b) => a.localeCompare(b))}
-                >
-                  <div
-                    style={{
-                      width: '1rem',
-                      height: '1rem',
-                      minWidth: '1rem',
-                      minHeight: '1rem',
-                      backgroundColor: `rgba(${group.color.join(',')})`,
-                      border: `1px solid rgba(${group.color.join(',')})`,
-                    }}
-                  />
+            .map(([colorKey, group]) => {
+              const isExpanded = isGroupExpanded(colorKey);
+              const intersectingLanduses = getIntersectingLanduse(group);
+
+              return (
+                <div key={colorKey}>
+                  {/* Group Header */}
                   <div
                     style={{
                       display: 'flex',
                       gap: '0.5rem',
-                      justifyContent: 'space-between',
-                      flexGrow: 1,
+                      minWidth: '250px',
+                      alignItems: 'center',
                     }}
                   >
-                    <Text
+                    <TooltipElement
+                      tooltipContent={`The Flight Path Intersects with ${intersectingLanduses
+                        .map((l) => l.label)
+                        .join(', ')}`}
+                    >
+                      <Alert
+                        style={{
+                          visibility:
+                            intersectingLanduses.length > 0
+                              ? 'visible'
+                              : 'hidden',
+                        }}
+                        variant='urgent'
+                      />
+                    </TooltipElement>
+
+                    {/* Expandable Button with Caret Icon */}
+                    <Button
+                      variant='text'
+                      compact
+                      onClick={() => toggleGroup(colorKey)}
                       style={{
-                        whiteSpace: 'nowrap',
-                        overflow: 'hidden',
-                        textOverflow: 'ellipsis',
-                        width: '15rem',
+                        padding: '0.25rem',
+                        minWidth: 'auto',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
                       }}
-                    >{`${group.landuses
-                      // filter duplicate labels
-                      .filter(
-                        (l, index, self) =>
-                          index === self.findIndex((t) => t.label === l.label),
-                      )
-                      .map((l) => l.label)
-                      .sort((a, b) => a.localeCompare(b))
-                      .join(' / ')}`}</Text>
-                    <Text
+                    >
+                      <Icon
+                        name={isExpanded ? 'caret-up' : 'caret-down'}
+                        role='img'
+                        aria-label={
+                          isExpanded ? 'collapse section' : 'expand section'
+                        }
+                        className='icon'
+                        style={{ fontSize: '0.875rem' }}
+                      />
+                    </Button>
+
+                    <TooltipElement
                       style={{
-                        width: '6rem',
-                        textAlign: 'right',
+                        display: 'flex',
+                        gap: '0.5rem',
+                        minWidth: '250px',
+                        alignItems: 'center',
                       }}
-                    >{`${group.maxDensity >= 1000 ? `${group.maxDensity / 1000}K` : group.maxDensity} per km²`}</Text>
+                      tooltipContent={group.landuses
+                        // filter duplicate labels
+                        .filter(
+                          (l, index, self) =>
+                            index ===
+                            self.findIndex((t) => t.label === l.label),
+                        )
+                        .map((l) => l.label)
+                        .sort((a, b) => a.localeCompare(b))}
+                    >
+                      <div
+                        style={{
+                          width: '1rem',
+                          height: '1rem',
+                          minWidth: '1rem',
+                          minHeight: '1rem',
+                          backgroundColor: `rgba(${group.color.join(',')})`,
+                          border: `1px solid rgba(${group.color.join(',')})`,
+                        }}
+                      />
+                      <div
+                        style={{
+                          display: 'flex',
+                          gap: '0.5rem',
+                          justifyContent: 'space-between',
+                          flexGrow: 1,
+                        }}
+                      >
+                        <Text
+                          style={{
+                            whiteSpace: 'nowrap',
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis',
+                            width: '15rem',
+                          }}
+                        >{`${group.landuses
+                          // filter duplicate labels
+                          .filter(
+                            (l, index, self) =>
+                              index ===
+                              self.findIndex((t) => t.label === l.label),
+                          )
+                          .map((l) => l.label)
+                          .sort((a, b) => a.localeCompare(b))
+                          .join(' / ')}`}</Text>
+                        <Text
+                          style={{
+                            width: '6rem',
+                            textAlign: 'right',
+                          }}
+                        >{`${group.maxDensity >= 1000 ? `${group.maxDensity / 1000}K` : group.maxDensity} per km²`}</Text>
+                      </div>
+                    </TooltipElement>
                   </div>
-                </TooltipElement>
-              </div>
-            ))}
+
+                  {/* Expanded Individual Landuse Classes */}
+                  {isExpanded && (
+                    <div
+                      style={{
+                        marginLeft: '2rem',
+                        marginTop: '0.5rem',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        gap: '0.25rem',
+                      }}
+                    >
+                      {group.landuses
+                        .filter(
+                          (l, index, self) =>
+                            index ===
+                            self.findIndex((t) => t.label === l.label),
+                        )
+                        .sort((a, b) => a.label.localeCompare(b.label))
+                        .map((landuse) => {
+                          const isIntersecting =
+                            intersectingLanduseClasses?.includes(
+                              landuse.landuse,
+                            );
+
+                          return (
+                            <div
+                              key={landuse.landuse}
+                              style={{
+                                display: 'flex',
+                                gap: '0.5rem',
+                                alignItems: 'center',
+                                padding: '0.25rem 0',
+                              }}
+                            >
+                              {/* Alert for intersecting individual landuse */}
+                              <Alert
+                                style={{
+                                  visibility: isIntersecting
+                                    ? 'visible'
+                                    : 'hidden',
+                                }}
+                                variant='urgent'
+                              />
+
+                              {/* Individual landuse info */}
+                              <div
+                                style={{
+                                  display: 'flex',
+                                  gap: '0.5rem',
+                                  flexGrow: 1,
+                                  alignItems: 'center',
+                                }}
+                              >
+                                {/* Landuse Icon */}
+                                <div
+                                  style={{
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    minWidth: '20px',
+                                  }}
+                                >
+                                  {getLanduseIcon(landuse.label)}
+                                </div>
+
+                                <Text
+                                  style={{
+                                    fontSize: '0.875rem',
+                                    color: isIntersecting
+                                      ? '#d32f2f'
+                                      : 'inherit',
+                                    fontWeight: isIntersecting
+                                      ? '600'
+                                      : 'normal',
+                                  }}
+                                >
+                                  {landuse.label}
+                                </Text>
+                              </div>
+                            </div>
+                          );
+                        })}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
         </div>
       </CardContent>
     </Card>
