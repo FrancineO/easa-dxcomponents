@@ -4,6 +4,8 @@ export type ImpactedLandUse = {
   pyLabel: string;
   Code: string;
   PopulationDensity: number;
+  OverridePopulationDensity: number | null;
+  OverrideReason: string | null;
   PeopleOutdoor: boolean;
   AssemblyOfPeople: boolean;
 };

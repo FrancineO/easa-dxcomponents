@@ -238,6 +238,8 @@ export const EasaExtensionsSORA = (props: ComponentProps) => {
             populationDensity?.maxPopDensityOperationalGroundRisk ?? 0,
           PeopleOutdoor: landusePeopleOutdoor.includes(landuse),
           AssemblyOfPeople: landusePeopleOutdoor.includes(landuse),
+          OverridePopulationDensity: null,
+          OverrideReason: null,
         };
       })
       .filter((value, index, self) => self.indexOf(value) === index) ?? null,
@@ -250,6 +252,8 @@ export const EasaExtensionsSORA = (props: ComponentProps) => {
             populationDensity?.maxPopDensityOperationalGroundRisk ?? 0,
           PeopleOutdoor: landusePeopleOutdoor.includes(landuse),
           AssemblyOfPeople: landusePeopleOutdoor.includes(landuse),
+          OverridePopulationDensity: null,
+          OverrideReason: null,
         };
       })
       .filter((value, index, self) => self.indexOf(value) === index) ?? null,
