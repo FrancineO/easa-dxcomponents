@@ -1,7 +1,11 @@
 import { useCallback, useState, useRef } from 'react';
 import { getView } from '../map/view';
 import * as geometryEngine from '@arcgis/core/geometry/geometryEngine';
-import type { FlightVolume, PopulationDensity } from '../types';
+import type {
+  FlightVolume,
+  PopulationDensity,
+  ImpactedLandUse,
+} from '../types';
 import { landusePopDensityLookup } from '../renderers';
 import _ from 'lodash';
 
@@ -23,8 +27,8 @@ const getPixelSize = () => {
     x: getView().resolution,
     y: getView().resolution,
     spatialReference: {
-      wkid: getView().spatialReference.wkid
-    }
+      wkid: getView().spatialReference.wkid,
+    },
   };
   // }
   // return {
@@ -36,8 +40,13 @@ const getPixelSize = () => {
   // };
 };
 
-export const useGetPopulationDensity = (flightVolume: FlightVolume | null, hFG: number) => {
-  const [populationDensity, setPopulationDensity] = useState<PopulationDensity | null>(null);
+export const useGetPopulationDensity = (
+  flightVolume: FlightVolume | null,
+  hFG: number,
+  correctedLandUse?: ImpactedLandUse[] | null,
+) => {
+  const [populationDensity, setPopulationDensity] =
+    useState<PopulationDensity | null>(null);
   const calculationInProgress = useRef(false);
   const flightVolumeRef = useRef(flightVolume);
 
@@ -47,14 +56,16 @@ export const useGetPopulationDensity = (flightVolume: FlightVolume | null, hFG: 
   const getMaxDensity = useCallback(
     async (geometry: __esri.Polygon, layer: __esri.ImageryLayer) => {
       if (hFG < 0) {
-        throw new Error('Cannot calculate population density with a negative height.');
+        throw new Error(
+          'Cannot calculate population density with a negative height.',
+        );
       }
 
       // const pixelSize = getPixelSize(hFG);
       const pixelSize = getPixelSize();
       const adjacentStats = await layer.computeStatisticsHistograms({
         geometry,
-        pixelSize
+        pixelSize,
       });
 
       if (adjacentStats.statistics[0]?.max) {
@@ -62,13 +73,15 @@ export const useGetPopulationDensity = (flightVolume: FlightVolume | null, hFG: 
       }
       return null;
     },
-    []
+    [],
   );
 
   const getAvgDensity = useCallback(
     async (geometry: __esri.Polygon, layer: __esri.ImageryLayer) => {
       if (hFG < 0) {
-        throw new Error('Cannot calculate population density with a negative height.');
+        throw new Error(
+          'Cannot calculate population density with a negative height.',
+        );
       }
 
       // const pixelSize = getPixelSize(hFG);
@@ -76,7 +89,7 @@ export const useGetPopulationDensity = (flightVolume: FlightVolume | null, hFG: 
 
       const opStats = await layer.computeStatisticsHistograms({
         geometry,
-        pixelSize
+        pixelSize,
       });
 
       if (opStats.statistics[0]?.avg) {
@@ -84,7 +97,7 @@ export const useGetPopulationDensity = (flightVolume: FlightVolume | null, hFG: 
       }
       return null;
     },
-    []
+    [],
   );
 
   const getOperationalAndGroundRiskGeometry = useCallback(() => {
@@ -93,38 +106,43 @@ export const useGetPopulationDensity = (flightVolume: FlightVolume | null, hFG: 
     return geometryEngine.union([
       currentFlightVolume?.flightGeography?.geometry as __esri.Polygon,
       currentFlightVolume?.contingencyVolume?.geometry as __esri.Polygon,
-      currentFlightVolume?.groundRiskVolume?.geometry as __esri.Polygon
+      currentFlightVolume?.groundRiskVolume?.geometry as __esri.Polygon,
     ]);
   }, []);
 
-  const getPopulationDensity = useCallback(async (layer: __esri.ImageryLayer) => {
-    // Use the ref instead of the params dependency
-    const currentFlightVolume = flightVolumeRef.current;
+  const getPopulationDensity = useCallback(
+    async (layer: __esri.ImageryLayer) => {
+      // Use the ref instead of the params dependency
+      const currentFlightVolume = flightVolumeRef.current;
 
-    const popDensity: PopulationDensity = {
-      maxPopDensityOperationalGroundRisk: null,
-      avgPopDensityAdjacentArea: null
-    };
+      const popDensity: PopulationDensity = {
+        maxPopDensityOperationalGroundRisk: null,
+        avgPopDensityAdjacentArea: null,
+      };
 
-    // Get the max density for the adjacent area
-    const opAndGr = getOperationalAndGroundRiskGeometry();
-    const maxDensity = await getMaxDensity(opAndGr as __esri.Polygon, layer);
-    popDensity.maxPopDensityOperationalGroundRisk = maxDensity;
+      // Get the max density for the adjacent area
+      const opAndGr = getOperationalAndGroundRiskGeometry();
+      const maxDensity = await getMaxDensity(opAndGr as __esri.Polygon, layer);
+      popDensity.maxPopDensityOperationalGroundRisk = maxDensity;
 
-    // Get the average density for the adjacent area
-    const avgDensity = await getAvgDensity(
-      currentFlightVolume?.adjacentArea?.geometry as __esri.Polygon,
-      layer
-    );
-    popDensity.avgPopDensityAdjacentArea = avgDensity;
+      // Get the average density for the adjacent area
+      const avgDensity = await getAvgDensity(
+        currentFlightVolume?.adjacentArea?.geometry as __esri.Polygon,
+        layer,
+      );
+      popDensity.avgPopDensityAdjacentArea = avgDensity;
 
-    return popDensity;
-  }, []);
+      return popDensity;
+    },
+    [],
+  );
 
   const getLanduseMaxPopDensityOperationalGroundrisk = useCallback(
     async (layer: __esri.ImageryLayer) => {
       if (hFG < 0) {
-        throw new Error('Cannot calculate population density with a negative height.');
+        throw new Error(
+          'Cannot calculate population density with a negative height.',
+        );
       }
 
       // get the max population density in the Operational Ground Risk area
@@ -133,7 +151,7 @@ export const useGetPopulationDensity = (flightVolume: FlightVolume | null, hFG: 
       const pixelSize = getPixelSize();
       const landuseHistograms = await layer.computeHistograms({
         geometry: opAndGr as __esri.Polygon,
-        pixelSize
+        pixelSize,
       });
       const intersectedLanduseClasses: number[] = [];
       const counts = landuseHistograms.histograms?.[0]?.counts;
@@ -144,9 +162,22 @@ export const useGetPopulationDensity = (flightVolume: FlightVolume | null, hFG: 
           }
         });
       }
-      return Math.max(...intersectedLanduseClasses.map(index => landusePopDensityLookup[index]));
+      // Use corrected values if available, otherwise use default lookup
+      const densities = intersectedLanduseClasses.map((index) => {
+        if (correctedLandUse) {
+          const corrected = correctedLandUse.find(
+            (lu) => lu.Code === index.toString(),
+          );
+          if (corrected && corrected.OverridePopulationDensity !== null) {
+            return corrected.OverridePopulationDensity;
+          }
+        }
+        return landusePopDensityLookup[index];
+      });
+
+      return Math.max(...densities);
     },
-    []
+    [correctedLandUse],
   );
 
   const calculatePopDensities = useCallback(async () => {
@@ -162,19 +193,28 @@ export const useGetPopulationDensity = (flightVolume: FlightVolume | null, hFG: 
       return;
     }
 
-    const { flightGeography, contingencyVolume, groundRiskVolume, adjacentArea } =
-      currentFlightVolume;
-    if (!flightGeography || !contingencyVolume || !groundRiskVolume || !adjacentArea) {
+    const {
+      flightGeography,
+      contingencyVolume,
+      groundRiskVolume,
+      adjacentArea,
+    } = currentFlightVolume;
+    if (
+      !flightGeography ||
+      !contingencyVolume ||
+      !groundRiskVolume ||
+      !adjacentArea
+    ) {
       setPopulationDensity(null);
       return;
     }
 
     const popDensityLayer = getView().map.layers.find(
-      layer => layer.id === 'PopulationDensity'
+      (layer) => layer.id === 'PopulationDensity',
     ) as __esri.ImageryLayer;
 
     const landuseLayer = getView().map.layers.find(
-      layer => layer.id === 'Landuse'
+      (layer) => layer.id === 'Landuse',
     ) as __esri.ImageryLayer;
 
     if (!popDensityLayer) return;
@@ -189,18 +229,19 @@ export const useGetPopulationDensity = (flightVolume: FlightVolume | null, hFG: 
 
       popDensity.maxPopDensityOperationalGroundRisk = Math.max(
         popDensity.maxPopDensityOperationalGroundRisk ?? 0,
-        maxPopDensityLanduseOperationalGroundRisk ?? 0
+        maxPopDensityLanduseOperationalGroundRisk ?? 0,
       );
 
       const avgPopDensityLanduseAdjacentArea = await getAvgDensity(
         adjacentArea.geometry as __esri.Polygon,
-        landuseLayer
+        landuseLayer,
       );
 
       // TODO: Is this correct? Can I just take an average of the two averages?
       if (avgPopDensityLanduseAdjacentArea !== 0) {
         const combined =
-          (popDensity.avgPopDensityAdjacentArea ?? 0) + (avgPopDensityLanduseAdjacentArea ?? 0);
+          (popDensity.avgPopDensityAdjacentArea ?? 0) +
+          (avgPopDensityLanduseAdjacentArea ?? 0);
 
         popDensity.avgPopDensityAdjacentArea =
           combined !== 0 ? _.round(combined / 2, combined < 1 ? 2 : 0) : 0;
@@ -209,7 +250,10 @@ export const useGetPopulationDensity = (flightVolume: FlightVolume | null, hFG: 
       setPopulationDensity(popDensity);
     } catch (error: any) {
       setPopulationDensity(null);
-      const message = error?.details?.messages?.join(' ') ?? error?.message ?? 'Unknown error';
+      const message =
+        error?.details?.messages?.join(' ') ??
+        error?.message ??
+        'Unknown error';
 
       throw new Error(`Error calculating population densities: \r ${message}`);
     } finally {
@@ -219,7 +263,7 @@ export const useGetPopulationDensity = (flightVolume: FlightVolume | null, hFG: 
 
   return {
     populationDensity,
-    calculatePopDensities
+    calculatePopDensities,
   };
 };
 

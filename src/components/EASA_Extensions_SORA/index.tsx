@@ -6,9 +6,11 @@ import {
   Text,
   useTheme,
   Progress,
+  Button,
+  useModalManager,
 } from '@pega/cosmos-react-core';
 import { merge } from 'lodash';
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import '../create-nonce';
 import { Toolbar } from './tools/toolbar/toolbar';
 import SearchTool from './tools/search-tool';
@@ -18,6 +20,7 @@ import {
   validateComponentProps,
   type ComponentProps,
   type MapState,
+  type ImpactedLandUse,
 } from './types';
 import useUpdatePegaProps from './hooks/useUpdatePegaProps';
 import useDebouncedEffect from './hooks/useDebouncedEffect';
@@ -30,6 +33,7 @@ import SoraMap from './map/sora-map';
 import useHighlightIntersectingLanduse from './hooks/useApplySpatialFilter';
 import LayerList from './tools/layer-list';
 import useGetIntersectingGeozones from './hooks/useGetIntersectingGeozones';
+import PopulationDensityCorrectionModal from './components/population-density-correction-modal';
 
 import Legends from './legends/legends';
 import { getFlightGeography } from './tools/toolbar/draw-utils';
@@ -93,6 +97,13 @@ export const EasaExtensionsSORA = (props: ComponentProps) => {
   const [propsValid, setPropsValid] = useState(false);
   const [geozonesRenderer, setGeozonesRenderer] =
     useState<__esri.UniqueValueRenderer | null>(null);
+  const [showPopulationDensityCorrection, setShowPopulationDensityCorrection] =
+    useState(false);
+  const [correctedLandUse, setCorrectedLandUse] = useState<
+    ImpactedLandUse[] | null
+  >(null);
+
+  const { create } = useModalManager();
 
   const pConnect = getPConnect();
   let PCore: any;
@@ -167,6 +178,7 @@ export const EasaExtensionsSORA = (props: ComponentProps) => {
         }
       : null,
     hFG,
+    correctedLandUse,
   );
 
   // Set up the hook to get the intersecting landuses
@@ -239,20 +251,22 @@ export const EasaExtensionsSORA = (props: ComponentProps) => {
       })
       .filter((gz) => gz !== null)
       .filter((value, index, self) => self.indexOf(value) === index) ?? null,
-    intersectingLanduseClasses
-      ?.map((landuse) => {
-        return {
-          pyLabel: landUseLabels[landuse],
-          Code: `${landuse}`,
-          PopulationDensity:
-            populationDensity?.maxPopDensityOperationalGroundRisk ?? 0,
-          PeopleOutdoor: landusePeopleOutdoor.includes(landuse),
-          AssemblyOfPeople: landusePeopleOutdoor.includes(landuse),
-          OverridePopulationDensity: null,
-          OverrideReason: null,
-        };
-      })
-      .filter((value, index, self) => self.indexOf(value) === index) ?? null,
+    (correctedLandUse ||
+      intersectingLanduseClasses
+        ?.map((landuse) => {
+          return {
+            pyLabel: landUseLabels[landuse],
+            Code: `${landuse}`,
+            PopulationDensity:
+              populationDensity?.maxPopDensityOperationalGroundRisk ?? 0,
+            PeopleOutdoor: landusePeopleOutdoor.includes(landuse),
+            AssemblyOfPeople: landusePeopleOutdoor.includes(landuse),
+            OverridePopulationDensity: null,
+            OverrideReason: null,
+          };
+        })
+        .filter((value, index, self) => self.indexOf(value) === index)) ??
+      null,
     intersectingAdjacentAreaLanduseClasses
       ?.map((landuse) => {
         return {
@@ -348,6 +362,7 @@ export const EasaExtensionsSORA = (props: ComponentProps) => {
     intersectingGeozones,
     intersectingLanduseClasses,
     intersectingAdjacentAreaLanduseClasses,
+    correctedLandUse,
   ]);
 
   const maxPopDensity = useMemo(() => {
@@ -368,6 +383,46 @@ export const EasaExtensionsSORA = (props: ComponentProps) => {
     if (!groundRisk || !flightGeography) return null;
     return groundRisk;
   }, [groundRisk, flightGeography]);
+
+  const populationDensityCorrectionModal = useCallback(() => {
+    return (
+      <PopulationDensityCorrectionModal
+        impactedLandUse={
+          intersectingLanduseClasses
+            ?.map((landuse) => {
+              return {
+                pyLabel: landUseLabels[landuse],
+                Code: `${landuse}`,
+                PopulationDensity:
+                  populationDensity?.maxPopDensityOperationalGroundRisk ?? 0,
+                PeopleOutdoor: landusePeopleOutdoor.includes(landuse),
+                AssemblyOfPeople: landusePeopleOutdoor.includes(landuse),
+                OverridePopulationDensity: null,
+                OverrideReason: null,
+              };
+            })
+            .filter((value, index, self) => self.indexOf(value) === index) ??
+          null
+        }
+        onClose={() => setShowPopulationDensityCorrection(false)}
+        onSave={(correctedLandUseData: ImpactedLandUse[]) => {
+          setCorrectedLandUse(correctedLandUseData);
+          setShowPopulationDensityCorrection(false);
+        }}
+      />
+    );
+  }, [intersectingLanduseClasses, populationDensity]);
+
+  // Create modal when button is clicked
+  useEffect(() => {
+    if (showPopulationDensityCorrection) {
+      create(populationDensityCorrectionModal);
+    }
+  }, [
+    showPopulationDensityCorrection,
+    create,
+    populationDensityCorrectionModal,
+  ]);
 
   return (
     <Card style={{ height: '100%' }}>
@@ -505,15 +560,42 @@ export const EasaExtensionsSORA = (props: ComponentProps) => {
             />
           </div>
         )}
-        <SoraMap
-          style={{ height, position: 'relative' }}
-          mapState={mapState}
-          mapProps={props}
-          onLayersAdded={() => setLayersAdded(true)}
-          onGeozonesLoaded={(renderer: __esri.UniqueValueRenderer) =>
-            setGeozonesRenderer(renderer)
-          }
-        />
+        <div style={{ position: 'relative', height }}>
+          <SoraMap
+            style={{ height, position: 'relative' }}
+            mapState={mapState}
+            mapProps={props}
+            onLayersAdded={() => setLayersAdded(true)}
+            onGeozonesLoaded={(renderer: __esri.UniqueValueRenderer) =>
+              setGeozonesRenderer(renderer)
+            }
+          />
+
+          {/* Population Density Correction Button - positioned over right corner of map */}
+          {intersectingLanduseClasses &&
+            intersectingLanduseClasses.length > 0 && (
+              <div
+                style={{
+                  position: 'absolute',
+                  top: '10px',
+                  right: '10px',
+                  zIndex: 1000,
+                }}
+              >
+                <Button
+                  variant='primary'
+                  onClick={() => setShowPopulationDensityCorrection(true)}
+                  disabled={!propsValid}
+                  style={{
+                    boxShadow: '0 2px 8px rgba(0, 0, 0, 0.15)',
+                    border: '1px solid #e0e0e0',
+                  }}
+                >
+                  Override Population Density
+                </Button>
+              </div>
+            )}
+        </div>
         <div
           style={{
             display: 'flex',
