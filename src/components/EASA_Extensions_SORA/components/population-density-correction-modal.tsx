@@ -27,20 +27,46 @@ const populationDensityOptions = [
 ];
 
 // Function to get population density options including the current value if not in predefined list
-const getPopulationDensityOptions = (currentValue: number) => {
-  const currentExists = populationDensityOptions.some(
-    (option) => option.value === currentValue,
-  );
+const getPopulationDensityOptions = (
+  currentValue: number,
+  overrideValue?: number | null,
+) => {
+  let options = [...populationDensityOptions];
 
-  if (currentExists) {
-    return populationDensityOptions;
+  // Add override value if it exists and is different from current value
+  if (
+    overrideValue !== null &&
+    overrideValue !== undefined &&
+    overrideValue !== currentValue
+  ) {
+    const overrideExists = options.some(
+      (option) => option.value === overrideValue,
+    );
+    if (!overrideExists) {
+      options = [
+        ...options,
+        {
+          value: overrideValue,
+          label: `${overrideValue.toLocaleString()} ppl/km²`,
+        },
+      ];
+    }
   }
 
-  // Add current value to options and sort them
-  return [
-    ...populationDensityOptions,
-    { value: currentValue, label: `${currentValue.toLocaleString()} ppl/km²` },
-  ].sort((a, b) => a.value - b.value);
+  // Add current value if it's not already in the list
+  const currentExists = options.some((option) => option.value === currentValue);
+  if (!currentExists) {
+    options = [
+      ...options,
+      {
+        value: currentValue,
+        label: `${currentValue.toLocaleString()} ppl/km²`,
+      },
+    ];
+  }
+
+  // Sort options by value
+  return options.sort((a, b) => a.value - b.value);
 };
 
 export const PopulationDensityCorrectionModal = (props: Props) => {
@@ -176,9 +202,8 @@ export const PopulationDensityCorrectionModal = (props: Props) => {
         >
           {correctedLandUse.map((landUse) => {
             const hasOverride =
-              landUse.OverridePopulationDensity !== null &&
-              landUse.OverridePopulationDensity !==
-                getOriginalPopulationDensity(landUse.Code);
+              landUse.OverridePopulationDensity !== null ||
+              landUse.OverrideReason !== null;
 
             const isIncomplete =
               hasOverride &&
@@ -194,8 +219,8 @@ export const PopulationDensityCorrectionModal = (props: Props) => {
               }
               if (hasOverride) {
                 return {
-                  border: '2px solid #1976d2',
-                  backgroundColor: '#e3f2fd',
+                  border: '2px solid #f57c00',
+                  backgroundColor: '#fff3e0',
                 };
               }
               return {
@@ -250,6 +275,21 @@ export const PopulationDensityCorrectionModal = (props: Props) => {
                       <Text variant='h4' style={{ fontWeight: 'bold' }}>
                         {landUse.pyLabel}
                       </Text>
+                      {hasOverride && (
+                        <div
+                          style={{
+                            backgroundColor: '#f57c00',
+                            color: 'white',
+                            padding: '2px 8px',
+                            borderRadius: '12px',
+                            fontSize: '12px',
+                            fontWeight: 'bold',
+                            marginLeft: '8px',
+                          }}
+                        >
+                          OVERRIDE
+                        </div>
+                      )}
                     </div>
                     <Text
                       variant='secondary'
@@ -278,6 +318,7 @@ export const PopulationDensityCorrectionModal = (props: Props) => {
                     >
                       {getPopulationDensityOptions(
                         getOriginalPopulationDensity(landUse.Code),
+                        landUse.OverridePopulationDensity,
                       ).map((option) => (
                         <option key={option.value} value={option.value}>
                           {option.label}
