@@ -162,112 +162,156 @@ export const PopulationDensityCorrectionModal = (props: Props) => {
           gap: '16px',
           minWidth: '500px',
           padding: '16px',
+          maxHeight: '70vh',
         }}
       >
-        {correctedLandUse.map((landUse) => (
-          <div
-            key={landUse.Code}
-            style={{
-              display: 'flex',
-              flexDirection: 'column',
-              gap: '16px',
-              marginBottom: '16px',
-              padding: '16px',
-              border: '1px solid #e0e0e0',
-              borderRadius: '8px',
-              backgroundColor: '#f9f9f9',
-            }}
-          >
-            {/* Top row: Land use info on left, corrected dropdown on right */}
-            <div
-              style={{
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'flex-start',
-                width: '100%',
-              }}
-            >
-              <div style={{ flex: 1 }}>
+        {/* Scrollable content area */}
+        <div
+          style={{
+            flex: 1,
+            overflowY: 'auto',
+            paddingRight: '8px',
+            marginRight: '-8px',
+          }}
+        >
+          {correctedLandUse.map((landUse) => {
+            const hasOverride =
+              landUse.OverridePopulationDensity !== null &&
+              landUse.OverridePopulationDensity !==
+                getOriginalPopulationDensity(landUse.Code);
+
+            const isIncomplete =
+              hasOverride &&
+              (!landUse.OverrideReason || landUse.OverrideReason.trim() === '');
+
+            // Determine styling based on state
+            const getSectionStyle = () => {
+              if (isIncomplete) {
+                return {
+                  border: '2px solid #d32f2f',
+                  backgroundColor: '#ffebee',
+                };
+              }
+              if (hasOverride) {
+                return {
+                  border: '2px solid #1976d2',
+                  backgroundColor: '#e3f2fd',
+                };
+              }
+              return {
+                border: '1px solid #e0e0e0',
+                backgroundColor: '#f9f9f9',
+              };
+            };
+
+            const sectionStyle = getSectionStyle();
+
+            return (
+              <div
+                key={landUse.Code}
+                style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '16px',
+                  marginBottom: '16px',
+                  padding: '16px',
+                  borderRadius: '8px',
+                  transition: 'all 0.2s ease-in-out',
+                  ...sectionStyle,
+                }}
+              >
+                {/* Top row: Land use info on left, corrected dropdown on right */}
                 <div
                   style={{
                     display: 'flex',
-                    alignItems: 'center',
-                    gap: '8px',
-                    marginBottom: '8px',
+                    justifyContent: 'space-between',
+                    alignItems: 'flex-start',
+                    width: '100%',
                   }}
                 >
-                  <div
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      minWidth: '20px',
-                    }}
-                  >
-                    {getLanduseIcon(landUse.pyLabel)}
+                  <div style={{ flex: 1 }}>
+                    <div
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '8px',
+                        marginBottom: '8px',
+                      }}
+                    >
+                      <div
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          minWidth: '20px',
+                        }}
+                      >
+                        {getLanduseIcon(landUse.pyLabel)}
+                      </div>
+                      <Text variant='h4' style={{ fontWeight: 'bold' }}>
+                        {landUse.pyLabel}
+                      </Text>
+                    </div>
+                    <Text
+                      variant='secondary'
+                      style={{
+                        color: '#666',
+                        fontSize: '14px',
+                      }}
+                    >
+                      {getOriginalPopulationDensity(landUse.Code)} ppl/km²
+                    </Text>
                   </div>
-                  <Text variant='h4' style={{ fontWeight: 'bold' }}>
-                    {landUse.pyLabel}
-                  </Text>
+
+                  <div style={{ minWidth: '200px' }}>
+                    <Select
+                      label='Corrected Population Density'
+                      value={
+                        landUse.OverridePopulationDensity?.toString() ||
+                        getOriginalPopulationDensity(landUse.Code).toString()
+                      }
+                      onChange={(e) =>
+                        handlePopulationDensityChange(
+                          landUse.Code,
+                          parseInt(e.target.value, 10),
+                        )
+                      }
+                    >
+                      {getPopulationDensityOptions(
+                        getOriginalPopulationDensity(landUse.Code),
+                      ).map((option) => (
+                        <option key={option.value} value={option.value}>
+                          {option.label}
+                        </option>
+                      ))}
+                    </Select>
+                  </div>
                 </div>
-                <Text
-                  variant='secondary'
-                  style={{
-                    color: '#666',
-                    fontSize: '14px',
-                  }}
-                >
-                  {getOriginalPopulationDensity(landUse.Code)} ppl/km²
-                </Text>
-              </div>
 
-              <div style={{ minWidth: '200px' }}>
-                <Select
-                  label='Corrected Population Density'
-                  value={
-                    landUse.OverridePopulationDensity?.toString() ||
-                    getOriginalPopulationDensity(landUse.Code).toString()
-                  }
-                  onChange={(e) =>
-                    handlePopulationDensityChange(
-                      landUse.Code,
-                      parseInt(e.target.value, 10),
-                    )
-                  }
-                >
-                  {getPopulationDensityOptions(
-                    getOriginalPopulationDensity(landUse.Code),
-                  ).map((option) => (
-                    <option key={option.value} value={option.value}>
-                      {option.label}
-                    </option>
-                  ))}
-                </Select>
+                {/* Bottom row: Justification takes full width */}
+                <div style={{ width: '100%' }}>
+                  <TextArea
+                    label='Justification *'
+                    placeholder='Please provide a reason for this correction...'
+                    value={landUse.OverrideReason || ''}
+                    onChange={(e) =>
+                      handleJustificationChange(landUse.Code, e.target.value)
+                    }
+                    rows={3}
+                  />
+                </div>
               </div>
-            </div>
-
-            {/* Bottom row: Justification takes full width */}
-            <div style={{ width: '100%' }}>
-              <TextArea
-                label='Justification *'
-                placeholder='Please provide a reason for this correction...'
-                value={landUse.OverrideReason || ''}
-                onChange={(e) =>
-                  handleJustificationChange(landUse.Code, e.target.value)
-                }
-                rows={3}
-              />
-            </div>
-          </div>
-        ))}
+            );
+          })}
+        </div>
 
         <div
           style={{
             display: 'flex',
             gap: '8px',
             justifyContent: 'flex-end',
-            marginTop: '16px',
             paddingTop: '16px',
             borderTop: '1px solid #e0e0e0',
+            flexShrink: 0,
           }}
         >
           <Button variant='secondary' onClick={handleClose}>
