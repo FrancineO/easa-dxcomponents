@@ -21,6 +21,7 @@ const useGetIntersectingLanduses = (flightVolume: FlightVolume | null) => {
       !flightVolume.adjacentArea
     ) {
       setIntersectingLanduseClasses([]);
+      setIntersectingAdjacentAreaLanduseClasses([]);
       return;
     }
 

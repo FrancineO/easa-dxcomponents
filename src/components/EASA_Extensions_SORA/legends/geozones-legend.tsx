@@ -1,10 +1,11 @@
 import { Alert, Card, CardContent, Text } from '@pega/cosmos-react-core';
 import TooltipElement from '../components/tooltip-element';
 import * as cimSymbolUtils from '@arcgis/core/symbols/support/cimSymbolUtils.js';
+import geozonesDefintions from '../geozone-definitions';
 
 const GeozonesLegend = ({
   intersectingGeozones,
-  geozonesRenderer
+  geozonesRenderer,
 }: {
   intersectingGeozones: __esri.Graphic[];
   geozonesRenderer: __esri.UniqueValueRenderer | null;
@@ -28,13 +29,17 @@ const GeozonesLegend = ({
                 display: 'flex',
                 flexDirection: 'column',
                 gap: '0.5rem',
-                marginTop: '0.5rem'
+                marginTop: '0.5rem',
               }}
             >
-              {geozonesRenderer.uniqueValueInfos?.map(zone => (
+              {geozonesRenderer.uniqueValueInfos?.map((zone) => (
                 <div
                   key={zone.value}
-                  style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.5rem',
+                  }}
                 >
                   <TooltipElement
                     tooltipContent={`The Flight Path Intersects with ${zone.label} GeoZone`}
@@ -42,10 +47,12 @@ const GeozonesLegend = ({
                     <Alert
                       style={{
                         visibility: intersectingGeozones.some(
-                          gz => gz.attributes[geozonesRenderer?.field] === zone.value
+                          (gz) =>
+                            gz.attributes[geozonesRenderer?.field] ===
+                            zone.value,
                         )
                           ? 'visible'
-                          : 'hidden'
+                          : 'hidden',
                       }}
                       variant='urgent'
                     />
@@ -57,10 +64,13 @@ const GeozonesLegend = ({
                       minWidth: '1rem',
                       minHeight: '1rem',
                       backgroundColor: `rgba(${getRgba(zone.symbol as __esri.CIMSymbol)})`,
-                      border: `1px solid rgba(${getRgba(zone.symbol as __esri.CIMSymbol)})`
+                      border: `1px solid rgba(${getRgba(zone.symbol as __esri.CIMSymbol)})`,
                     }}
                   />
-                  <Text>{zone.label}</Text>
+                  <Text>
+                    {geozonesDefintions.find((g) => g.value === zone.value)
+                      ?.label ?? zone.label}
+                  </Text>
                 </div>
               ))}
             </div>

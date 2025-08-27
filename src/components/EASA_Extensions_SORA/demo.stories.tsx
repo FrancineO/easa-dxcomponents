@@ -203,6 +203,7 @@ export const Default: Story = {
     basemapPortalItemIds:
       '979c6cc89af9449cbeb5342a439c6a76,86265e5a4bbb4187a59719cf134e0018,67372ff42cd145319639a99152b15bc3',
     landusePortalItemId: '87919279e9394adb9ba4f3f8009e1360',
-    geozonePortalItemId: 'a0bdecf836b843a9ad3d2eadcb590dc6',
+    geozonePortalItemIds:
+      '961089b2b5934678966938195a745029,eebdb68dbdb44859925d868399cecdf3,2375bb13147443fe9e42c629ff87d821',
   },
 };

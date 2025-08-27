@@ -13,17 +13,21 @@ const LayerList = (props: Props) => {
   const { style, mapState } = props;
 
   const hasPopDensity =
-    mapState?.layerVisibility && 'PopulationDensity' in mapState.layerVisibility;
-  const hasGeozones = mapState?.layerVisibility && 'Geozones' in mapState.layerVisibility;
+    mapState?.layerVisibility &&
+    'PopulationDensity' in mapState.layerVisibility;
+  const hasGeozones =
+    mapState?.layerVisibility && 'Geozones' in mapState.layerVisibility;
 
   const popDensityVisible = hasPopDensity
     ? (mapState?.layerVisibility?.PopulationDensity ?? true)
     : true;
-  const geozonesVisible = hasGeozones ? (mapState?.layerVisibility?.Geozones ?? true) : true;
+  const geozonesVisible = hasGeozones
+    ? (mapState?.layerVisibility?.Geozones ?? true)
+    : true;
 
   const [visibilityState, setVisibilityState] = useState({
     [LayerGroupType.populationDensity]: popDensityVisible,
-    [LayerGroupType.geozones]: geozonesVisible
+    [LayerGroupType.geozones]: geozonesVisible,
   });
 
   // Initialize layer visibility
@@ -35,8 +39,8 @@ const LayerList = (props: Props) => {
       .then(() => {
         if (!mounted) return;
 
-        layerGroups.forEach(layerGroup => {
-          layerGroup.ids.forEach(id => {
+        layerGroups.forEach((layerGroup) => {
+          layerGroup.ids.forEach((id) => {
             const layer = getView().map?.findLayerById(id);
             if (layer) {
               layer.visible = visibilityState[layerGroup.type];
@@ -51,16 +55,26 @@ const LayerList = (props: Props) => {
   }, [visibilityState]);
 
   const toggleLayer = (layerGroupType: LayerGroupType) => {
-    const layerGroup = layerGroups.find(lg => lg.type === layerGroupType);
+    const layerGroup = layerGroups.find((lg) => lg.type === layerGroupType);
     if (!layerGroup) return;
 
     const newVisibility = !visibilityState[layerGroupType];
-    setVisibilityState(prev => ({ ...prev, [layerGroupType]: newVisibility }));
+    setVisibilityState((prev) => ({
+      ...prev,
+      [layerGroupType]: newVisibility,
+    }));
 
-    layerGroup.ids.forEach(id => {
+    layerGroup.ids.forEach((id) => {
       const layer = getView().map?.findLayerById(id);
       if (layer) {
         layer.visible = newVisibility;
+      } else {
+        getView()
+          .map?.layers.toArray()
+          .filter((l) => l.id?.startsWith(id))
+          .forEach((l) => {
+            l.visible = newVisibility;
+          });
       }
     });
   };
@@ -69,7 +83,7 @@ const LayerList = (props: Props) => {
     <Card style={style}>
       <CardContent style={{ margin: '0.5rem' }}>
         <div style={{ display: 'flex', flexDirection: 'row', gap: '0.5rem' }}>
-          {layerGroups.map(lg => (
+          {layerGroups.map((lg) => (
             <div key={lg.type}>
               <Switch
                 id={lg.type}

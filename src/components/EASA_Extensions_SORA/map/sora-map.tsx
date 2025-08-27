@@ -19,7 +19,7 @@ import {
   Card,
   CardContent,
   useTheme,
-  registerIcon
+  registerIcon,
 } from '@pega/cosmos-react-core';
 import { Icon } from '@pega/cosmos-react-core';
 import BasemapChooser from '../tools/basemap-chooser/basemap-chooser';
@@ -48,24 +48,37 @@ const SoraMap = (props: Props) => {
     popDensityPortalItemId,
     basemapPortalItemIds,
     landusePortalItemId,
-    geozonePortalItemId
+    geozonePortalItemIds,
   } = mapProps;
 
   let PCore: any;
   const defaultTheme = useTheme();
-  const theme = PCore ? merge(defaultTheme, PCore.getEnvironmentInfo().getTheme()) : defaultTheme;
+  const theme = PCore
+    ? merge(defaultTheme, PCore.getEnvironmentInfo().getTheme())
+    : defaultTheme;
 
   const basemapPortalItemIdsArray = useMemo(() => {
-    const bmIds = basemapPortalItemIds?.split(',');
+    const bmIds = basemapPortalItemIds?.split(',').map((id) => id.trim());
     if (!bmIds || bmIds.length === 0) {
       return [
         '979c6cc89af9449cbeb5342a439c6a76',
         '86265e5a4bbb4187a59719cf134e0018',
-        '67372ff42cd145319639a99152b15bc3'
+        '67372ff42cd145319639a99152b15bc3',
       ];
     }
     return bmIds;
   }, [basemapPortalItemIds]);
+
+  const geozonePortalItemIdsArray = useMemo(() => {
+    const gzIds = geozonePortalItemIds?.split(',').map((id) => id.trim());
+    if (!gzIds || gzIds.length === 0) {
+      return [
+        '961089b2b5934678966938195a745029',
+        'eebdb68dbdb44859925d868399cecdf3',
+      ];
+    }
+    return gzIds;
+  }, [geozonePortalItemIds]);
 
   const mapDiv = useRef(null);
 
@@ -81,14 +94,14 @@ const SoraMap = (props: Props) => {
     checkingSignInStatus.current = true;
     IdentityManager.registerToken({
       token: agolToken,
-      server: agolUrl
+      server: agolUrl,
     });
 
     IdentityManager.checkSignInStatus(agolUrl)
       .then(() => {
         setSignedIn(true);
       })
-      .catch(error => {
+      .catch((error) => {
         setSignInError(error?.message);
         setSignedIn(false);
       })
@@ -103,7 +116,7 @@ const SoraMap = (props: Props) => {
       if (layer.portalItem.id === popDensityPortalItemId) {
         layer.id = LayerId.populationDensity;
         layer.renderer = rendererJsonUtils.fromJSON(
-          populationDensityRenderer
+          populationDensityRenderer,
         ) as __esri.ClassBreaksRenderer;
       }
       if (layer.portalItem.id === landusePortalItemId) {
@@ -111,17 +124,20 @@ const SoraMap = (props: Props) => {
 
         layer.id = landuseLayer ? LayerId.landuseHighlight : LayerId.landuse;
         layer.visible = !landuseLayer;
-        layer.renderer = rendererJsonUtils.fromJSON(landuseRenderer) as __esri.ClassBreaksRenderer;
+        layer.renderer = rendererJsonUtils.fromJSON(
+          landuseRenderer,
+        ) as __esri.ClassBreaksRenderer;
         layer.opacity = landuseLayer ? 1 : 0.85;
       }
-      if (layer.portalItem.id === geozonePortalItemId) {
-        layer.id = LayerId.geozones;
+      if (geozonePortalItemIdsArray.includes(layer.portalItem.id)) {
+        // Use the portal item ID to create a unique layer ID
+        layer.id = `${LayerId.geozones}_${layer.portalItem.id}`;
       }
       if (layer.portalItem.id === popDensityPortalItemId) {
         layer.opacity = 0.65;
       }
     },
-    [popDensityPortalItemId, landusePortalItemId, geozonePortalItemId]
+    [popDensityPortalItemId, landusePortalItemId, geozonePortalItemIdsArray],
   );
 
   const addLayers = useCallback(
@@ -132,45 +148,54 @@ const SoraMap = (props: Props) => {
           portalItem: new PortalItem({
             id: popDensityPortalItemId,
             portal: {
-              url: agolUrl
-            }
-          })
+              url: agolUrl,
+            },
+          }),
         }),
         Layer.fromPortalItem({
           portalItem: new PortalItem({
             id: landusePortalItemId,
             portal: {
-              url: agolUrl
-            }
-          })
+              url: agolUrl,
+            },
+          }),
         }),
         Layer.fromPortalItem({
           portalItem: new PortalItem({
             id: landusePortalItemId,
             portal: {
-              url: agolUrl
-            }
-          })
+              url: agolUrl,
+            },
+          }),
         }),
-        Layer.fromPortalItem({
-          portalItem: new PortalItem({
-            id: geozonePortalItemId,
-            portal: {
-              url: agolUrl
-            }
-          })
-        })
       );
 
-      Promise.all(promises).then(layers => {
-        layers.forEach(layer => {
+      // Add multiple geozone layers
+      geozonePortalItemIdsArray.forEach((geozoneId) => {
+        promises.push(
+          Layer.fromPortalItem({
+            portalItem: new PortalItem({
+              id: geozoneId,
+              portal: {
+                url: agolUrl,
+              },
+            }),
+          }),
+        );
+      });
+
+      Promise.all(promises).then((layers) => {
+        layers.forEach((layer) => {
           applyRenderer(layer as ImageryLayer | FeatureLayer);
-          if (layer.id === LayerId.geozones) {
+          if (layer.id?.startsWith(LayerId.geozones)) {
             (layer as FeatureLayer).popupEnabled = false;
             (layer as FeatureLayer).outFields = ['*'];
             const hasGeozonesVisibilityProperty =
               mapState?.layerVisibility &&
-              Object.prototype.hasOwnProperty.call(mapState.layerVisibility, 'Geozones');
+              Object.prototype.hasOwnProperty.call(
+                mapState.layerVisibility,
+                'Geozones',
+              );
 
             if (hasGeozonesVisibilityProperty) {
               layer.visible = mapState?.layerVisibility?.Geozones as boolean;
@@ -178,15 +203,30 @@ const SoraMap = (props: Props) => {
             reactiveUtils
               .whenOnce(() => layer.loaded)
               .then(() => {
-                onGeozonesLoaded((layer as FeatureLayer).renderer as __esri.UniqueValueRenderer);
+                // Only call onGeozonesLoaded for the first geozone layer in the array
+                if (
+                  (layer as any).portalItem?.id === geozonePortalItemIdsArray[0]
+                ) {
+                  onGeozonesLoaded(
+                    (layer as FeatureLayer)
+                      .renderer as __esri.UniqueValueRenderer,
+                  );
+                }
               });
           }
-          if (layer.id === LayerId.populationDensity || layer.id === LayerId.landuse) {
+          if (
+            layer.id === LayerId.populationDensity ||
+            layer.id === LayerId.landuse
+          ) {
             const hasPopulationDensityVisibilityProperty =
               mapState?.layerVisibility &&
-              Object.prototype.hasOwnProperty.call(mapState.layerVisibility, 'PopulationDensity');
+              Object.prototype.hasOwnProperty.call(
+                mapState.layerVisibility,
+                'PopulationDensity',
+              );
             if (hasPopulationDensityVisibilityProperty) {
-              layer.visible = mapState?.layerVisibility?.PopulationDensity as boolean;
+              layer.visible = mapState?.layerVisibility
+                ?.PopulationDensity as boolean;
             }
           }
           map.add(layer, 0);
@@ -197,13 +237,13 @@ const SoraMap = (props: Props) => {
     [
       popDensityPortalItemId,
       landusePortalItemId,
-      geozonePortalItemId,
+      geozonePortalItemIdsArray,
       applyRenderer,
       agolUrl,
       onLayersAdded,
       mapState,
-      onGeozonesLoaded
-    ]
+      onGeozonesLoaded,
+    ],
   );
 
   const { create } = useModalManager();
@@ -218,8 +258,12 @@ const SoraMap = (props: Props) => {
           setLocateError(null);
         }}
       >
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-          <Text>Please check your browser location settings and try again.</Text>
+        <div
+          style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}
+        >
+          <Text>
+            Please check your browser location settings and try again.
+          </Text>
         </div>
       </Modal>
     );
@@ -231,26 +275,26 @@ const SoraMap = (props: Props) => {
     if (mapDiv.current) {
       setLocateVM(
         new LocateViewModel({
-          view: getView()
-        })
+          view: getView(),
+        }),
       );
 
       IdentityManager.registerToken({
         token: agolToken,
-        server: agolUrl
+        server: agolUrl,
       });
 
       const basemap = new Basemap({
         portalItem: new PortalItem({
           id: basemapPortalItemIdsArray[0],
           portal: {
-            url: agolUrl
-          }
-        })
+            url: agolUrl,
+          },
+        }),
       });
 
       const map = new Map({
-        basemap
+        basemap,
       });
 
       addLayers(map);
@@ -267,7 +311,14 @@ const SoraMap = (props: Props) => {
 
       getView().focus();
     }
-  }, [mapState, agolToken, agolUrl, mapDiv, addLayers, basemapPortalItemIdsArray]);
+  }, [
+    mapState,
+    agolToken,
+    agolUrl,
+    mapDiv,
+    addLayers,
+    basemapPortalItemIdsArray,
+  ]);
 
   useEffect(() => {
     if (!signInStatusChecked) {
@@ -302,7 +353,7 @@ const SoraMap = (props: Props) => {
 
   const locateMe = useCallback(() => {
     if (locateVM) {
-      locateVM.locate().catch(error => {
+      locateVM.locate().catch((error) => {
         setLocateError(error.message);
       });
     }
@@ -314,14 +365,20 @@ const SoraMap = (props: Props) => {
         <div style={style}>
           <div style={{ width: '100%', height: '100%' }} ref={mapDiv} />
           <Card style={{ position: 'absolute', top: '0', left: '0' }}>
-            <CardContent style={{ display: 'flex', flexDirection: 'column', gap: '0.15rem' }}>
+            <CardContent
+              style={{
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '0.15rem',
+              }}
+            >
               <Button
                 label='Zoom in'
                 style={{
                   width: '2rem',
                   height: '2rem',
                   marginLeft: '0.25rem',
-                  marginTop: '0.25rem'
+                  marginTop: '0.25rem',
                 }}
                 variant='secondary'
                 onClick={() => {
@@ -336,7 +393,7 @@ const SoraMap = (props: Props) => {
                   width: '2rem',
                   height: '2rem',
                   marginLeft: '0.25rem',
-                  marginTop: '0.25rem'
+                  marginTop: '0.25rem',
                 }}
                 variant='secondary'
                 onClick={() => {
@@ -351,7 +408,7 @@ const SoraMap = (props: Props) => {
                   width: '2rem',
                   height: '2rem',
                   marginLeft: '0.25rem',
-                  marginTop: '0.25rem'
+                  marginTop: '0.25rem',
                 }}
                 disabled={locateVM === null}
                 variant='secondary'
@@ -361,7 +418,10 @@ const SoraMap = (props: Props) => {
               </Button>
             </CardContent>
           </Card>
-          <BasemapChooser basemapPortalItemIds={basemapPortalItemIdsArray} mapState={mapState} />
+          <BasemapChooser
+            basemapPortalItemIds={basemapPortalItemIdsArray}
+            mapState={mapState}
+          />
         </div>
       ) : (
         signInStatusChecked && (
@@ -375,7 +435,7 @@ const SoraMap = (props: Props) => {
               margin: '1rem',
               padding: '1rem',
               border: `1px solid ${theme.base.palette.urgent}`,
-              gap: '0.5rem'
+              gap: '0.5rem',
             }}
           >
             <Text variant='h3' style={{ color: theme.base.palette.urgent }}>
@@ -389,7 +449,7 @@ const SoraMap = (props: Props) => {
               style={{
                 color: theme.base.palette.urgent,
                 overflowWrap: 'break-word',
-                inlineSize: '50%'
+                inlineSize: '50%',
               }}
             >
               {agolToken}

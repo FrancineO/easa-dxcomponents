@@ -167,13 +167,8 @@ const useUpdatePegaProps = (
             ContingencyVolumeWidth: cVW,
             GroundRiskBufferWidth: gRW,
             ImpactedGeoZones: iGZ,
-            ImpactedLandUse: iLU ? iLU.map((landuse) => landuse.pyLabel) : null,
-            // ImpactedLandUseInAdjacentArea: iLUAA
-            //   ? iLUAA.map((landuse) => landuse.pyLabel)
-            //   : null,
-            // TODO: uncomment this when we have a way to send the impacted land use as a json object
-            // ImpactedLandUse: iLU ? JSON.stringify(iLU) : null,
-            // ImpactedLandUseAdjacentArea: iLUAA ? JSON.stringify(iLUAA) : null,
+            ImpactedLandUseList: iLU ?? null,
+            ImpactedLandUseInAdjacentAreaList: iLUAA ?? null,
           },
         },
       });

@@ -18,7 +18,7 @@ export type MapProps = {
   popDensityPortalItemId: string;
   basemapPortalItemIds: string;
   landusePortalItemId: string;
-  geozonePortalItemId: string;
+  geozonePortalItemIds: string;
 };
 
 export type MapState = {
@@ -153,7 +153,7 @@ function validateMapProps(obj: any): asserts obj is MapProps {
     'popDensityPortalItemId',
     'basemapPortalItemIds',
     'landusePortalItemId',
-    'geozonePortalItemId',
+    'geozonePortalItemIds',
     'flightPathJSON',
     'mapStateJSON',
   ];
@@ -188,10 +188,10 @@ function validateMapProps(obj: any): asserts obj is MapProps {
     obj.landusePortalItemId,
   );
   assertType(
-    typeof obj.geozonePortalItemId === 'string',
-    'geozonePortalItemId',
+    typeof obj.geozonePortalItemIds === 'string',
+    'geozonePortalItemIds',
     'string',
-    obj.geozonePortalItemId,
+    obj.geozonePortalItemIds,
   );
   assertType(
     typeof obj.flightPathJSON === 'string' || obj.flightPathJSON === null,
@@ -249,7 +249,7 @@ export function validateComponentProps(
     'popDensityPortalItemId',
     'basemapPortalItemIds',
     'landusePortalItemId',
-    'geozonePortalItemId',
+    'geozonePortalItemIds',
     'flightPathJSON',
     'mapStateJSON',
   ];

@@ -35,11 +35,8 @@ import Legends from './legends/legends';
 import { getFlightGeography } from './tools/toolbar/draw-utils';
 import useGetIntersectingLanduses from './hooks/useGetIntersectingLanduses';
 import { getView } from './map/view';
-import {
-  geozonesDefintions,
-  landUseLabels,
-  landusePeopleOutdoor,
-} from './renderers';
+import { landUseLabels, landusePeopleOutdoor } from './renderers';
+import geozonesDefintions from './geozone-definitions';
 
 // eslint-disable-next-line no-console
 console.log(
@@ -112,6 +109,7 @@ export const EasaExtensionsSORA = (props: ComponentProps) => {
       console.log(props);
       validateComponentProps(props);
       setPropsValid(true);
+      setErrorText(null);
       // eslint-disable-next-line no-console
       console.log('%cProps are valid!', `color: ${'rgb(93, 255, 153)'}`);
     } catch (error: any) {
@@ -120,7 +118,19 @@ export const EasaExtensionsSORA = (props: ComponentProps) => {
       console.error('Error validating props:', error);
       setPropsValid(false);
     }
-  }, [props]);
+  }, [
+    props,
+    // Critical props that should trigger re-validation when they change
+    props.tR,
+    props.vO,
+    props.hFG,
+    props.cd,
+    props.controlledGroundArea,
+    props.criticalArea,
+    props.flightPathJSON,
+    props.mapStateJSON,
+    props.vWind,
+  ]);
 
   const { flightVolume, calculateVolume } = useCalculateFlightVolume({
     ...props,
@@ -324,7 +334,7 @@ export const EasaExtensionsSORA = (props: ComponentProps) => {
     queryIntersectingGeozones();
   }, [flightVolume, layersAdded, queryIntersectingGeozones]);
 
-  // Call updatePegaProps when groundRisk, or printRequest changes
+  // Call updatePegaProps when groundRisk, printRequest, or intersectingGeozones changes
   useEffect(() => {
     if (!layersAdded) return;
     updatePegaProps();
@@ -335,6 +345,9 @@ export const EasaExtensionsSORA = (props: ComponentProps) => {
     updatePegaProps,
     mapState,
     errorText,
+    intersectingGeozones,
+    intersectingLanduseClasses,
+    intersectingAdjacentAreaLanduseClasses,
   ]);
 
   const maxPopDensity = useMemo(() => {
