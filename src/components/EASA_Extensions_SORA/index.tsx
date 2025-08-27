@@ -286,6 +286,9 @@ export const EasaExtensionsSORA = (props: ComponentProps) => {
   // Set up the effect for flight geometry which comes in as a parameter
   useEffect(() => {
     if (flightPathJSON && layersAdded) {
+      // Reset corrected landuse when flight geometry changes
+      setCorrectedLandUse(null);
+
       const fg = getFlightGeography(flightPathJSON);
       if (!fg) return;
       setFlightGeography(fg);
@@ -309,6 +312,9 @@ export const EasaExtensionsSORA = (props: ComponentProps) => {
 
   // Call calculatePopDensities when flightVolume changes
   useEffect(() => {
+    // Reset corrected landuse when flight geometry changes
+    setCorrectedLandUse(null);
+
     queryIntersectingLanduses();
     if (!flightVolume) return;
     calculatePopDensities()
@@ -483,6 +489,9 @@ export const EasaExtensionsSORA = (props: ComponentProps) => {
               <Toolbar
                 cd={cd}
                 onFlightGeographyChange={(g, autoZoomToFlightPath) => {
+                  // Reset corrected landuse when user draws new flight path
+                  setCorrectedLandUse(null);
+
                   setFlightGeography(g);
                   if (autoZoomToFlightPath) {
                     getView().goTo(

@@ -103,11 +103,24 @@ export const useGetPopulationDensity = (
   const getOperationalAndGroundRiskGeometry = useCallback(() => {
     const currentFlightVolume = flightVolumeRef.current;
 
-    return geometryEngine.union([
-      currentFlightVolume?.flightGeography?.geometry as __esri.Polygon,
-      currentFlightVolume?.contingencyVolume?.geometry as __esri.Polygon,
-      currentFlightVolume?.groundRiskVolume?.geometry as __esri.Polygon,
-    ]);
+    if (
+      !currentFlightVolume?.flightGeography?.geometry ||
+      !currentFlightVolume?.contingencyVolume?.geometry ||
+      !currentFlightVolume?.groundRiskVolume?.geometry
+    ) {
+      return null;
+    }
+
+    try {
+      return geometryEngine.union([
+        currentFlightVolume.flightGeography.geometry as __esri.Polygon,
+        currentFlightVolume.contingencyVolume.geometry as __esri.Polygon,
+        currentFlightVolume.groundRiskVolume.geometry as __esri.Polygon,
+      ]);
+    } catch (error) {
+      // If geometry union fails, return null
+      return null;
+    }
   }, []);
 
   const getPopulationDensity = useCallback(
@@ -122,6 +135,9 @@ export const useGetPopulationDensity = (
 
       // Get the max density for the adjacent area
       const opAndGr = getOperationalAndGroundRiskGeometry();
+      if (!opAndGr) {
+        return popDensity;
+      }
       const maxDensity = await getMaxDensity(opAndGr as __esri.Polygon, layer);
       popDensity.maxPopDensityOperationalGroundRisk = maxDensity;
 
@@ -147,6 +163,9 @@ export const useGetPopulationDensity = (
 
       // get the max population density in the Operational Ground Risk area
       const opAndGr = getOperationalAndGroundRiskGeometry();
+      if (!opAndGr) {
+        return null;
+      }
       // const pixelSize = getPixelSize(hFG);
       const pixelSize = getPixelSize();
       const landuseHistograms = await layer.computeHistograms({
@@ -175,7 +194,16 @@ export const useGetPopulationDensity = (
         return landusePopDensityLookup[index];
       });
 
-      return Math.max(...densities);
+      // Filter out undefined/null values and ensure we have valid densities
+      const validDensities = densities.filter(
+        (density) => density !== undefined && density !== null,
+      );
+
+      if (validDensities.length === 0) {
+        return null;
+      }
+
+      return Math.max(...validDensities);
     },
     [correctedLandUse],
   );
@@ -222,15 +250,35 @@ export const useGetPopulationDensity = (
     try {
       calculationInProgress.current = true;
 
+      // Ensure the view is ready before accessing map layers
+      await getView().when();
+
+      // First, get the landuse-based calculation for operational ground risk area
+      let maxPopDensityOperationalGroundRisk = null;
+      if (landuseLayer && landuseLayer.loaded) {
+        try {
+          maxPopDensityOperationalGroundRisk =
+            await getLanduseMaxPopDensityOperationalGroundrisk(landuseLayer);
+        } catch (error) {
+          // If landuse calculation fails, continue with population density layer
+          // The error is silently handled to prevent breaking the calculation
+        }
+      }
+
+      // Then get the population density layer calculation
       const popDensity = await getPopulationDensity(popDensityLayer);
 
-      const maxPopDensityLanduseOperationalGroundRisk =
-        await getLanduseMaxPopDensityOperationalGroundrisk(landuseLayer);
-
-      popDensity.maxPopDensityOperationalGroundRisk = Math.max(
-        popDensity.maxPopDensityOperationalGroundRisk ?? 0,
-        maxPopDensityLanduseOperationalGroundRisk ?? 0,
-      );
+      // Use the maximum of both calculations when landuse-based calculation is available
+      if (
+        maxPopDensityOperationalGroundRisk !== null &&
+        maxPopDensityOperationalGroundRisk > 0 &&
+        Number.isFinite(maxPopDensityOperationalGroundRisk)
+      ) {
+        popDensity.maxPopDensityOperationalGroundRisk = Math.max(
+          popDensity.maxPopDensityOperationalGroundRisk ?? 0,
+          maxPopDensityOperationalGroundRisk,
+        );
+      }
 
       const avgPopDensityLanduseAdjacentArea = await getAvgDensity(
         adjacentArea.geometry as __esri.Polygon,
@@ -259,7 +307,7 @@ export const useGetPopulationDensity = (
     } finally {
       calculationInProgress.current = false;
     }
-  }, []); // Empty dependency array since we're using ref
+  }, [correctedLandUse]); // Add correctedLandUse dependency since it's used in landuse calculation
 
   return {
     populationDensity,
