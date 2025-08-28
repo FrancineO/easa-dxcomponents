@@ -35,19 +35,20 @@ export const PopDensitySourceInfo = (props: PopDensitySourceInfoProps) => {
 
     // Check if the population density is coming from an overridden landuse value
     if (populationDensityData.maxPopDensitySource === 'overridden-landuse') {
-      // Find the override that contributed to this value
-      const contributingLanduseClass =
-        populationDensityData.maxPopDensityLanduseClass;
-      const foundOverride = overriddenLandUseData.find(
-        (override) => override.pyLabel === contributingLanduseClass,
+      // Find all overrides that have the same maximum value
+      const maxValue = populationDensityData.maxPopDensityOperationalGroundRisk;
+
+      // Find all overrides that have this maximum value
+      const foundOverrides = overriddenLandUseData.filter(
+        (override) => override.OverridePopulationDensity === maxValue,
       );
 
-      if (foundOverride && foundOverride.OverridePopulationDensity !== null) {
-        return {
-          landuseClass: foundOverride.pyLabel || 'Unknown',
-          overrideValue: foundOverride.OverridePopulationDensity,
-          overrideReason: foundOverride.OverrideReason || '',
-        };
+      if (foundOverrides.length > 0) {
+        return foundOverrides.map((override) => ({
+          landuseClass: override.pyLabel || 'Unknown',
+          overrideValue: override.OverridePopulationDensity || 0,
+          overrideReason: override.OverrideReason || '',
+        }));
       }
     }
     return null;
@@ -63,25 +64,33 @@ export const PopDensitySourceInfo = (props: PopDensitySourceInfoProps) => {
     return landUseLabels[landuseClass] || 'Unknown';
   };
 
-  // Helper function to find the landuse class with highest default density
-  const findHighestLanduseClass = (landuseClasses: number[] | null) => {
+  // Helper function to find all landuse classes with the highest default density
+  const findAllHighestLanduseClasses = (landuseClasses: number[] | null) => {
     if (!landuseClasses || landuseClasses.length === 0) return null;
 
     let maxDensity = 0;
-    let maxLanduseClass: { code: number; label: string } | null = null;
+    let maxLanduseClasses: { code: number; label: string }[] = [];
 
     landuseClasses.forEach((landuseCode) => {
       const density = getOriginalLanduseDensity(landuseCode);
       if (density > maxDensity) {
         maxDensity = density;
-        maxLanduseClass = {
+        maxLanduseClasses = [
+          {
+            code: landuseCode,
+            label: getLanduseLabel(landuseCode),
+          },
+        ];
+      } else if (density === maxDensity && maxDensity > 0) {
+        // Add to the list if it has the same maximum density
+        maxLanduseClasses.push({
           code: landuseCode,
           label: getLanduseLabel(landuseCode),
-        };
+        });
       }
     });
 
-    return maxLanduseClass;
+    return maxLanduseClasses.length > 0 ? maxLanduseClasses : null;
   };
 
   const source = populationDensity.maxPopDensitySource;
@@ -123,14 +132,16 @@ export const PopDensitySourceInfo = (props: PopDensitySourceInfoProps) => {
   ): {
     title: string;
     icon: any;
-    landuseClass?: { code: number; label: string } | null;
+    landuseClass?: { code: number; label: string }[] | null;
     description: string;
     infoLink?: string;
-    overrideInfo?: {
-      landuseClass: string;
-      overrideValue: number;
-      overrideReason: string;
-    } | null;
+    overrideInfo?:
+      | {
+          landuseClass: string;
+          overrideValue: number;
+          overrideReason: string;
+        }[]
+      | null;
     tooltipContent?: string;
   } => {
     switch (sourceType) {
@@ -144,13 +155,13 @@ export const PopDensitySourceInfo = (props: PopDensitySourceInfoProps) => {
         };
       case 'landuse': {
         // Find which landuse class has the highest default density
-        const highestLanduseClass = findHighestLanduseClass(
+        const highestLanduseClasses = findAllHighestLanduseClasses(
           intersectingLanduseClasses,
         );
         return {
           title: 'Landuse Classification',
           icon: TbLayoutGrid,
-          landuseClass: highestLanduseClass,
+          landuseClass: highestLanduseClasses,
           description:
             'Assumed population density value based on landuse classification',
           infoLink: 'https://data.jrc.ec.europa.eu/dataset?collection=LUISA',
@@ -229,53 +240,11 @@ export const PopDensitySourceInfo = (props: PopDensitySourceInfoProps) => {
           <div style={{ fontWeight: 'bold' }}>
             {value?.toLocaleString()} ppl/km²
           </div>
-
-          {/* Remove override button - positioned using flexbox */}
-          {content.overrideInfo && (
-            <TooltipElement tooltipContent='Remove override'>
-              <div
-                style={{
-                  cursor: 'pointer',
-                  fontSize: '14px',
-                  fontWeight: 'bold',
-                  width: '20px',
-                  height: '20px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  borderRadius: '50%',
-                  backgroundColor: 'rgba(0, 0, 0, 0.1)',
-                  transition: 'background-color 0.2s',
-                  lineHeight: '1',
-                }}
-                onClick={() =>
-                  onRemoveOverride(content.overrideInfo!.landuseClass)
-                }
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' || e.key === ' ') {
-                    e.preventDefault();
-                    onRemoveOverride(content.overrideInfo!.landuseClass);
-                  }
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.backgroundColor = 'rgba(0, 0, 0, 0.2)';
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.backgroundColor = 'rgba(0, 0, 0, 0.1)';
-                }}
-                role='button'
-                tabIndex={0}
-                aria-label='Remove override'
-              >
-                ×
-              </div>
-            </TooltipElement>
-          )}
         </div>
       </div>
 
       {/* Landuse details if applicable */}
-      {content.landuseClass && (
+      {content.landuseClass && content.landuseClass.length > 0 && (
         <div
           style={{
             padding: '6px 8px',
@@ -283,57 +252,130 @@ export const PopDensitySourceInfo = (props: PopDensitySourceInfoProps) => {
             borderRadius: '4px',
             border: '1px solid rgba(0, 0, 0, 0.1)',
             display: 'flex',
-            alignItems: 'center',
-            gap: '6px',
+            flexDirection: 'column',
+            gap: '4px',
           }}
         >
-          <span
-            style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '4px',
-            }}
-          >
-            {source === 'landuse' && getLanduseIcon(content.landuseClass.label)}
-            {source === 'landuse' && content.landuseClass.label}
-          </span>
+          {content.landuseClass.map((landuse, index) => (
+            <div
+              key={landuse.code}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
+                padding: index > 0 ? '2px 0' : '0',
+              }}
+            >
+              <span
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '4px',
+                }}
+              >
+                {source === 'landuse' && getLanduseIcon(landuse.label)}
+                {source === 'landuse' && landuse.label}
+              </span>
+            </div>
+          ))}
         </div>
       )}
 
       {/* Override details if applicable */}
-      {content.overrideInfo && (
+      {content.overrideInfo && content.overrideInfo.length > 0 && (
         <div
           style={{
             padding: '6px 8px',
             backgroundColor: 'rgba(255, 255, 255, 0.3)',
             borderRadius: '4px',
             border: '1px solid rgba(0, 0, 0, 0.1)',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '8px',
           }}
         >
-          <div style={{ marginBottom: '4px' }}>
-            <span
+          {content.overrideInfo.map((override, index) => (
+            <div
+              key={override.landuseClass}
               style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: '4px',
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'flex-start',
+                gap: '8px',
+                padding: index > 0 ? '8px 0 0 0' : '0',
+                borderTop: index > 0 ? '1px solid rgba(0, 0, 0, 0.1)' : 'none',
               }}
             >
-              {getLanduseIcon(content.overrideInfo.landuseClass)}
-              {content.overrideInfo.landuseClass}
-            </span>
-          </div>
+              <div style={{ flex: 1 }}>
+                <div style={{ marginBottom: '4px' }}>
+                  <span
+                    style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '4px',
+                    }}
+                  >
+                    {getLanduseIcon(override.landuseClass)}
+                    {override.landuseClass}
+                  </span>
+                </div>
 
-          <div style={{ marginBottom: '4px' }}>
-            <span style={{ fontWeight: 'bold' }}>Override:</span>{' '}
-            {content.overrideInfo.overrideValue.toLocaleString()} ppl/km²
-          </div>
+                <div style={{ marginBottom: '4px' }}>
+                  <span style={{ fontWeight: 'bold' }}>Override:</span>{' '}
+                  {override.overrideValue.toLocaleString()} ppl/km²
+                </div>
 
-          {content.overrideInfo.overrideReason && (
-            <div style={{ marginBottom: '4px' }}>
-              <span style={{ fontWeight: 'bold' }}>Reason:</span>{' '}
-              {content.overrideInfo.overrideReason}
+                {override.overrideReason && (
+                  <div style={{ marginBottom: '4px' }}>
+                    <span style={{ fontWeight: 'bold' }}>Reason:</span>{' '}
+                    {override.overrideReason}
+                  </div>
+                )}
+              </div>
+
+              {/* Individual remove button for each override */}
+              <TooltipElement tooltipContent='Remove override'>
+                <div
+                  style={{
+                    cursor: 'pointer',
+                    fontSize: '14px',
+                    fontWeight: 'bold',
+                    width: '20px',
+                    height: '20px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    borderRadius: '50%',
+                    backgroundColor: 'rgba(245, 124, 0, 0.1)',
+                    color: '#f57c00',
+                    transition: 'background-color 0.2s',
+                    lineHeight: '1',
+                    flexShrink: 0,
+                  }}
+                  onClick={() => onRemoveOverride(override.landuseClass)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      onRemoveOverride(override.landuseClass);
+                    }
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.backgroundColor =
+                      'rgba(245, 124, 0, 0.2)';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.backgroundColor =
+                      'rgba(245, 124, 0, 0.1)';
+                  }}
+                  role='button'
+                  tabIndex={0}
+                  aria-label='Remove override'
+                >
+                  ×
+                </div>
+              </TooltipElement>
             </div>
-          )}
+          ))}
         </div>
       )}
 
