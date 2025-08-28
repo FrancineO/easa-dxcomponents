@@ -38,6 +38,7 @@ const useGetIntersectingLanduses = (flightVolume: FlightVolume | null) => {
       const landuseLayer = getView().map?.findLayerById(
         LayerId.landuse,
       ) as __esri.ImageryLayer;
+
       const landuseHistograms = await landuseLayer?.computeHistograms({
         geometry,
       });

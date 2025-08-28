@@ -87,7 +87,14 @@ export type FlightVolume = {
 export type PopulationDensity = {
   maxPopDensityOperationalGroundRisk: number | null;
   avgPopDensityAdjacentArea: number | null;
+  maxPopDensitySource: PopulationDensitySource | null;
+  maxPopDensityLanduseClass?: string | null;
 };
+
+export type PopulationDensitySource =
+  | 'pop-density'
+  | 'landuse'
+  | 'overridden-landuse';
 
 export enum LayerGroupType {
   populationDensity = 'PopulationDensity',

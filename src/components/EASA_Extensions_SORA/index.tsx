@@ -33,13 +33,18 @@ import SoraMap from './map/sora-map';
 import useHighlightIntersectingLanduse from './hooks/useApplySpatialFilter';
 import LayerList from './tools/layer-list';
 import useGetIntersectingGeozones from './hooks/useGetIntersectingGeozones';
-import PopulationDensityCorrectionModal from './components/population-density-correction-modal';
+import PopulationDensityOverrideModal from './components/population-density-override-modal';
+import PopDensitySourceInfo from './components/pop-density-source-info';
 
 import Legends from './legends/legends';
 import { getFlightGeography } from './tools/toolbar/draw-utils';
 import useGetIntersectingLanduses from './hooks/useGetIntersectingLanduses';
 import { getView } from './map/view';
-import { landUseLabels, landusePeopleOutdoor } from './renderers';
+import {
+  landUseLabels,
+  landusePeopleOutdoor,
+  landusePopDensityLookup,
+} from './renderers';
 import geozonesDefintions from './geozone-definitions';
 
 // eslint-disable-next-line no-console
@@ -99,7 +104,7 @@ export const EasaExtensionsSORA = (props: ComponentProps) => {
     useState<__esri.UniqueValueRenderer | null>(null);
   const [showPopulationDensityCorrection, setShowPopulationDensityCorrection] =
     useState(false);
-  const [correctedLandUse, setCorrectedLandUse] = useState<
+  const [overriddenLandUse, setOverriddenLandUse] = useState<
     ImpactedLandUse[] | null
   >(null);
 
@@ -178,7 +183,7 @@ export const EasaExtensionsSORA = (props: ComponentProps) => {
         }
       : null,
     hFG,
-    correctedLandUse,
+    overriddenLandUse,
   );
 
   // Set up the hook to get the intersecting landuses
@@ -239,15 +244,14 @@ export const EasaExtensionsSORA = (props: ComponentProps) => {
     return intersectingLanduseClasses
       .map((landuse) => {
         // Check if there's an existing override for this landuse
-        const existingOverride = correctedLandUse?.find(
+        const existingOverride = overriddenLandUse?.find(
           (override: ImpactedLandUse) => override.Code === `${landuse}`,
         );
 
         return {
           pyLabel: landUseLabels[landuse],
           Code: `${landuse}`,
-          PopulationDensity:
-            populationDensity?.maxPopDensityOperationalGroundRisk ?? 0,
+          PopulationDensity: landusePopDensityLookup[landuse] ?? 0,
           PeopleOutdoor: landusePeopleOutdoor.includes(landuse),
           AssemblyOfPeople: landusePeopleOutdoor.includes(landuse),
           OverridePopulationDensity:
@@ -256,7 +260,7 @@ export const EasaExtensionsSORA = (props: ComponentProps) => {
         };
       })
       .filter((value, index, self) => self.indexOf(value) === index);
-  }, [intersectingLanduseClasses, correctedLandUse, populationDensity]);
+  }, [intersectingLanduseClasses, overriddenLandUse]);
 
   // Set up the hook for updating Pega props
   const updatePegaProps = useUpdatePegaProps(
@@ -277,7 +281,7 @@ export const EasaExtensionsSORA = (props: ComponentProps) => {
       })
       .filter((gz) => gz !== null)
       .filter((value, index, self) => self.indexOf(value) === index) ?? null,
-    (correctedLandUse || buildImpactedLandUseData()) ?? null,
+    (overriddenLandUse || buildImpactedLandUseData()) ?? null,
     intersectingAdjacentAreaLanduseClasses
       ?.map((landuse) => {
         return {
@@ -298,7 +302,7 @@ export const EasaExtensionsSORA = (props: ComponentProps) => {
   useEffect(() => {
     if (flightPathJSON && layersAdded) {
       // Reset corrected landuse when flight geometry changes
-      setCorrectedLandUse(null);
+      setOverriddenLandUse(null);
 
       const fg = getFlightGeography(flightPathJSON);
       if (!fg) return;
@@ -323,7 +327,7 @@ export const EasaExtensionsSORA = (props: ComponentProps) => {
 
   useEffect(() => {
     // Reset corrected landuse when flight volume changes
-    setCorrectedLandUse(null);
+    setOverriddenLandUse(null);
   }, [flightVolume]);
 
   // Call calculatePopDensities when flightVolume changes
@@ -340,6 +344,17 @@ export const EasaExtensionsSORA = (props: ComponentProps) => {
         setLoading(false);
       });
   }, [flightVolume, calculatePopDensities, queryIntersectingLanduses]);
+
+  // Recalculate population densities when overrides change
+  useEffect(() => {
+    if (!flightVolume || !layersAdded) return;
+    setLoading(true);
+    calculatePopDensities().catch((error) => {
+      setErrorText(error.message);
+      // eslint-disable-next-line no-console
+      console.error(error);
+    });
+  }, [overriddenLandUse, calculatePopDensities, flightVolume, layersAdded]);
 
   // highlight the intersecting landuse when flightVolume changes
   useEffect(() => {
@@ -381,7 +396,7 @@ export const EasaExtensionsSORA = (props: ComponentProps) => {
     intersectingGeozones,
     intersectingLanduseClasses,
     intersectingAdjacentAreaLanduseClasses,
-    correctedLandUse,
+    overriddenLandUse,
   ]);
 
   const maxPopDensity = useMemo(() => {
@@ -390,6 +405,28 @@ export const EasaExtensionsSORA = (props: ComponentProps) => {
       ? '0'
       : populationDensity?.maxPopDensityOperationalGroundRisk;
   }, [populationDensity, flightGeography]);
+
+  // Handler for removing overrides
+  const handleRemoveOverride = useCallback(
+    (landuseClass: string) => {
+      if (overriddenLandUse) {
+        // Find the override by matching the landuse class name (pyLabel)
+        const overrideToRemove = overriddenLandUse.find(
+          (override) => override.pyLabel === landuseClass,
+        );
+
+        if (overrideToRemove) {
+          const updatedOverrides = overriddenLandUse.filter(
+            (override) => override.Code !== overrideToRemove.Code,
+          );
+          setOverriddenLandUse(
+            updatedOverrides.length > 0 ? updatedOverrides : null,
+          );
+        }
+      }
+    },
+    [overriddenLandUse],
+  );
 
   const avgPopDensity = useMemo(() => {
     if (!populationDensity || !flightGeography) return null;
@@ -405,12 +442,12 @@ export const EasaExtensionsSORA = (props: ComponentProps) => {
 
   const populationDensityCorrectionModal = useCallback(() => {
     return (
-      <PopulationDensityCorrectionModal
+      <PopulationDensityOverrideModal
         impactedLandUse={
           intersectingLanduseClasses
             ?.map((landuse) => {
               // Check if there's an existing override for this landuse
-              const existingOverride = correctedLandUse?.find(
+              const existingOverride = overriddenLandUse?.find(
                 (override) => override.Code === `${landuse}`,
               );
 
@@ -430,13 +467,13 @@ export const EasaExtensionsSORA = (props: ComponentProps) => {
           null
         }
         onClose={() => setShowPopulationDensityCorrection(false)}
-        onSave={(correctedLandUseData: ImpactedLandUse[]) => {
-          setCorrectedLandUse(correctedLandUseData);
+        onSave={(overriddenLandUseData: ImpactedLandUse[]) => {
+          setOverriddenLandUse(overriddenLandUseData);
           setShowPopulationDensityCorrection(false);
         }}
       />
     );
-  }, [intersectingLanduseClasses, populationDensity, correctedLandUse]);
+  }, [intersectingLanduseClasses, populationDensity, overriddenLandUse]);
 
   // Create modal when button is clicked
   useEffect(() => {
@@ -616,9 +653,46 @@ export const EasaExtensionsSORA = (props: ComponentProps) => {
                   style={{
                     boxShadow: '0 2px 8px rgba(0, 0, 0, 0.15)',
                     border: '1px solid #e0e0e0',
+                    position: 'relative',
                   }}
                 >
-                  Override Population Density?
+                  Override Landuse Population Density?
+                  {/* Badge showing override count */}
+                  {overriddenLandUse &&
+                    overriddenLandUse.length > 0 &&
+                    (() => {
+                      const activeOverrideCount = overriddenLandUse.filter(
+                        (item) =>
+                          item.OverridePopulationDensity !== null ||
+                          item.OverrideReason !== null,
+                      ).length;
+
+                      return activeOverrideCount > 0 ? (
+                        <div
+                          style={{
+                            position: 'absolute',
+                            top: '-6px',
+                            right: '-6px',
+                            backgroundColor: '#f57c00',
+                            color: 'white',
+                            borderRadius: '12px',
+                            minWidth: '20px',
+                            height: '20px',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            fontSize: '11px',
+                            fontWeight: '600',
+                            padding: '0 6px',
+                            border: '2px solid white',
+                            boxShadow: '0 2px 4px rgba(0, 0, 0, 0.15)',
+                            lineHeight: '1',
+                          }}
+                        >
+                          {activeOverrideCount}
+                        </div>
+                      ) : null;
+                    })()}
                 </Button>
               </div>
             )}
@@ -638,10 +712,22 @@ export const EasaExtensionsSORA = (props: ComponentProps) => {
             fields={[
               {
                 name: 'Max. population in op. volume + ground risk buffer',
-                value: loading ? (
-                  <Progress variant='ring' placement='inline' visible />
-                ) : (
-                  maxPopDensity
+                value: (
+                  <div>
+                    {loading ? (
+                      <Progress variant='ring' placement='inline' visible />
+                    ) : (
+                      maxPopDensity
+                    )}
+                    {populationDensity && flightVolume && !loading && (
+                      <PopDensitySourceInfo
+                        populationDensity={populationDensity}
+                        overriddenLandUse={overriddenLandUse}
+                        intersectingLanduseClasses={intersectingLanduseClasses}
+                        onRemoveOverride={handleRemoveOverride}
+                      />
+                    )}
+                  </div>
                 ),
               },
               {

@@ -296,11 +296,25 @@ export const Toolbar = (props: Props) => {
         });
         setGraphic(g);
 
-        // sketchViewModelRef.current?.cancel();
-        // sketchViewModelRef.current?.layer.removeAll();
-        // sketchViewModelRef.current?.layer.add(g);
+        // Update the graphic in the sketch view model
         sketchViewModelRef.current?.update([g]);
-        // console.log('move-update', g.geometry.centroid.x);
+
+        // Restore edit mode to keep the graphic editable
+        if (
+          sketchViewModelRef.current &&
+          (g.geometry.type === 'polyline' || g.geometry.type === 'polygon')
+        ) {
+          // For polylines and polygons, we need to restore edit mode after vertex updates
+          setTimeout(() => {
+            if (sketchViewModelRef.current && g) {
+              // Ensure the graphic is in the layer and put it back in edit mode
+              if (!sketchViewModelRef.current.layer.graphics.includes(g)) {
+                sketchViewModelRef.current.layer.add(g);
+              }
+              sketchViewModelRef.current.update([g]);
+            }
+          }, 100);
+        }
       }
       if (
         event.state === 'active' &&

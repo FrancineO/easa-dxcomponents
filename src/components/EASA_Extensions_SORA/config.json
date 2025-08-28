@@ -174,7 +174,7 @@
       "name": "geozonePortalItemIds",
       "label": "Geozones portal item ids",
       "format": "TEXT",
-      "defaultValue": "e632deb3526647aaa864e2b89e92c738"
+      "defaultValue": "961089b2b5934678966938195a745029,eebdb68dbdb44859925d868399cecdf3,2375bb13147443fe9e42c629ff87d821,ecf23963356e4c1d8e821c129fa341e5,659c2403b764481b93470e644936fc8c"
     },
     {
       "name": "printServiceUrl",

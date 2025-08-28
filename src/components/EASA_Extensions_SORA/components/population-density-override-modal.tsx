@@ -10,11 +10,12 @@ import { useState, useEffect, useMemo } from 'react';
 import type { ImpactedLandUse } from '../types';
 import { landusePopDensityLookup } from '../renderers';
 import getLanduseIcon from '../legends/landuse-icons';
+import TooltipElement from './tooltip-element';
 
 interface Props {
   impactedLandUse: ImpactedLandUse[] | null;
   onClose: () => void;
-  onSave: (correctedLandUse: ImpactedLandUse[]) => void;
+  onSave: (overriddenLandUse: ImpactedLandUse[]) => void;
 }
 
 // Available population density options
@@ -69,15 +70,15 @@ const getPopulationDensityOptions = (
   return options.sort((a, b) => a.value - b.value);
 };
 
-export const PopulationDensityCorrectionModal = (props: Props) => {
+export const PopulationDensityOverrideModal = (props: Props) => {
   const { dismiss } = useModalContext();
-  const [correctedLandUse, setCorrectedLandUse] = useState<ImpactedLandUse[]>(
+  const [overriddenLandUse, setOverriddenLandUse] = useState<ImpactedLandUse[]>(
     [],
   );
 
   useEffect(() => {
     if (props.impactedLandUse) {
-      setCorrectedLandUse([...props.impactedLandUse]);
+      setOverriddenLandUse([...props.impactedLandUse]);
     }
   }, [props.impactedLandUse]);
 
@@ -90,7 +91,7 @@ export const PopulationDensityCorrectionModal = (props: Props) => {
   const isDirty = useMemo(() => {
     if (!props.impactedLandUse) return false;
 
-    return correctedLandUse.some((landUse) => {
+    return overriddenLandUse.some((landUse) => {
       const originalDensity = getOriginalPopulationDensity(landUse.Code);
       return (
         (landUse.OverridePopulationDensity !== null &&
@@ -98,13 +99,13 @@ export const PopulationDensityCorrectionModal = (props: Props) => {
         landUse.OverrideReason !== null
       );
     });
-  }, [correctedLandUse, props.impactedLandUse]);
+  }, [overriddenLandUse, props.impactedLandUse]);
 
   // Check if all required fields are filled for overrides
   const isFormValid = useMemo(() => {
     if (!props.impactedLandUse) return false;
 
-    return correctedLandUse.every((landUse) => {
+    return overriddenLandUse.every((landUse) => {
       const originalDensity = getOriginalPopulationDensity(landUse.Code);
       const hasOverride =
         landUse.OverridePopulationDensity !== null &&
@@ -117,7 +118,7 @@ export const PopulationDensityCorrectionModal = (props: Props) => {
 
       return true;
     });
-  }, [correctedLandUse, props.impactedLandUse]);
+  }, [overriddenLandUse, props.impactedLandUse]);
 
   const handlePopulationDensityChange = (
     landUseCode: string,
@@ -125,7 +126,7 @@ export const PopulationDensityCorrectionModal = (props: Props) => {
   ) => {
     const originalDensity = getOriginalPopulationDensity(landUseCode);
 
-    setCorrectedLandUse((prev) =>
+    setOverriddenLandUse((prev) =>
       prev.map((landUse) =>
         landUse.Code === landUseCode
           ? {
@@ -148,7 +149,7 @@ export const PopulationDensityCorrectionModal = (props: Props) => {
     landUseCode: string,
     newJustification: string,
   ) => {
-    setCorrectedLandUse((prev) =>
+    setOverriddenLandUse((prev) =>
       prev.map((landUse) =>
         landUse.Code === landUseCode
           ? {
@@ -160,9 +161,23 @@ export const PopulationDensityCorrectionModal = (props: Props) => {
     );
   };
 
+  const handleRemoveOverride = (landUseCode: string) => {
+    setOverriddenLandUse((prev) =>
+      prev.map((landUse) =>
+        landUse.Code === landUseCode
+          ? {
+              ...landUse,
+              OverridePopulationDensity: null,
+              OverrideReason: null,
+            }
+          : landUse,
+      ),
+    );
+  };
+
   const handleSave = () => {
-    if (correctedLandUse.length > 0) {
-      props.onSave(correctedLandUse);
+    if (overriddenLandUse.length > 0) {
+      props.onSave(overriddenLandUse);
     }
     props.onClose();
     dismiss();
@@ -173,12 +188,42 @@ export const PopulationDensityCorrectionModal = (props: Props) => {
     dismiss();
   };
 
+  // Calculate the current maximum population density considering overrides
+  const currentMaxPopulationDensity = useMemo((): {
+    value: number;
+    landuse: ImpactedLandUse | null;
+  } => {
+    if (!overriddenLandUse || overriddenLandUse.length === 0)
+      return { value: 0, landuse: null };
+
+    let maxValue = 0;
+    let maxLanduse: ImpactedLandUse | null = null;
+
+    overriddenLandUse.forEach((landUse: ImpactedLandUse) => {
+      // Use override value if available, otherwise use original value
+      const currentValue =
+        landUse.OverridePopulationDensity !== null
+          ? landUse.OverridePopulationDensity
+          : getOriginalPopulationDensity(landUse.Code);
+
+      if (currentValue > maxValue) {
+        maxValue = currentValue;
+        maxLanduse = landUse;
+      }
+    });
+
+    return { value: maxValue, landuse: maxLanduse };
+  }, [overriddenLandUse]);
+
+  // Type guard to check if we have a valid landuse object
+  const hasMaxLanduse = currentMaxPopulationDensity.landuse !== null;
+
   return (
     <Modal
       dismissible
-      heading='Override Population Density'
+      heading='Override Landuse Population Density'
       onAfterClose={props.onClose}
-      title='Override Population Density'
+      title='Override Landuse Population Density'
       size='large'
     >
       <div
@@ -191,6 +236,91 @@ export const PopulationDensityCorrectionModal = (props: Props) => {
           maxHeight: '70vh',
         }}
       >
+        {/* Current Maximum Population Density Display */}
+        <div
+          style={{
+            backgroundColor: '#e3f2fd',
+            border: '1px solid #1976d2',
+            borderRadius: '6px',
+            padding: '12px',
+            marginBottom: '6px',
+          }}
+        >
+          <Text variant='h5' style={{ marginBottom: '6px', color: '#495057' }}>
+            Current Maximum Landuse Population Density
+          </Text>
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+            }}
+          >
+            <Text
+              variant='h3'
+              style={{
+                color: '#0d6efd',
+                fontWeight: 'bold',
+                fontSize: '18px',
+              }}
+            >
+              {currentMaxPopulationDensity.value.toLocaleString()} ppl/km²
+            </Text>
+            <Text
+              variant='secondary'
+              style={{ color: '#6c757d', fontSize: '12px' }}
+            >
+              (considering all overrides)
+            </Text>
+          </div>
+
+          {/* Show which landuse class contributes to the maximum */}
+          {hasMaxLanduse && currentMaxPopulationDensity.landuse && (
+            <div
+              style={{
+                marginTop: '8px',
+                padding: '8px',
+                backgroundColor: 'white',
+                border: '1px solid #e9ecef',
+                borderRadius: '4px',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
+              }}
+            >
+              <Text
+                variant='secondary'
+                style={{ color: '#6c757d', fontSize: '12px' }}
+              >
+                From:
+              </Text>
+              <div
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '4px',
+                  padding: '3px 6px',
+                  backgroundColor: '#e3f2fd',
+                  borderRadius: '3px',
+                  border: '1px solid #bbdefb',
+                }}
+              >
+                {getLanduseIcon(currentMaxPopulationDensity.landuse!.pyLabel)}
+                <Text
+                  variant='secondary'
+                  style={{
+                    color: '#1976d2',
+                    fontWeight: '500',
+                    fontSize: '12px',
+                  }}
+                >
+                  {currentMaxPopulationDensity.landuse!.pyLabel}
+                </Text>
+              </div>
+            </div>
+          )}
+        </div>
+
         {/* Scrollable content area */}
         <div
           style={{
@@ -200,7 +330,7 @@ export const PopulationDensityCorrectionModal = (props: Props) => {
             marginRight: '-8px',
           }}
         >
-          {correctedLandUse.map((landUse) => {
+          {overriddenLandUse.map((landUse) => {
             const hasOverride =
               landUse.OverridePopulationDensity !== null ||
               landUse.OverrideReason !== null;
@@ -245,7 +375,7 @@ export const PopulationDensityCorrectionModal = (props: Props) => {
                   ...sectionStyle,
                 }}
               >
-                {/* Top row: Land use info on left, corrected dropdown on right */}
+                {/* Top row with landuse info and remove button */}
                 <div
                   style={{
                     display: 'flex',
@@ -302,30 +432,75 @@ export const PopulationDensityCorrectionModal = (props: Props) => {
                     </Text>
                   </div>
 
-                  <div style={{ minWidth: '200px' }}>
-                    <Select
-                      label='Corrected Population Density'
-                      value={
-                        landUse.OverridePopulationDensity?.toString() ||
-                        getOriginalPopulationDensity(landUse.Code).toString()
-                      }
-                      onChange={(e) =>
-                        handlePopulationDensityChange(
-                          landUse.Code,
-                          parseInt(e.target.value, 10),
-                        )
-                      }
-                    >
-                      {getPopulationDensityOptions(
-                        getOriginalPopulationDensity(landUse.Code),
-                        landUse.OverridePopulationDensity,
-                      ).map((option) => (
-                        <option key={option.value} value={option.value}>
-                          {option.label}
-                        </option>
-                      ))}
-                    </Select>
-                  </div>
+                  {/* Remove Override Button - positioned using flexbox */}
+                  {hasOverride && (
+                    <TooltipElement tooltipContent='Remove override'>
+                      <div
+                        style={{
+                          cursor: 'pointer',
+                          fontSize: '14px',
+                          fontWeight: 'bold',
+                          width: '20px',
+                          height: '20px',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          borderRadius: '50%',
+                          backgroundColor: 'rgba(245, 124, 0, 0.1)',
+                          color: '#f57c00',
+                          transition: 'background-color 0.2s',
+                          lineHeight: '1',
+                          marginLeft: '16px',
+                        }}
+                        onClick={() => handleRemoveOverride(landUse.Code)}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter' || e.key === ' ') {
+                            e.preventDefault();
+                            handleRemoveOverride(landUse.Code);
+                          }
+                        }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.backgroundColor =
+                            'rgba(245, 124, 0, 0.2)';
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.backgroundColor =
+                            'rgba(245, 124, 0, 0.1)';
+                        }}
+                        role='button'
+                        tabIndex={0}
+                        aria-label='Remove override'
+                      >
+                        ×
+                      </div>
+                    </TooltipElement>
+                  )}
+                </div>
+
+                {/* Population density dropdown row */}
+                <div style={{ width: '100%' }}>
+                  <Select
+                    label='Corrected Population Density'
+                    value={
+                      landUse.OverridePopulationDensity?.toString() ||
+                      getOriginalPopulationDensity(landUse.Code).toString()
+                    }
+                    onChange={(e) =>
+                      handlePopulationDensityChange(
+                        landUse.Code,
+                        parseInt(e.target.value, 10),
+                      )
+                    }
+                  >
+                    {getPopulationDensityOptions(
+                      getOriginalPopulationDensity(landUse.Code),
+                      landUse.OverridePopulationDensity,
+                    ).map((option) => (
+                      <option key={option.value} value={option.value}>
+                        {option.label}
+                      </option>
+                    ))}
+                  </Select>
                 </div>
 
                 {/* Bottom row: Justification takes full width */}
@@ -371,4 +546,4 @@ export const PopulationDensityCorrectionModal = (props: Props) => {
   );
 };
 
-export default PopulationDensityCorrectionModal;
+export default PopulationDensityOverrideModal;

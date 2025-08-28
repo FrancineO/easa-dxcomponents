@@ -43,7 +43,7 @@ const getPixelSize = () => {
 export const useGetPopulationDensity = (
   flightVolume: FlightVolume | null,
   hFG: number,
-  correctedLandUse?: ImpactedLandUse[] | null,
+  overriddenLandUse?: ImpactedLandUse[] | null,
 ) => {
   const [populationDensity, setPopulationDensity] =
     useState<PopulationDensity | null>(null);
@@ -71,7 +71,7 @@ export const useGetPopulationDensity = (
       if (adjacentStats.statistics[0]?.max) {
         return _.round(adjacentStats.statistics[0].max, 2);
       }
-      return null;
+      return 0;
     },
     [],
   );
@@ -131,6 +131,7 @@ export const useGetPopulationDensity = (
       const popDensity: PopulationDensity = {
         maxPopDensityOperationalGroundRisk: null,
         avgPopDensityAdjacentArea: null,
+        maxPopDensitySource: 'pop-density',
       };
 
       // Get the max density for the adjacent area
@@ -166,11 +167,9 @@ export const useGetPopulationDensity = (
       if (!opAndGr) {
         return null;
       }
-      // const pixelSize = getPixelSize(hFG);
-      const pixelSize = getPixelSize();
+
       const landuseHistograms = await layer.computeHistograms({
         geometry: opAndGr as __esri.Polygon,
-        pixelSize,
       });
       const intersectedLanduseClasses: number[] = [];
       const counts = landuseHistograms.histograms?.[0]?.counts;
@@ -183,16 +182,51 @@ export const useGetPopulationDensity = (
       }
       // Use corrected values if available, otherwise use default lookup
       const densities = intersectedLanduseClasses.map((index) => {
-        if (correctedLandUse) {
-          const corrected = correctedLandUse.find(
+        // eslint-disable-next-line no-console
+        console.log(
+          `Processing landuse index: ${index} (type: ${typeof index})`,
+        );
+
+        if (overriddenLandUse) {
+          // eslint-disable-next-line no-console
+          console.log(`Looking for override with Code: '${index.toString()}'`);
+          // eslint-disable-next-line no-console
+          console.log(
+            'Available overrides:',
+            overriddenLandUse.map((lu) => ({
+              Code: lu.Code,
+              pyLabel: lu.pyLabel,
+              OverridePopulationDensity: lu.OverridePopulationDensity,
+            })),
+          );
+
+          const corrected = overriddenLandUse.find(
             (lu) => lu.Code === index.toString(),
           );
+
           if (corrected && corrected.OverridePopulationDensity !== null) {
+            // eslint-disable-next-line no-console
+            console.log(`Found override for landuse ${index}:`, corrected);
             return corrected.OverridePopulationDensity;
           }
+          // eslint-disable-next-line no-console
+          console.log(`No override found for landuse ${index}`);
         }
-        return landusePopDensityLookup[index];
+        const defaultDensity = landusePopDensityLookup[index];
+        // eslint-disable-next-line no-console
+        console.log(
+          `Using default density for landuse ${index}:`,
+          defaultDensity,
+        );
+        return defaultDensity;
       });
+
+      // eslint-disable-next-line no-console
+      console.log('Intersected landuse classes:', intersectedLanduseClasses);
+      // eslint-disable-next-line no-console
+      console.log('Corrected landuse data:', overriddenLandUse);
+      // eslint-disable-next-line no-console
+      console.log('Calculated densities:', densities);
 
       // Filter out undefined/null values and ensure we have valid densities
       const validDensities = densities.filter(
@@ -200,12 +234,12 @@ export const useGetPopulationDensity = (
       );
 
       if (validDensities.length === 0) {
-        return null;
+        return 0;
       }
 
       return Math.max(...validDensities);
     },
-    [correctedLandUse],
+    [overriddenLandUse],
   );
 
   const calculatePopDensities = useCallback(async () => {
@@ -274,10 +308,35 @@ export const useGetPopulationDensity = (
         maxPopDensityOperationalGroundRisk > 0 &&
         Number.isFinite(maxPopDensityOperationalGroundRisk)
       ) {
-        popDensity.maxPopDensityOperationalGroundRisk = Math.max(
-          popDensity.maxPopDensityOperationalGroundRisk ?? 0,
-          maxPopDensityOperationalGroundRisk,
-        );
+        const popDensityValue =
+          popDensity.maxPopDensityOperationalGroundRisk ?? 0;
+        const landuseValue = maxPopDensityOperationalGroundRisk;
+
+        if (landuseValue > popDensityValue) {
+          // Landuse-based calculation (which includes overrides) is higher
+          popDensity.maxPopDensityOperationalGroundRisk = landuseValue;
+          popDensity.maxPopDensitySource = 'landuse';
+
+          // Check if this is from an overridden value
+          if (overriddenLandUse && overriddenLandUse.length > 0) {
+            // Find which landuse class contributed to this value
+            const contributingLanduse = overriddenLandUse.find(
+              (lu) => lu.OverridePopulationDensity === landuseValue,
+            );
+            if (contributingLanduse) {
+              popDensity.maxPopDensitySource = 'overridden-landuse';
+              popDensity.maxPopDensityLanduseClass =
+                contributingLanduse.pyLabel;
+            }
+          }
+        } else {
+          // Population density layer is higher
+          popDensity.maxPopDensityOperationalGroundRisk = popDensityValue;
+          popDensity.maxPopDensitySource = 'pop-density';
+        }
+      } else {
+        // Only population density layer calculation available
+        popDensity.maxPopDensitySource = 'pop-density';
       }
 
       const avgPopDensityLanduseAdjacentArea = await getAvgDensity(
@@ -307,7 +366,7 @@ export const useGetPopulationDensity = (
     } finally {
       calculationInProgress.current = false;
     }
-  }, [correctedLandUse]); // Add correctedLandUse dependency since it's used in landuse calculation
+  }, [overriddenLandUse]); // Add overriddenLandUse dependency since it's used in landuse calculation
 
   return {
     populationDensity,

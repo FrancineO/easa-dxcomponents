@@ -86,12 +86,14 @@ export const landusePeopleOutdoor: Array<number> = [
   1210, 1222, 1241, 1410, 1421, 1422, 3310,
 ];
 
+// TODO: 1122 and 1123 should be excluded from the map
+
 export const landUseLabels: Record<number, string> = {
-  1111: 'Urban fabric', // New, generic label
-  1121: 'Urban fabric', // New, generic label
+  1111: 'Urban fabric',
+  1121: 'Urban fabric',
   1130: 'Urban vegetation',
   1210: 'Industrial or commercial units',
-  1221: 'Transport infrastructure', // New, generic label
+  1221: 'Transport infrastructure',
   1222: 'Major stations',
   1230: 'Port areas',
   1242: 'Airport terminals',
@@ -100,14 +102,14 @@ export const landUseLabels: Record<number, string> = {
   1421: 'Sport and leisure green',
   1422: 'Sport and leisure built-up',
   3310: 'Beaches, dunes and sand plains',
-  3311: 'Beaches, dunes and sand plains', // New, generic label
-  3312: 'Beaches, dunes and sand plains', // New
-  3313: 'Beaches, dunes and sand plains', // New
-  3314: 'Beaches, dunes and sand plains', // New
-  3315: 'Beaches, dunes and sand plains', // New
-  3316: 'Beaches, dunes and sand plains', // New
-  3317: 'Beaches, dunes and sand plains', // New
-  3318: 'Beaches, dunes and sand plains', // New
+  3311: 'Beaches, dunes and sand plains',
+  3312: 'Beaches, dunes and sand plains',
+  3313: 'Beaches, dunes and sand plains',
+  3314: 'Beaches, dunes and sand plains',
+  3315: 'Beaches, dunes and sand plains',
+  3316: 'Beaches, dunes and sand plains',
+  3317: 'Beaches, dunes and sand plains',
+  3318: 'Beaches, dunes and sand plains',
 };
 
 export const landuseRenderer = {
