@@ -168,13 +168,13 @@ export const PopDensitySourceInfo = (props: PopDensitySourceInfoProps) => {
             title: 'Overridden Landuse',
             icon: '✏️',
             overrideInfo,
-            description: 'Manually corrected population density value',
+            description: 'Manually adjusted population density value',
           };
         }
         return {
           title: 'Overridden Landuse',
           icon: '✏️',
-          description: 'Manually corrected population density value',
+          description: 'Manually adjusted population density value',
         };
       }
       default:
