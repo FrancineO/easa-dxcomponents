@@ -3,6 +3,7 @@ import { landusePopDensityLookup, landUseLabels } from '../renderers';
 import getLanduseIcon from '../legends/landuse-icons';
 import TooltipElement from './tooltip-element';
 import { Icon } from '@pega/cosmos-react-core';
+import { TbLayoutGrid, TbChartHistogram, TbPencil } from 'react-icons/tb';
 
 interface PopDensitySourceInfoProps {
   populationDensity: any;
@@ -121,7 +122,7 @@ export const PopDensitySourceInfo = (props: PopDensitySourceInfoProps) => {
     sourceType: PopulationDensitySource,
   ): {
     title: string;
-    icon: string;
+    icon: any;
     landuseClass?: { code: number; label: string } | null;
     description: string;
     infoLink?: string;
@@ -136,7 +137,7 @@ export const PopDensitySourceInfo = (props: PopDensitySourceInfoProps) => {
       case 'pop-density':
         return {
           title: 'Population Density Layer',
-          icon: '📊',
+          icon: TbChartHistogram,
           description: 'Data from JRC Global Human Settlement Layer (GHS-POP)',
           infoLink:
             'https://data.jrc.ec.europa.eu/dataset/98336641-fd1c-4992-8c7b-c470dd5eb81e',
@@ -148,7 +149,7 @@ export const PopDensitySourceInfo = (props: PopDensitySourceInfoProps) => {
         );
         return {
           title: 'Landuse Classification',
-          icon: '🏗️',
+          icon: TbLayoutGrid,
           landuseClass: highestLanduseClass,
           description:
             'Assumed population density value based on landuse classification',
@@ -166,21 +167,21 @@ export const PopDensitySourceInfo = (props: PopDensitySourceInfoProps) => {
         if (overrideInfo) {
           return {
             title: 'Overridden Landuse',
-            icon: '✏️',
+            icon: TbPencil,
             overrideInfo,
             description: 'Manually adjusted population density value',
           };
         }
         return {
           title: 'Overridden Landuse',
-          icon: '✏️',
+          icon: TbPencil,
           description: 'Manually adjusted population density value',
         };
       }
       default:
         return {
           title: 'Unknown Source',
-          icon: '❓',
+          icon: TbChartHistogram,
           description: 'Source of population density value unknown',
         };
     }
@@ -218,7 +219,9 @@ export const PopDensitySourceInfo = (props: PopDensitySourceInfoProps) => {
             fontWeight: 'bold',
           }}
         >
-          <span style={{ fontSize: '16px' }}>{content.icon}</span>
+          <span style={{ fontSize: '16px' }}>
+            <content.icon size={16} />
+          </span>
           <span>{content.title}</span>
         </div>
 
@@ -284,7 +287,6 @@ export const PopDensitySourceInfo = (props: PopDensitySourceInfoProps) => {
             gap: '6px',
           }}
         >
-          <span style={{ fontWeight: 'bold' }}>Class:</span>
           <span
             style={{
               display: 'inline-flex',
@@ -309,7 +311,6 @@ export const PopDensitySourceInfo = (props: PopDensitySourceInfoProps) => {
           }}
         >
           <div style={{ marginBottom: '4px' }}>
-            <span style={{ fontWeight: 'bold' }}>Class:</span>{' '}
             <span
               style={{
                 display: 'inline-flex',
