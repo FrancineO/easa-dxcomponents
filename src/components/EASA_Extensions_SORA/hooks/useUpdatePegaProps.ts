@@ -169,9 +169,6 @@ const useUpdatePegaProps = (
             ImpactedGeoZones: iGZ,
             ImpactedLandUseList: iLU ?? null,
             ImpactedLandUseInAdjacentAreaList: iLUAA ?? null,
-            PopulationDensityCorrections:
-              iLU?.filter((lu) => lu.OverridePopulationDensity !== null) ??
-              null,
           },
         },
       });
