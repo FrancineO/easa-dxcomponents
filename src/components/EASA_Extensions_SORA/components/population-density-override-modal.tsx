@@ -76,8 +76,18 @@ export const PopulationDensityOverrideModal = (props: Props) => {
     [],
   );
 
+  // Store the original state when the modal opens to compare against
+  const [originalState, setOriginalState] = useState<ImpactedLandUse[]>([]);
+
   useEffect(() => {
     if (props.impactedLandUse) {
+      // Deep clone the original state to avoid reference issues
+      const clonedState = props.impactedLandUse.map((item) => ({
+        ...item,
+        OverridePopulationDensity: item.OverridePopulationDensity,
+        OverrideReason: item.OverrideReason,
+      }));
+      setOriginalState(clonedState);
       setOverriddenLandUse([...props.impactedLandUse]);
     }
   }, [props.impactedLandUse]);
@@ -87,19 +97,26 @@ export const PopulationDensityOverrideModal = (props: Props) => {
     return landusePopDensityLookup[code] || 0;
   };
 
-  // Check if any changes have been made from the original values
+  // Check if any changes have been made from the original state when modal opened
   const isDirty = useMemo(() => {
-    if (!props.impactedLandUse) return false;
+    if (!originalState || originalState.length === 0) return false;
 
-    return overriddenLandUse.some((landUse) => {
-      const originalDensity = getOriginalPopulationDensity(landUse.Code);
-      return (
-        (landUse.OverridePopulationDensity !== null &&
-          landUse.OverridePopulationDensity !== originalDensity) ||
-        landUse.OverrideReason !== null
-      );
+    return overriddenLandUse.some((landUse, index) => {
+      const originalLandUse = originalState[index];
+      if (!originalLandUse) return false;
+
+      // Check if override population density has changed
+      const densityChanged =
+        landUse.OverridePopulationDensity !==
+        originalLandUse.OverridePopulationDensity;
+
+      // Check if override reason has changed
+      const reasonChanged =
+        landUse.OverrideReason !== originalLandUse.OverrideReason;
+
+      return densityChanged || reasonChanged;
     });
-  }, [overriddenLandUse, props.impactedLandUse]);
+  }, [overriddenLandUse, originalState]);
 
   // Check if all required fields are filled for overrides
   const isFormValid = useMemo(() => {
