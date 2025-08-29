@@ -712,31 +712,39 @@ export const EasaExtensionsSORA = (props: ComponentProps) => {
             fields={[
               {
                 name: 'Max. population in op. volume + ground risk buffer',
-                value: (
-                  <div>
-                    {loading ? (
-                      <Progress variant='ring' placement='inline' visible />
-                    ) : (
-                      maxPopDensity
-                    )}
-                    {populationDensity && flightVolume && !loading && (
-                      <PopDensitySourceInfo
-                        populationDensity={populationDensity}
-                        overriddenLandUse={overriddenLandUse}
-                        intersectingLanduseClasses={intersectingLanduseClasses}
-                        onRemoveOverride={handleRemoveOverride}
-                      />
-                    )}
-                  </div>
-                ),
+                value:
+                  maxPopDensity || loading ? (
+                    <div>
+                      {loading ? (
+                        <Progress variant='ring' placement='inline' visible />
+                      ) : (
+                        `${maxPopDensity} ppl/km²`
+                      )}
+                      {populationDensity && flightVolume && !loading && (
+                        <PopDensitySourceInfo
+                          populationDensity={populationDensity}
+                          overriddenLandUse={overriddenLandUse}
+                          intersectingLanduseClasses={
+                            intersectingLanduseClasses
+                          }
+                          onRemoveOverride={handleRemoveOverride}
+                        />
+                      )}
+                    </div>
+                  ) : null,
               },
               {
                 name: 'Average population density in adjacent area',
-                value: loading ? (
-                  <Progress variant='ring' placement='inline' visible />
-                ) : (
-                  avgPopDensity
-                ),
+                value:
+                  avgPopDensity || loading ? (
+                    <div>
+                      {loading ? (
+                        <Progress variant='ring' placement='inline' visible />
+                      ) : (
+                        `${avgPopDensity} ppl/km²`
+                      )}
+                    </div>
+                  ) : null,
               },
               {
                 name: 'Intrinsic ground risk',

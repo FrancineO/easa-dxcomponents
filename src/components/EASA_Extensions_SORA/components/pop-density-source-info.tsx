@@ -294,6 +294,62 @@ export const PopDensitySourceInfo = (props: PopDensitySourceInfoProps) => {
             gap: '8px',
           }}
         >
+          {/* Remove all overrides button - small and compact */}
+          <div
+            style={{
+              display: 'flex',
+              justifyContent: 'flex-end',
+              marginBottom: '4px',
+            }}
+          >
+            <TooltipElement tooltipContent='Remove all overrides'>
+              <div
+                style={{
+                  cursor: 'pointer',
+                  fontSize: '11px',
+                  fontWeight: 'bold',
+                  padding: '2px 6px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  borderRadius: '12px',
+                  backgroundColor: 'rgba(245, 124, 0, 0.1)',
+                  color: '#f57c00',
+                  transition: 'background-color 0.2s',
+                  lineHeight: '1',
+                  border: '1px solid rgba(245, 124, 0, 0.3)',
+                }}
+                onClick={() => {
+                  // Remove all overrides by calling onRemoveOverride for each one
+                  content.overrideInfo?.forEach((override) => {
+                    onRemoveOverride(override.landuseClass);
+                  });
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    content.overrideInfo?.forEach((override) => {
+                      onRemoveOverride(override.landuseClass);
+                    });
+                  }
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.backgroundColor =
+                    'rgba(245, 124, 0, 0.2)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.backgroundColor =
+                    'rgba(245, 124, 0, 0.1)';
+                }}
+                role='button'
+                tabIndex={0}
+                aria-label='Remove all overrides'
+              >
+                Remove all
+              </div>
+            </TooltipElement>
+          </div>
+
           {content.overrideInfo.map((override, index) => (
             <div
               key={override.landuseClass}

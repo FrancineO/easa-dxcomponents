@@ -192,6 +192,16 @@ export const PopulationDensityOverrideModal = (props: Props) => {
     );
   };
 
+  const handleRemoveAllOverrides = () => {
+    setOverriddenLandUse((prev) =>
+      prev.map((landUse) => ({
+        ...landUse,
+        OverridePopulationDensity: null,
+        OverrideReason: null,
+      })),
+    );
+  };
+
   const handleSave = () => {
     if (overriddenLandUse.length > 0) {
       props.onSave(overriddenLandUse);
@@ -541,22 +551,51 @@ export const PopulationDensityOverrideModal = (props: Props) => {
           style={{
             display: 'flex',
             gap: '8px',
-            justifyContent: 'flex-end',
+            justifyContent: 'space-between',
             paddingTop: '16px',
             borderTop: '1px solid #e0e0e0',
             flexShrink: 0,
           }}
         >
-          <Button variant='secondary' onClick={handleClose}>
-            Cancel
-          </Button>
+          {/* Left side: Remove all overrides button - always present but conditionally visible */}
           <Button
-            variant='primary'
-            onClick={handleSave}
-            disabled={!isDirty || !isFormValid}
+            variant='secondary'
+            onClick={handleRemoveAllOverrides}
+            style={{
+              color: '#f57c00',
+              borderColor: '#f57c00',
+              visibility: overriddenLandUse.some(
+                (landUse) =>
+                  landUse.OverridePopulationDensity !== null ||
+                  landUse.OverrideReason !== null,
+              )
+                ? 'visible'
+                : 'hidden',
+              pointerEvents: overriddenLandUse.some(
+                (landUse) =>
+                  landUse.OverridePopulationDensity !== null ||
+                  landUse.OverrideReason !== null,
+              )
+                ? 'auto'
+                : 'none',
+            }}
           >
-            Save
+            Remove all overrides
           </Button>
+
+          {/* Right side: Cancel and Save buttons */}
+          <div style={{ display: 'flex', gap: '8px' }}>
+            <Button variant='secondary' onClick={handleClose}>
+              Cancel
+            </Button>
+            <Button
+              variant='primary'
+              onClick={handleSave}
+              disabled={!isDirty || !isFormValid}
+            >
+              Save
+            </Button>
+          </div>
         </div>
       </div>
     </Modal>
