@@ -41,17 +41,17 @@ const getPixelSize = () => {
 };
 
 export const useGetPopulationDensity = (
-  flightVolume: FlightVolume | null,
+  flightVolumes: FlightVolume[] | null,
   hFG: number,
   overriddenLandUse?: ImpactedLandUse[] | null,
 ) => {
   const [populationDensity, setPopulationDensity] =
     useState<PopulationDensity | null>(null);
   const calculationInProgress = useRef(false);
-  const flightVolumeRef = useRef(flightVolume);
+  const flightVolumesRef = useRef(flightVolumes);
 
   // Update the ref when params change
-  flightVolumeRef.current = flightVolume;
+  flightVolumesRef.current = flightVolumes;
 
   const getMaxDensity = useCallback(
     async (geometry: __esri.Polygon, layer: __esri.ImageryLayer) => {
@@ -101,22 +101,36 @@ export const useGetPopulationDensity = (
   );
 
   const getOperationalAndGroundRiskGeometry = useCallback(() => {
-    const currentFlightVolume = flightVolumeRef.current;
+    const currentFlightVolumes = flightVolumesRef.current;
 
-    if (
-      !currentFlightVolume?.flightGeography?.geometry ||
-      !currentFlightVolume?.contingencyVolume?.geometry ||
-      !currentFlightVolume?.groundRiskVolume?.geometry
-    ) {
+    if (!currentFlightVolumes || currentFlightVolumes.length === 0) {
       return null;
     }
 
     try {
-      return geometryEngine.union([
-        currentFlightVolume.flightGeography.geometry as __esri.Polygon,
-        currentFlightVolume.contingencyVolume.geometry as __esri.Polygon,
-        currentFlightVolume.groundRiskVolume.geometry as __esri.Polygon,
-      ]);
+      const allGeometries: __esri.Polygon[] = [];
+
+      // Collect all geometries from all flight volumes
+      for (const flightVolume of currentFlightVolumes) {
+        if (
+          flightVolume?.flightGeography?.geometry &&
+          flightVolume?.contingencyVolume?.geometry &&
+          flightVolume?.groundRiskVolume?.geometry
+        ) {
+          allGeometries.push(
+            flightVolume.flightGeography.geometry as __esri.Polygon,
+            flightVolume.contingencyVolume.geometry as __esri.Polygon,
+            flightVolume.groundRiskVolume.geometry as __esri.Polygon,
+          );
+        }
+      }
+
+      if (allGeometries.length === 0) {
+        return null;
+      }
+
+      // Union all geometries
+      return geometryEngine.union(allGeometries);
     } catch (error) {
       // If geometry union fails, return null
       return null;
@@ -126,7 +140,7 @@ export const useGetPopulationDensity = (
   const getPopulationDensity = useCallback(
     async (layer: __esri.ImageryLayer) => {
       // Use the ref instead of the params dependency
-      const currentFlightVolume = flightVolumeRef.current;
+      const currentFlightVolumes = flightVolumesRef.current;
 
       const popDensity: PopulationDensity = {
         maxPopDensityOperationalGroundRisk: null,
@@ -134,7 +148,7 @@ export const useGetPopulationDensity = (
         maxPopDensitySource: 'pop-density',
       };
 
-      // Get the max density for the adjacent area
+      // Get the max density for the combined operational and ground risk area
       const opAndGr = getOperationalAndGroundRiskGeometry();
       if (!opAndGr) {
         return popDensity;
@@ -142,12 +156,30 @@ export const useGetPopulationDensity = (
       const maxDensity = await getMaxDensity(opAndGr as __esri.Polygon, layer);
       popDensity.maxPopDensityOperationalGroundRisk = maxDensity;
 
-      // Get the average density for the adjacent area
-      const avgDensity = await getAvgDensity(
-        currentFlightVolume?.adjacentArea?.geometry as __esri.Polygon,
-        layer,
-      );
-      popDensity.avgPopDensityAdjacentArea = avgDensity;
+      // Get the average density for all adjacent areas combined
+      if (currentFlightVolumes && currentFlightVolumes.length > 0) {
+        const adjacentAreas = currentFlightVolumes
+          .map((fv) => fv.adjacentArea?.geometry)
+          .filter(Boolean) as __esri.Polygon[];
+
+        if (adjacentAreas.length > 0) {
+          try {
+            // Union all adjacent areas
+            const combinedAdjacentArea = geometryEngine.union(adjacentAreas);
+            if (combinedAdjacentArea) {
+              const avgDensity = await getAvgDensity(
+                combinedAdjacentArea as __esri.Polygon,
+                layer,
+              );
+              popDensity.avgPopDensityAdjacentArea = avgDensity;
+            }
+          } catch (error) {
+            // If union fails, use the first adjacent area as fallback
+            const avgDensity = await getAvgDensity(adjacentAreas[0], layer);
+            popDensity.avgPopDensityAdjacentArea = avgDensity;
+          }
+        }
+      }
 
       return popDensity;
     },
@@ -244,29 +276,27 @@ export const useGetPopulationDensity = (
 
   const calculatePopDensities = useCallback(async () => {
     // Use the ref instead of the params dependency
-    const currentFlightVolume = flightVolumeRef.current;
+    const currentFlightVolumes = flightVolumesRef.current;
 
     // Prevent multiple simultaneous calculations
     if (calculationInProgress.current) return;
 
     // Reset states if no params
-    if (!currentFlightVolume) {
+    if (!currentFlightVolumes || currentFlightVolumes.length === 0) {
       setPopulationDensity(null);
       return;
     }
 
-    const {
-      flightGeography,
-      contingencyVolume,
-      groundRiskVolume,
-      adjacentArea,
-    } = currentFlightVolume;
-    if (
-      !flightGeography ||
-      !contingencyVolume ||
-      !groundRiskVolume ||
-      !adjacentArea
-    ) {
+    // Check that all flight volumes have the required properties
+    const hasValidVolumes = currentFlightVolumes.every(
+      (fv) =>
+        fv.flightGeography &&
+        fv.contingencyVolume &&
+        fv.groundRiskVolume &&
+        fv.adjacentArea,
+    );
+
+    if (!hasValidVolumes) {
       setPopulationDensity(null);
       return;
     }
@@ -339,19 +369,57 @@ export const useGetPopulationDensity = (
         popDensity.maxPopDensitySource = 'pop-density';
       }
 
-      const avgPopDensityLanduseAdjacentArea = await getAvgDensity(
-        adjacentArea.geometry as __esri.Polygon,
-        landuseLayer,
-      );
+      // Calculate average density for all adjacent areas combined using landuse layer
+      if (
+        landuseLayer &&
+        currentFlightVolumes &&
+        currentFlightVolumes.length > 0
+      ) {
+        const adjacentAreas = currentFlightVolumes
+          .map((fv) => fv.adjacentArea?.geometry)
+          .filter(Boolean) as __esri.Polygon[];
 
-      // TODO: Is this correct? Can I just take an average of the two averages?
-      if (avgPopDensityLanduseAdjacentArea !== 0) {
-        const combined =
-          (popDensity.avgPopDensityAdjacentArea ?? 0) +
-          (avgPopDensityLanduseAdjacentArea ?? 0);
+        if (adjacentAreas.length > 0) {
+          try {
+            // Union all adjacent areas
+            const combinedAdjacentArea = geometryEngine.union(adjacentAreas);
+            if (combinedAdjacentArea) {
+              const avgPopDensityLanduseAdjacentArea = await getAvgDensity(
+                combinedAdjacentArea as __esri.Polygon,
+                landuseLayer,
+              );
 
-        popDensity.avgPopDensityAdjacentArea =
-          combined !== 0 ? _.round(combined / 2, combined < 1 ? 2 : 0) : 0;
+              // TODO: Is this correct? Can I just take an average of the two averages?
+              if (avgPopDensityLanduseAdjacentArea !== 0) {
+                const combined =
+                  (popDensity.avgPopDensityAdjacentArea ?? 0) +
+                  (avgPopDensityLanduseAdjacentArea ?? 0);
+
+                popDensity.avgPopDensityAdjacentArea =
+                  combined !== 0
+                    ? _.round(combined / 2, combined < 1 ? 2 : 0)
+                    : 0;
+              }
+            }
+          } catch (error) {
+            // If union fails, use the first adjacent area as fallback
+            const avgPopDensityLanduseAdjacentArea = await getAvgDensity(
+              adjacentAreas[0],
+              landuseLayer,
+            );
+
+            if (avgPopDensityLanduseAdjacentArea !== 0) {
+              const combined =
+                (popDensity.avgPopDensityAdjacentArea ?? 0) +
+                (avgPopDensityLanduseAdjacentArea ?? 0);
+
+              popDensity.avgPopDensityAdjacentArea =
+                combined !== 0
+                  ? _.round(combined / 2, combined < 1 ? 2 : 0)
+                  : 0;
+            }
+          }
+        }
       }
 
       setPopulationDensity(popDensity);

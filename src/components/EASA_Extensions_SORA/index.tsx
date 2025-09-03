@@ -90,8 +90,8 @@ export const EasaExtensionsSORA = (props: ComponentProps) => {
     printDpi,
   } = props;
 
-  const [flightGeography, setFlightGeography] = useState<__esri.Graphic | null>(
-    null,
+  const [flightGeographies, setFlightGeographies] = useState<__esri.Graphic[]>(
+    [],
   );
   // const [flightPath, setFlightPath] = useState<__esri.Geometry | null>(null);
   const [layersAdded, setLayersAdded] = useState(false);
@@ -107,6 +107,7 @@ export const EasaExtensionsSORA = (props: ComponentProps) => {
   const [overriddenLandUse, setOverriddenLandUse] = useState<
     ImpactedLandUse[] | null
   >(null);
+  const [isAddMode, setIsAddMode] = useState(false);
 
   const { create } = useModalManager();
 
@@ -148,9 +149,9 @@ export const EasaExtensionsSORA = (props: ComponentProps) => {
     props.vWind,
   ]);
 
-  const { flightVolume, calculateVolume } = useCalculateFlightVolume({
+  const { flightVolumes, calculateVolume } = useCalculateFlightVolume({
     ...props,
-    flightGeography,
+    flightGeographies, // Pass the array of flight geographies
   });
 
   // Replace the existing useEffect with useDebouncedEffect
@@ -158,7 +159,7 @@ export const EasaExtensionsSORA = (props: ComponentProps) => {
     () => {
       if (!layersAdded || !propsValid) return;
       setErrorText(null);
-      if (flightGeography) {
+      if (flightGeographies?.length > 0 && !isAddMode) {
         setLoading(true);
       }
       try {
@@ -166,22 +167,35 @@ export const EasaExtensionsSORA = (props: ComponentProps) => {
       } catch (error: any) {
         setErrorText(error.message);
         setLoading(false);
-        // eslint-disable-next-line no-console
-        console.error(error);
+        // Silently handle errors
       }
     },
     300,
-    [flightGeography, props, layersAdded, calculateVolume],
+    [flightGeographies, props, layersAdded, calculateVolume],
   );
+
+  // Function to toggle drawing mode for additional flight paths
+  const handleAddFlightPath = useCallback(() => {
+    if (propsValid) {
+      if (isAddMode) {
+        // Exit add mode
+        setIsAddMode(false);
+      } else {
+        // Enable drawing mode for a new flight path
+        // The current flightGeography will persist
+        // User can draw another path
+        setIsAddMode(true);
+        // The toolbar will handle the drawing mode
+        // We just need to ensure it's ready to accept new paths
+        // and that existing paths are preserved and locked
+      }
+      setShowPopulationDensityCorrection(false); // Close any open modals
+    }
+  }, [propsValid, isAddMode]);
 
   // Set up the hook for population density
   const { populationDensity, calculatePopDensities } = useGetPopulationDensity(
-    flightVolume
-      ? {
-          ...flightVolume,
-          flightGeography,
-        }
-      : null,
+    flightVolumes,
     hFG,
     overriddenLandUse,
   );
@@ -191,11 +205,11 @@ export const EasaExtensionsSORA = (props: ComponentProps) => {
     intersectingLanduseClasses,
     intersectingAdjacentAreaLanduseClasses,
     queryIntersectingLanduses,
-  } = useGetIntersectingLanduses(flightVolume);
+  } = useGetIntersectingLanduses(flightVolumes);
 
   // Set up the hook to get the intersecting geozones
   const { intersectingGeozones, queryIntersectingGeozones } =
-    useGetIntersectingGeozones(flightVolume);
+    useGetIntersectingGeozones(flightVolumes);
 
   // Set up the hook for ground risk
   const { groundRisk, calculateIntrinsicGroundRisk } =
@@ -224,7 +238,7 @@ export const EasaExtensionsSORA = (props: ComponentProps) => {
 
   // Set up the hook for highlighting the intersecting landuse
   const { highlightIntersectingLanduse } =
-    useHighlightIntersectingLanduse(flightVolume);
+    useHighlightIntersectingLanduse(flightVolumes);
 
   const getGeozoneLabel = (geozone: __esri.Graphic) => {
     if (!geozone || !geozonesRenderer) return null;
@@ -267,14 +281,24 @@ export const EasaExtensionsSORA = (props: ComponentProps) => {
     pConnect,
     populationDensity,
     printRequest,
-    flightGeography?.geometry ?? null,
+    flightGeographies.length > 0
+      ? (flightGeographies[0]?.geometry ?? null)
+      : null,
     mapState,
     groundRisk,
     errorText,
-    flightVolume?.contingencyVolumeHeight ?? null,
-    flightVolume?.adjacentVolumeWidth ?? null,
-    flightVolume?.contingencyVolumeWidth ?? null,
-    flightVolume?.groundRiskBufferWidth ?? null,
+    flightVolumes.length > 0
+      ? (flightVolumes[0]?.contingencyVolumeHeight ?? null)
+      : null,
+    flightVolumes.length > 0
+      ? (flightVolumes[0]?.adjacentVolumeWidth ?? null)
+      : null,
+    flightVolumes.length > 0
+      ? (flightVolumes[0]?.contingencyVolumeWidth ?? null)
+      : null,
+    flightVolumes.length > 0
+      ? (flightVolumes[0]?.groundRiskBufferWidth ?? null)
+      : null,
     intersectingGeozones
       ?.map((geozone: __esri.Graphic) => {
         return getGeozoneLabel(geozone);
@@ -306,7 +330,7 @@ export const EasaExtensionsSORA = (props: ComponentProps) => {
 
       const fg = getFlightGeography(flightPathJSON);
       if (!fg) return;
-      setFlightGeography(fg);
+      setFlightGeographies([fg]);
     }
   }, [flightPathJSON, layersAdded]);
 
@@ -315,9 +339,9 @@ export const EasaExtensionsSORA = (props: ComponentProps) => {
 
   // Set up the effect for print request
   useEffect(() => {
-    if (!flightVolume) return;
+    if (flightVolumes.length === 0) return;
     getPrintRequest();
-  }, [getPrintRequest, flightVolume]);
+  }, [getPrintRequest, flightVolumes]);
 
   useEffect(() => {
     if (updatedMapState) {
@@ -326,41 +350,39 @@ export const EasaExtensionsSORA = (props: ComponentProps) => {
   }, [updatedMapState]);
 
   useEffect(() => {
-    // Reset corrected landuse when flight volume changes
+    // Reset corrected landuse when flight volumes change
     setOverriddenLandUse(null);
-  }, [flightVolume]);
+  }, [flightVolumes]);
 
-  // Call calculatePopDensities when flightVolume changes
+  // Call calculatePopDensities when flightVolumes change
   useEffect(() => {
     queryIntersectingLanduses();
-    if (!flightVolume) return;
+    if (flightVolumes.length === 0) return;
     calculatePopDensities()
       .catch((error) => {
         setErrorText(error.message);
-        // eslint-disable-next-line no-console
-        console.error(error);
+        // Silently handle errors
       })
       .finally(() => {
         setLoading(false);
       });
-  }, [flightVolume, calculatePopDensities, queryIntersectingLanduses]);
+  }, [flightVolumes, calculatePopDensities, queryIntersectingLanduses]);
 
   // Recalculate population densities when overrides change
   useEffect(() => {
-    if (!flightVolume || !layersAdded) return;
+    if (flightVolumes.length === 0 || !layersAdded) return;
     setLoading(true);
     calculatePopDensities().catch((error) => {
       setErrorText(error.message);
-      // eslint-disable-next-line no-console
-      console.error(error);
+      // Silently handle errors
     });
-  }, [overriddenLandUse, calculatePopDensities, flightVolume, layersAdded]);
+  }, [overriddenLandUse, calculatePopDensities, flightVolumes, layersAdded]);
 
-  // highlight the intersecting landuse when flightVolume changes
+  // highlight the intersecting landuse when flightVolumes change
   useEffect(() => {
     if (!layersAdded) return;
     highlightIntersectingLanduse();
-  }, [flightVolume, layersAdded, highlightIntersectingLanduse]);
+  }, [flightVolumes, layersAdded, highlightIntersectingLanduse]);
 
   // Call calculateIntrinsicGroundRisk when populationDensity, cd, or vO changes
   useEffect(() => {
@@ -371,16 +393,15 @@ export const EasaExtensionsSORA = (props: ComponentProps) => {
       if (error instanceof GroundRiskError) {
         setErrorText(`Error calculating ground risk: ${error.message}`);
       }
-      // eslint-disable-next-line no-console
-      console.error(error);
+      // Silently handle errors
     }
   }, [populationDensity, cd, vO, layersAdded, calculateIntrinsicGroundRisk]);
 
-  // Call queryIntersectingGeozones when flightVolume changes
+  // Call queryIntersectingGeozones when flightVolumes change
   useEffect(() => {
     if (!layersAdded) return;
     queryIntersectingGeozones();
-  }, [flightVolume, layersAdded, queryIntersectingGeozones]);
+  }, [flightVolumes, layersAdded, queryIntersectingGeozones]);
 
   // Call updatePegaProps when groundRisk, printRequest, or intersectingGeozones changes
   useEffect(() => {
@@ -400,11 +421,11 @@ export const EasaExtensionsSORA = (props: ComponentProps) => {
   ]);
 
   const maxPopDensity = useMemo(() => {
-    if (!populationDensity || !flightGeography) return null;
+    if (!populationDensity || flightGeographies.length === 0) return null;
     return populationDensity?.maxPopDensityOperationalGroundRisk === 0
       ? '0'
       : populationDensity?.maxPopDensityOperationalGroundRisk;
-  }, [populationDensity, flightGeography]);
+  }, [populationDensity, flightGeographies]);
 
   // Handler for removing overrides
   const handleRemoveOverride = useCallback(
@@ -429,16 +450,16 @@ export const EasaExtensionsSORA = (props: ComponentProps) => {
   );
 
   const avgPopDensity = useMemo(() => {
-    if (!populationDensity || !flightGeography) return null;
+    if (!populationDensity || !flightGeographies) return null;
     return populationDensity?.avgPopDensityAdjacentArea === 0
       ? '0'
       : populationDensity?.avgPopDensityAdjacentArea;
-  }, [populationDensity, flightGeography]);
+  }, [populationDensity, flightGeographies]);
 
   const groundRiskValue = useMemo(() => {
-    if (!groundRisk || !flightGeography) return null;
+    if (!groundRisk || !flightGeographies) return null;
     return groundRisk;
-  }, [groundRisk, flightGeography]);
+  }, [groundRisk, flightGeographies]);
 
   const populationDensityCorrectionModal = useCallback(() => {
     return (
@@ -547,10 +568,34 @@ export const EasaExtensionsSORA = (props: ComponentProps) => {
                 onFlightGeographyChange={(g, autoZoomToFlightPath) => {
                   // Reset corrected landuse when user draws new flight path
 
-                  setFlightGeography(g);
-                  if (autoZoomToFlightPath) {
+                  if (g) {
+                    // Check if this graphic is already in the array to prevent duplicates
+                    setFlightGeographies((prev) => {
+                      // Check if the graphic is already in the array by comparing geometries
+                      const isDuplicate = prev.some(
+                        (existingG) =>
+                          existingG.geometry &&
+                          g.geometry &&
+                          existingG.geometry.type === g.geometry.type &&
+                          JSON.stringify(existingG.geometry.toJSON()) ===
+                            JSON.stringify(g.geometry.toJSON()),
+                      );
+
+                      if (isDuplicate) {
+                        return prev; // Don't add duplicate
+                      }
+
+                      return isAddMode ? [...prev, g] : [g];
+                    });
+                    // Keep add mode active so user can continue adding more paths
+                    // Add mode will be exited when user clicks the button again or clears
+                  } else {
+                    setFlightGeographies([]);
+                  }
+
+                  if (autoZoomToFlightPath && g) {
                     getView().goTo(
-                      (g?.geometry as __esri.Geometry)?.extent?.expand(1.5),
+                      (g.geometry as __esri.Geometry)?.extent?.expand(1.5),
                     );
                   }
                 }}
@@ -558,6 +603,7 @@ export const EasaExtensionsSORA = (props: ComponentProps) => {
                 flightPathJSON={flightPathJSON}
                 onGeozoneInfoChange={setGeozoneInfo}
                 enabled={propsValid}
+                isAddMode={isAddMode}
               />
             </div>
           </div>
@@ -635,14 +681,38 @@ export const EasaExtensionsSORA = (props: ComponentProps) => {
             }
           />
 
-          {/* Population Density Correction Button - positioned over right corner of map */}
+          {/* Add Flight Path Button - positioned over top right corner of map */}
+          {flightGeographies.length > 0 && (
+            <div
+              style={{
+                position: 'absolute',
+                top: '10px',
+                right: '10px',
+                zIndex: 1000,
+              }}
+            >
+              <Button
+                variant='primary'
+                onClick={handleAddFlightPath}
+                disabled={!propsValid}
+                style={{
+                  boxShadow: '0 2px 8px rgba(0, 0, 0, 0.15)',
+                  border: '1px solid #e0e0e0',
+                }}
+              >
+                {isAddMode ? 'Exit Add Mode' : 'Add Flight Path'}
+              </Button>
+            </div>
+          )}
+
+          {/* Population Density Correction Button - positioned over bottom left corner of map */}
           {intersectingLanduseClasses &&
             intersectingLanduseClasses.length > 0 && (
               <div
                 style={{
                   position: 'absolute',
-                  top: '10px',
-                  right: '10px',
+                  bottom: '10px',
+                  left: '10px',
                   zIndex: 1000,
                 }}
               >
@@ -720,16 +790,18 @@ export const EasaExtensionsSORA = (props: ComponentProps) => {
                       ) : (
                         `${maxPopDensity} ppl/km²`
                       )}
-                      {populationDensity && flightVolume && !loading && (
-                        <PopDensitySourceInfo
-                          populationDensity={populationDensity}
-                          overriddenLandUse={overriddenLandUse}
-                          intersectingLanduseClasses={
-                            intersectingLanduseClasses
-                          }
-                          onRemoveOverride={handleRemoveOverride}
-                        />
-                      )}
+                      {populationDensity &&
+                        flightVolumes.length > 0 &&
+                        !loading && (
+                          <PopDensitySourceInfo
+                            populationDensity={populationDensity}
+                            overriddenLandUse={overriddenLandUse}
+                            intersectingLanduseClasses={
+                              intersectingLanduseClasses
+                            }
+                            onRemoveOverride={handleRemoveOverride}
+                          />
+                        )}
                     </div>
                   ) : null,
               },
@@ -763,7 +835,7 @@ export const EasaExtensionsSORA = (props: ComponentProps) => {
               gap: '2rem',
               maxWidth: '70%',
             }}
-            flightVolume={flightVolume}
+            flightVolumes={flightVolumes}
             intersectingGeozones={intersectingGeozones}
             intersectingLanduseClasses={intersectingLanduseClasses}
             geozonesRenderer={geozonesRenderer}

@@ -70,7 +70,7 @@ export type ComponentProps = {
 } & MapProps;
 
 export type FlightVolumeParams = {
-  flightGeography: __esri.Graphic | null;
+  flightGeographies: __esri.Graphic[];
 } & ComponentProps;
 
 export type FlightVolume = {
@@ -84,11 +84,36 @@ export type FlightVolume = {
   flightGeography: __esri.Graphic | null;
 };
 
+export type FlightVolumeMultiple = {
+  flightVolumes: FlightVolume[];
+  combinedContingencyVolume: __esri.Graphic | null;
+  combinedGroundRiskVolume: __esri.Graphic | null;
+  combinedAdjacentArea: __esri.Graphic | null;
+  maxContingencyVolumeHeight: number | null;
+  maxAdjacentVolumeWidth: number | null;
+  maxContingencyVolumeWidth: number | null;
+  maxGroundRiskBufferWidth: number | null;
+};
+
 export type PopulationDensity = {
   maxPopDensityOperationalGroundRisk: number | null;
   avgPopDensityAdjacentArea: number | null;
   maxPopDensitySource: PopulationDensitySource | null;
   maxPopDensityLanduseClass?: string | null;
+};
+
+export type PopulationDensityMultiple = {
+  flightPathDensities: {
+    flightPathIndex: number;
+    maxPopDensityOperationalGroundRisk: number | null;
+    avgPopDensityAdjacentArea: number | null;
+    maxPopDensitySource: PopulationDensitySource | null;
+    maxPopDensityLanduseClass?: string | null;
+  }[];
+  overallMaxPopDensityOperationalGroundRisk: number | null;
+  overallAvgPopDensityAdjacentArea: number | null;
+  overallMaxPopDensitySource: PopulationDensitySource | null;
+  overallMaxPopDensityLanduseClass?: string | null;
 };
 
 export type PopulationDensitySource =

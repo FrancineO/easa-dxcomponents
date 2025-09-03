@@ -3,27 +3,51 @@ import { LayerId, type FlightVolume } from '../types';
 import * as geometryEngine from '@arcgis/core/geometry/geometryEngine';
 import { getView } from '../map/view';
 
-const useGetIntersectingGeozones = (flightVolume: FlightVolume | null) => {
+const useGetIntersectingGeozones = (flightVolumes: FlightVolume[] | null) => {
   const [intersectingGeozones, setIntersectingGeozones] = useState<
     __esri.Graphic[]
   >([]);
 
   const queryIntersectingGeozones = useCallback(async () => {
-    if (
-      !flightVolume ||
-      !flightVolume.flightGeography ||
-      !flightVolume.contingencyVolume ||
-      !flightVolume.groundRiskVolume
-    ) {
+    if (!flightVolumes || flightVolumes.length === 0) {
       setIntersectingGeozones([]);
       return;
     }
 
-    const geometry = geometryEngine.union([
-      flightVolume.flightGeography?.geometry,
-      flightVolume.contingencyVolume?.geometry,
-      flightVolume.groundRiskVolume?.geometry,
-    ]) as __esri.Polygon;
+    // Check that all flight volumes have the required properties
+    const hasValidVolumes = flightVolumes.every(
+      (fv) => fv.flightGeography && fv.contingencyVolume && fv.groundRiskVolume,
+    );
+
+    if (!hasValidVolumes) {
+      setIntersectingGeozones([]);
+      return;
+    }
+
+    // Collect all geometries from all flight volumes
+    const allGeometries: __esri.Polygon[] = [];
+
+    for (const flightVolume of flightVolumes) {
+      if (
+        flightVolume.flightGeography?.geometry &&
+        flightVolume.contingencyVolume?.geometry &&
+        flightVolume.groundRiskVolume?.geometry
+      ) {
+        allGeometries.push(
+          flightVolume.flightGeography.geometry as __esri.Polygon,
+          flightVolume.contingencyVolume.geometry as __esri.Polygon,
+          flightVolume.groundRiskVolume.geometry as __esri.Polygon,
+        );
+      }
+    }
+
+    if (allGeometries.length === 0) {
+      setIntersectingGeozones([]);
+      return;
+    }
+
+    // Union all geometries
+    const geometry = geometryEngine.union(allGeometries) as __esri.Polygon;
 
     getView().when(async () => {
       const map = getView().map;
@@ -69,7 +93,7 @@ const useGetIntersectingGeozones = (flightVolume: FlightVolume | null) => {
 
       setIntersectingGeozones(allFeatures);
     });
-  }, [flightVolume]);
+  }, [flightVolumes]);
 
   return {
     intersectingGeozones,

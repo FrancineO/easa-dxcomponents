@@ -65,6 +65,7 @@ type Props = {
   // onFlightPathChange: (path: __esri.Geometry | null) => void;
   onGeozoneInfoChange: (info: string | null) => void;
   enabled: boolean;
+  isAddMode?: boolean; // New prop to indicate if we're adding to existing paths
 };
 
 const bufferGraphicsLayerId = 'easa-sora-tool-buffer-graphics';
@@ -82,6 +83,7 @@ export const Toolbar = (props: Props) => {
     // onFlightPathChange,
     onGeozoneInfoChange,
     enabled,
+    isAddMode = false, // Default to false for backward compatibility
   } = props;
 
   let PCore: any;
@@ -108,6 +110,42 @@ export const Toolbar = (props: Props) => {
   const pendingRadiusRef = useRef(500);
   const radiusRef = useRef(500);
   const sketchViewModelRef = useRef<SketchViewModel | null>(null);
+  const lastProcessedGraphicRef = useRef<__esri.Graphic | null>(null);
+  const previousIsAddModeRef = useRef<boolean>(false);
+  const selectedToolRef = useRef<Tool | null>(null);
+
+  // Keep the ref in sync with the state
+  useEffect(() => {
+    selectedToolRef.current = selectedTool;
+  }, [selectedTool]);
+
+  const getPreservationLayer = useCallback(() => {
+    let l = getView().map?.findLayerById(
+      'easa-sora-preserved-graphics',
+    ) as GraphicsLayer;
+    if (!l) {
+      l = new GraphicsLayer({ id: 'easa-sora-preserved-graphics' });
+      getView().map?.add(l);
+    }
+    return l;
+  }, []);
+
+  const enterCreateMode = useCallback(() => {
+    const currentSelectedTool = selectedToolRef.current;
+    if (sketchViewModelRef.current && currentSelectedTool) {
+      // Start create mode with the currently selected tool
+      sketchViewModelRef.current.create(
+        currentSelectedTool as
+          | 'circle'
+          | 'point'
+          | 'multipoint'
+          | 'polyline'
+          | 'polygon'
+          | 'mesh'
+          | 'rectangle',
+      );
+    }
+  }, []);
 
   useEffect(() => {
     pendingRadiusRef.current = pendingRadius;
@@ -169,6 +207,39 @@ export const Toolbar = (props: Props) => {
     }
   }, [pendingRadius, updateCircleRadius]);
 
+  // Watch for changes in isAddMode and notify parent when entering create mode
+  useEffect(() => {
+    // Lock existing graphics by moving them to a separate layer
+    // and prepare SketchViewModel for new drawing
+    if (isAddMode && sketchViewModelRef.current) {
+      // Cancel any current editing
+      sketchViewModelRef.current.cancel();
+
+      // Move existing graphics to a separate layer to preserve them
+      const existingGraphics =
+        sketchViewModelRef.current.layer.graphics.toArray();
+      if (existingGraphics.length > 0) {
+        // Create a preservation layer if it doesn't exist
+        const preservationLayer = getPreservationLayer();
+
+        // Move existing graphics to preservation layer
+        existingGraphics.forEach((existingGraphic) => {
+          sketchViewModelRef.current?.layer.remove(existingGraphic);
+          preservationLayer.add(existingGraphic);
+        });
+      }
+
+      getView()
+        .when(() => getView().ready && sketchViewModelRef.current)
+        .then(() => {
+          enterCreateMode();
+        });
+    }
+
+    // Update the previous isAddMode ref
+    previousIsAddModeRef.current = isAddMode;
+  }, [isAddMode, selectedTool, getPreservationLayer, enterCreateMode]);
+
   const getBufferLayer = useCallback(() => {
     let l = getView().map?.findLayerById(
       bufferGraphicsLayerId,
@@ -184,9 +255,14 @@ export const Toolbar = (props: Props) => {
     (event: any) => {
       if (event.state === 'start') {
         setGraphic(null);
-        sketchViewModelRef.current?.layer.removeAll();
-        const l = getBufferLayer();
-        l?.removeAll();
+        // Clear the last processed graphic ref when starting a new drawing
+        lastProcessedGraphicRef.current = null;
+        // Only clear graphics if not in add mode
+        if (!isAddMode) {
+          sketchViewModelRef.current?.layer.removeAll();
+          const l = getBufferLayer();
+          l?.removeAll();
+        }
       }
       if (
         event.state === 'active' &&
@@ -232,21 +308,37 @@ export const Toolbar = (props: Props) => {
             radiusUnit: 'meters',
           });
 
-          // No need to update radius state since we're always using the current radius
-
-          // we have to complete the circle creation because if we don't, we get a second circle graphic.
-          // the sketchviewmodel holds on to the original graphic even if we only want to update the geometry of the graphic.
-          // so we have to complete the creation and then set the flow to create circle.
-          // In this way the user can not move a circle but can create a new one on another location immediately.
           sketchViewModelRef.current?.complete();
           sketchViewModelRef.current?.create('circle');
+        } else if (isAddMode) {
+          // Only call onFlightGeographyChange if we have a valid graphic and haven't processed it already
+          if (
+            event.graphic &&
+            event.graphic.geometry &&
+            event.graphic !== lastProcessedGraphicRef.current
+          ) {
+            lastProcessedGraphicRef.current = event.graphic;
+            onFlightGeographyChange(event.graphic, autoZoomToFlightPath);
+          }
+          // Clear the graphic state since we're in add mode
+          setGraphic(null);
         } else {
+          // Normal mode - update the SketchViewModel and set the graphic
           sketchViewModelRef.current?.update([event.graphic]);
+          setGraphic(event.graphic);
         }
-        setGraphic(event.graphic);
+        // keep the create mode active so user can continue adding more paths
+        enterCreateMode();
       }
     },
-    [getBufferLayer, sketchViewModelRef],
+    [
+      getBufferLayer,
+      sketchViewModelRef,
+      isAddMode,
+      onFlightGeographyChange,
+      autoZoomToFlightPath,
+      enterCreateMode,
+    ],
   );
 
   const onUpdate = useCallback(
@@ -352,41 +444,8 @@ export const Toolbar = (props: Props) => {
     }
     if (!selectedTool) {
       sketchViewModelRef.current?.cancel();
-      return;
     }
-
-    reactiveUtils
-      .whenOnce(() => getView().ready)
-      .then(() => {
-        // make sure the buffer layer is created
-        getBufferLayer();
-
-        // Ensure the sketch view model layer is added to the map
-        if (sketchViewModelRef.current?.layer && getView().map) {
-          // Check if the layer is already in the map
-          const existingLayer = getView().map.findLayerById(
-            sketchViewModelRef.current.layer.id,
-          );
-          if (!existingLayer) {
-            getView().map.add(sketchViewModelRef.current.layer);
-          }
-        }
-
-        // Set up event handlers
-        const hc = sketchViewModelRef.current?.on('create', onCreate);
-        setHandleCreate(hc);
-        const hu = sketchViewModelRef.current?.on('update', onUpdate);
-        setHandleUpdate(hu);
-      });
-  }, [
-    selectedTool,
-    handleCreate,
-    onCreate,
-    handleUpdate,
-    onUpdate,
-    getBufferLayer,
-    sketchViewModelRef,
-  ]);
+  }, [selectedTool, handleCreate, handleUpdate, sketchViewModelRef]);
 
   useEffect(() => {
     if (flightPathJSON) {
@@ -404,13 +463,13 @@ export const Toolbar = (props: Props) => {
 
   useEffect(() => {
     if (!graphic) {
-      sketchViewModelRef.current?.layer.removeAll();
-      const l = getView().map?.findLayerById(
-        bufferGraphicsLayerId,
-      ) as GraphicsLayer;
-      l?.removeAll();
-      onFlightGeographyChange(null);
-      // onFlightPathChange(null);
+      // Only clear graphics if not in add mode
+      if (!isAddMode) {
+        const l = getBufferLayer();
+        l?.removeAll();
+        onFlightGeographyChange(null);
+        // onFlightPathChange(null);
+      }
       return;
     }
 
@@ -454,6 +513,7 @@ export const Toolbar = (props: Props) => {
     getBufferLayer,
     sketchViewModelRef,
     autoZoomToFlightPath,
+    isAddMode,
   ]);
 
   useEffect(() => {
@@ -462,18 +522,27 @@ export const Toolbar = (props: Props) => {
     };
   }, [geozoneClickHandle]);
 
-  const handleClear = () => {
-    sketchViewModelRef.current?.layer.removeAll();
-    const l = getView().map?.findLayerById(
-      bufferGraphicsLayerId,
-    ) as GraphicsLayer;
-    l?.removeAll();
-    setGraphic(null);
-    setIsLiveUpdating(false);
-    sketchViewModelRef.current?.cancel();
-    onFlightGeographyChange(null);
-    // onFlightPathChange(null);
-  };
+  const clearCurrentDrawing = useCallback(() => {
+    // Only clear everything if not in add mode
+    if (!isAddMode) {
+      sketchViewModelRef.current?.layer.removeAll();
+      const l = getView().map?.findLayerById(
+        bufferGraphicsLayerId,
+      ) as GraphicsLayer;
+      l?.removeAll();
+      setGraphic(null);
+      setIsLiveUpdating(false);
+      sketchViewModelRef.current?.cancel();
+      onFlightGeographyChange(null);
+    } else {
+      sketchViewModelRef.current?.cancel();
+      setGraphic(null);
+      setIsLiveUpdating(false);
+
+      const l = getPreservationLayer();
+      l?.removeAll();
+    }
+  }, [isAddMode, onFlightGeographyChange, getPreservationLayer]);
 
   const getToolFromGeometry = (geometry: __esri.Geometry): Tool | null => {
     if (geometry.type === 'polyline') return 'polyline';
@@ -518,14 +587,19 @@ export const Toolbar = (props: Props) => {
 
   const handleToolClick = (tool: Tool) => {
     setAutoZoomToFlightPath(false);
-    handleClear();
+    clearCurrentDrawing();
     if (tool === selectedTool) {
       if (tool === 'geozone') {
         geozoneClickHandle?.remove();
-        getView().graphics.removeAll();
+        if (!isAddMode) {
+          getView().graphics.removeAll();
+        }
         onGeozoneInfoChange(null);
       }
-      setSelectedTool(null);
+      // Don't clear selected tool when in add mode - we want to keep the tool active
+      if (!isAddMode) {
+        setSelectedTool(null);
+      }
     } else {
       setSelectedTool(tool);
       if (tool === 'geozone') {
@@ -546,10 +620,6 @@ export const Toolbar = (props: Props) => {
         } else {
           sketchViewModelRef.current.defaultUpdateOptions = {
             tool: 'reshape',
-            reshapeOptions: {
-              vertexOperation: 'move',
-              shapeOperation: 'move',
-            },
             highlightOptions: {
               enabled: false,
             },
@@ -558,7 +628,10 @@ export const Toolbar = (props: Props) => {
           };
         }
       }
-      getView().graphics.removeAll();
+      // Only clear graphics if not in add mode
+      if (!isAddMode) {
+        getView().graphics.removeAll();
+      }
       onGeozoneInfoChange(null);
 
       // Ensure the sketch view model is ready before creating
@@ -671,6 +744,21 @@ export const Toolbar = (props: Props) => {
 
             sketchViewModelRef.current = skvm;
 
+            // Set up event handlers
+            const hc = sketchViewModelRef.current?.on('create', onCreate);
+            setHandleCreate(hc);
+            const hu = sketchViewModelRef.current?.on('update', onUpdate);
+            setHandleUpdate(hu);
+
+            getBufferLayer();
+
+            // const existingLayer = getView().map.findLayerById(
+            //   sketchViewModelRef.current?.layer?.id,
+            // );
+            // if (!existingLayer) {
+            //   getView().map.add(sketchViewModelRef.current.layer);
+            // }
+
             // Add the sketch view model's layer to the map
             if (skvm.layer && getView().map) {
               getView().map.add(skvm.layer);
@@ -678,9 +766,29 @@ export const Toolbar = (props: Props) => {
           });
       });
     // setSketchViewModel(skvm);
-  }, []);
+  }, [getBufferLayer, onCreate, onUpdate]);
 
-  const fileUploadModal = useCallback(() => {
+  // Set up the sketch view model
+
+  const { create } = useModalManager();
+
+  // Handle trash button click
+  const handleTrashClick = useCallback(() => {
+    clearCurrentDrawing();
+    if (
+      selectedTool &&
+      sketchViewModelRef.current &&
+      sketchViewModelRef.current.layer
+    ) {
+      // For circle tool, ensure the radius is properly set
+      if (selectedTool === 'circle') {
+        setPendingRadius(radiusRef.current);
+      }
+      enterCreateMode();
+    }
+  }, [selectedTool, clearCurrentDrawing, enterCreateMode]);
+
+  const uploadModal = useCallback(() => {
     return (
       <UploadModal
         onUpload={(g: __esri.Graphic) => {
@@ -717,35 +825,28 @@ export const Toolbar = (props: Props) => {
         onClose={() => setUploadFileModalVisible(false)}
       />
     );
-  }, [
-    setGraphic,
-    setAutoZoomToFlightPath,
-    setUploadFileModalVisible,
-    sketchViewModelRef,
-  ]);
+  }, [sketchViewModelRef]);
 
-  const downloadFileModal = useCallback(() => {
+  const downloadModal = useCallback(() => {
     return (
       <DownloadModal
         graphic={graphic}
         onClose={() => setDownloadFileModalVisible(false)}
       />
     );
-  }, [setDownloadFileModalVisible, graphic]);
-
-  const { create } = useModalManager();
+  }, [graphic]);
 
   useEffect(() => {
     if (uploadFileModalVisible) {
-      create(fileUploadModal);
+      create(uploadModal);
     }
-  }, [uploadFileModalVisible, create, fileUploadModal]);
+  }, [uploadFileModalVisible, create, uploadModal]);
 
   useEffect(() => {
     if (downloadFileModalVisible) {
-      create(downloadFileModal);
+      create(downloadModal);
     }
-  }, [downloadFileModalVisible, create, downloadFileModal]);
+  }, [downloadFileModalVisible, create, downloadModal]);
 
   // green/yellow/red -> maximum pop dens in polygons -> send back to pega
   // blue -> adjacent area - average pop dens -> send back to pega
@@ -852,48 +953,7 @@ export const Toolbar = (props: Props) => {
             <Button
               variant='link'
               label='Clear'
-              onClick={() => {
-                handleClear();
-                if (
-                  selectedTool &&
-                  sketchViewModelRef.current &&
-                  sketchViewModelRef.current.layer
-                ) {
-                  // For circle tool, ensure the radius is properly set
-                  if (selectedTool === 'circle') {
-                    setPendingRadius(radiusRef.current);
-                  }
-
-                  // Create the drawing mode immediately if the view is ready
-                  if (getView().ready) {
-                    try {
-                      sketchViewModelRef.current.create(selectedTool as any);
-                    } catch (error) {
-                      // If immediate creation fails, wait for the view to be ready
-                      reactiveUtils
-                        .whenOnce(() => getView().ready)
-                        .then(() => {
-                          if (sketchViewModelRef.current) {
-                            sketchViewModelRef.current.create(
-                              selectedTool as any,
-                            );
-                          }
-                        });
-                    }
-                  } else {
-                    // Wait for the view to be ready before creating
-                    reactiveUtils
-                      .whenOnce(() => getView().ready)
-                      .then(() => {
-                        if (sketchViewModelRef.current) {
-                          sketchViewModelRef.current.create(
-                            selectedTool as any,
-                          );
-                        }
-                      });
-                  }
-                }
-              }}
+              onClick={handleTrashClick}
               compact
               disabled={!enabled}
             >
@@ -908,8 +968,7 @@ export const Toolbar = (props: Props) => {
           <VertexInfo />
         </CardContent>
       </Card>
-      {fileUploadModal}
-      {downloadFileModal}
+
       {selectedTool === 'circle' && (
         <div
           style={{

@@ -3,12 +3,16 @@ import {
   adjacentAreaColor,
   groundRiskVolumeColor,
   contingencyVolumeColor,
-  flightGeographyColor
+  flightGeographyColor,
   // flightPathColor
 } from '../flight-volume/flight-volume-symbols';
 import type { FlightVolume } from '../types';
 
-const FlightVolumeLegend = ({ flightVolume }: { flightVolume: FlightVolume | null }) => {
+const FlightVolumeLegend = ({
+  flightVolumes,
+}: {
+  flightVolumes: FlightVolume[];
+}): JSX.Element | null => {
   const legendItems = [
     // {
     //   label: 'Flight Path',
@@ -16,70 +20,72 @@ const FlightVolumeLegend = ({ flightVolume }: { flightVolume: FlightVolume | nul
     // },
     {
       label: 'Flight Geography',
-      color: flightGeographyColor
+      color: flightGeographyColor,
     },
     {
       label: 'Contingency Volume',
-      color: contingencyVolumeColor
+      color: contingencyVolumeColor,
     },
     {
       label: 'Ground Risk Buffer',
-      color: groundRiskVolumeColor
+      color: groundRiskVolumeColor,
     },
     {
       label: 'Adjacent Area',
-      color: adjacentAreaColor
-    }
+      color: adjacentAreaColor,
+    },
   ];
 
-  return (
-    flightVolume && (
-      <Card>
-        <CardContent>
-          <div style={{ display: 'flex', gap: '0.5rem' }}>
-            <Alert
-              style={{
-                visibility: 'hidden'
-              }}
-              variant='urgent'
-            />
-            <Text variant='h3'>Flight Volume</Text>
-          </div>
-          <div
-            style={{
-              display: 'flex',
-              flexDirection: 'column',
-              gap: '0.5rem',
-              marginTop: '0.5rem'
-            }}
-          >
-            {legendItems.map(item => (
-              <div
-                key={item.label}
-                style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}
-              >
-                <Alert
-                  style={{
-                    visibility: 'hidden'
-                  }}
-                  variant='urgent'
-                />
+  if (flightVolumes.length === 0) {
+    return null;
+  }
 
-                <div
-                  style={{
-                    width: '1rem',
-                    height: '1rem',
-                    backgroundColor: `rgb(${item.color.join(',')})`,
-                    border: `1px solid rgb(${item.color.join(',')})`
-                  }}
-                />
-                <div style={{ width: '9rem' }}>{item.label}</div>
-              </div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
-    )
+  return (
+    <Card>
+      <CardContent>
+        <div style={{ display: 'flex', gap: '0.5rem' }}>
+          <Alert
+            style={{
+              visibility: 'hidden',
+            }}
+            variant='urgent'
+          />
+          <Text variant='h3'>Flight Volume</Text>
+        </div>
+        <div
+          style={{
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '0.5rem',
+            marginTop: '0.5rem',
+          }}
+        >
+          {legendItems.map((item) => (
+            <div
+              key={item.label}
+              style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}
+            >
+              <Alert
+                style={{
+                  visibility: 'hidden',
+                }}
+                variant='urgent'
+              />
+
+              <div
+                style={{
+                  width: '1rem',
+                  height: '1rem',
+                  backgroundColor: `rgb(${item.color.join(',')})`,
+                  border: `1px solid rgb(${item.color.join(',')})`,
+                }}
+              />
+              <div style={{ width: '9rem' }}>{item.label}</div>
+            </div>
+          ))}
+        </div>
+      </CardContent>
+    </Card>
   );
 };
 

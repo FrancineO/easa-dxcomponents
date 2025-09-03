@@ -191,7 +191,7 @@ export const Default: Story = {
     // client: http://localhost:6006/
     // expiration: 21600
     agolToken:
-      'mzFcMRqhxzPAoRJavp2MJnT86fp9vdIuHnlcY6yRjycMNMkD4n52uRAbbfniWAIwG4jwcCaLwPEPCP9VDg-IApgmrolN6HgEBM7E9cTZCaREdt_0_IDcZCygu3pxaQI4rzcH6TWyq5MS9VH26dsdjLJRtczJVDk435Wtc8X6K3s.',
+      'mzFcMRqhxzPAoRJavp2MJnT86fp9vdIuHnlcY6yRjycMNMkD4n52uRAbbfniWAIw9bwWEdm-4zORJgJ6LSp4hCRQpMEe4dGAx9FZvy9NdpE_VASRX4OS8yZboLieaFZL47zAenfzl-2nD2qhP-pekgXpS_76tmK0GA4QUottdDg.',
     agolUrl: 'https://easa.maps.arcgis.com/',
     printServiceUrl:
       'https://utility.arcgisonline.com/arcgis/rest/services/Utilities/PrintingTools/GPServer/Export%20Web%20Map%20Task',

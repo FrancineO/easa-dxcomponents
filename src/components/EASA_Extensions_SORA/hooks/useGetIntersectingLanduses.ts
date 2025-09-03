@@ -3,7 +3,7 @@ import { LayerId, type FlightVolume } from '../types';
 import * as geometryEngine from '@arcgis/core/geometry/geometryEngine';
 import { getView } from '../map/view';
 
-const useGetIntersectingLanduses = (flightVolume: FlightVolume | null) => {
+const useGetIntersectingLanduses = (flightVolumes: FlightVolume[] | null) => {
   const [intersectingLanduseClasses, setIntersectingLanduseClasses] = useState<
     number[]
   >([]);
@@ -13,26 +13,62 @@ const useGetIntersectingLanduses = (flightVolume: FlightVolume | null) => {
   ] = useState<number[]>([]);
 
   const queryIntersectingLanduses = useCallback(async () => {
-    if (
-      !flightVolume ||
-      !flightVolume.flightGeography ||
-      !flightVolume.contingencyVolume ||
-      !flightVolume.groundRiskVolume ||
-      !flightVolume.adjacentArea
-    ) {
+    if (!flightVolumes || flightVolumes.length === 0) {
       setIntersectingLanduseClasses([]);
       setIntersectingAdjacentAreaLanduseClasses([]);
       return;
     }
 
-    const geometry = geometryEngine.union([
-      flightVolume.flightGeography?.geometry,
-      flightVolume.contingencyVolume?.geometry,
-      flightVolume.groundRiskVolume?.geometry,
-    ]) as __esri.Polygon;
+    // Check that all flight volumes have the required properties
+    const hasValidVolumes = flightVolumes.every(
+      (fv) =>
+        fv.flightGeography &&
+        fv.contingencyVolume &&
+        fv.groundRiskVolume &&
+        fv.adjacentArea,
+    );
 
-    const adjacentAreaGeometry = flightVolume.adjacentArea
-      ?.geometry as __esri.Polygon;
+    if (!hasValidVolumes) {
+      setIntersectingLanduseClasses([]);
+      setIntersectingAdjacentAreaLanduseClasses([]);
+      return;
+    }
+
+    // Collect all geometries from all flight volumes
+    const allGeometries: __esri.Polygon[] = [];
+    const allAdjacentAreaGeometries: __esri.Polygon[] = [];
+
+    for (const flightVolume of flightVolumes) {
+      if (
+        flightVolume.flightGeography?.geometry &&
+        flightVolume.contingencyVolume?.geometry &&
+        flightVolume.groundRiskVolume?.geometry
+      ) {
+        allGeometries.push(
+          flightVolume.flightGeography.geometry as __esri.Polygon,
+          flightVolume.contingencyVolume.geometry as __esri.Polygon,
+          flightVolume.groundRiskVolume.geometry as __esri.Polygon,
+        );
+      }
+
+      if (flightVolume.adjacentArea?.geometry) {
+        allAdjacentAreaGeometries.push(
+          flightVolume.adjacentArea.geometry as __esri.Polygon,
+        );
+      }
+    }
+
+    if (allGeometries.length === 0 || allAdjacentAreaGeometries.length === 0) {
+      setIntersectingLanduseClasses([]);
+      setIntersectingAdjacentAreaLanduseClasses([]);
+      return;
+    }
+
+    // Union all geometries
+    const geometry = geometryEngine.union(allGeometries) as __esri.Polygon;
+    const adjacentAreaGeometry = geometryEngine.union(
+      allAdjacentAreaGeometries,
+    ) as __esri.Polygon;
 
     getView().when(async () => {
       const landuseLayer = getView().map?.findLayerById(
@@ -75,7 +111,7 @@ const useGetIntersectingLanduses = (flightVolume: FlightVolume | null) => {
         adjacentAreaIntersectedLanduseClasses,
       );
     });
-  }, [flightVolume]);
+  }, [flightVolumes]);
 
   return {
     intersectingLanduseClasses,

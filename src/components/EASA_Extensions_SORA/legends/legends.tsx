@@ -4,7 +4,7 @@ import LandusePopDensityLegend from './landuse-pop-density-legend';
 import GeozonesLegend from './geozones-legend';
 
 interface LegendsProps {
-  flightVolume: any;
+  flightVolumes: any[];
   intersectingLanduseClasses: any[];
   intersectingGeozones: any[];
   geozonesRenderer: __esri.Renderer | null;
@@ -12,7 +12,7 @@ interface LegendsProps {
 }
 
 const Legends = ({
-  flightVolume,
+  flightVolumes,
   intersectingLanduseClasses,
   intersectingGeozones,
   geozonesRenderer,
@@ -20,7 +20,7 @@ const Legends = ({
 }: LegendsProps) => {
   return (
     <div style={style}>
-      <FlightVolumeLegend flightVolume={flightVolume} />
+      <FlightVolumeLegend flightVolumes={flightVolumes} />
       <PopDensityLegend />
       <LandusePopDensityLegend
         intersectingLanduseClasses={intersectingLanduseClasses}
