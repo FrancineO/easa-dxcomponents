@@ -95,8 +95,8 @@ const genResponse = () => {
 };
 
 type Story = StoryObj<typeof EasaExtensionsSORA>;
-export const Default: Story = {
-  render: (args) => {
+export const Default = {
+  render: (args: any) => {
     const response = genResponse();
     setPCore();
     const props = {

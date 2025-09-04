@@ -10,7 +10,7 @@ import * as geometryJsonUtils from '@arcgis/core/geometry/support/jsonUtils';
 import {
   adjacentAreaColor,
   flightGeographyColor,
-  flightPathColor
+  flightPathColor,
 } from '../../flight-volume/flight-volume-symbols';
 
 export const getPolylineSymbol = () => {
@@ -18,7 +18,7 @@ export const getPolylineSymbol = () => {
     color: new Color(flightPathColor),
     width: 2,
     cap: 'round',
-    join: 'round'
+    join: 'round',
   });
 };
 
@@ -33,9 +33,9 @@ export const getFillSymbol = (withOutline: boolean = true) => {
           color: new Color(adjacentAreaColor),
           width: 2,
           cap: 'round',
-          join: 'round'
+          join: 'round',
         }
-      : undefined
+      : undefined,
   });
 };
 
@@ -46,8 +46,8 @@ export const getPointSymbol = () => {
     style: 'circle',
     outline: {
       color: new Color(adjacentAreaColor),
-      width: 2
-    }
+      width: 2,
+    },
   });
 };
 
@@ -78,7 +78,7 @@ export const getAllFields = (pConnect: any) => {
       ...pConnect().resolveConfigProps(f.config),
       type: f.type,
       path: f.config.value,
-      category
+      category,
     };
   };
 
@@ -90,7 +90,7 @@ export const getAllFields = (pConnect: any) => {
         if (field.type === 'Group' && field.children) {
           field.children.forEach((gf: any) => allFields.push(makeField(gf)));
         }
-      })
+      }),
     );
   } else {
     allFields = metadata.children.map(makeField);
@@ -98,28 +98,19 @@ export const getAllFields = (pConnect: any) => {
   return allFields;
 };
 
-// create a new graphic presenting the polyline that is being drawn on the view
-export const createGraphic = (ptLayer: GraphicsLayer, geometry: any) => {
-  const graphic = new Graphic({
-    geometry,
-    symbol: getSymbol(geometry.type)
-  });
-  ptLayer.add(graphic);
-};
-
 export const deletePoints = (
   getPConnect: any,
   props: any,
   embedDataRef: string,
-  numPoints: number
+  numPoints: number,
 ) => {
   const messageConfig = {
     meta: props,
     options: {
       context: getPConnect().getContextName(),
       pageReference: `caseInfo.content${embedDataRef}`,
-      target: getPConnect().getTarget()
-    }
+      target: getPConnect().getTarget(),
+    },
   };
   const c11nEnv = (window as any).PCore.createPConnect(messageConfig);
   for (let index = numPoints; index > 0; index -= 1) {
@@ -137,15 +128,15 @@ export const addPoint = (
   longitudePropRef: string,
   latitudePropRef: string,
   index: number,
-  x: any
+  x: any,
 ) => {
   const messageConfig = {
     meta: props,
     options: {
       context: getPConnect().getContextName(),
       pageReference: `caseInfo.content${embedDataRef}[${index}]`,
-      target: getPConnect().getTarget()
-    }
+      target: getPConnect().getTarget(),
+    },
   };
   const c11nEnv = (window as any).PCore.createPConnect(messageConfig);
   const actionsApi = c11nEnv.getPConnect().getActionsApi();
@@ -183,6 +174,6 @@ export const getFlightGeography = (flightGeometryString: string | null) => {
 
   return new Graphic({
     geometry: geometryJsonUtils.fromJSON(flightGeometry),
-    symbol: getSymbol(flightGeometry.type)
+    symbol: getSymbol(flightGeometry.type),
   });
 };

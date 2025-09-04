@@ -65,10 +65,11 @@ type Props = {
   // onFlightPathChange: (path: __esri.Geometry | null) => void;
   onGeozoneInfoChange: (info: string | null) => void;
   enabled: boolean;
-  isAddMode?: boolean; // New prop to indicate if we're adding to existing paths
+  isMultiMode?: boolean; // New prop to indicate if we're adding to existing paths
+  forceClear?: boolean; // New prop to force clear the toolbar state
 };
 
-const bufferGraphicsLayerId = 'easa-sora-tool-buffer-graphics';
+// const bufferGraphicsLayerId = 'easa-sora-tool-buffer-graphics';
 
 /**
  * DrawToolbar component
@@ -83,7 +84,8 @@ export const Toolbar = (props: Props) => {
     // onFlightPathChange,
     onGeozoneInfoChange,
     enabled,
-    isAddMode = false, // Default to false for backward compatibility
+    isMultiMode = false,
+    forceClear = false, // Default to false for backward compatibility
   } = props;
 
   let PCore: any;
@@ -111,24 +113,19 @@ export const Toolbar = (props: Props) => {
   const radiusRef = useRef(500);
   const sketchViewModelRef = useRef<SketchViewModel | null>(null);
   const lastProcessedGraphicRef = useRef<__esri.Graphic | null>(null);
-  const previousIsAddModeRef = useRef<boolean>(false);
+  const previousIsMultiModeRef = useRef<boolean>(false);
   const selectedToolRef = useRef<Tool | null>(null);
+  const isMultiModeRef = useRef<boolean>(false);
 
   // Keep the ref in sync with the state
   useEffect(() => {
     selectedToolRef.current = selectedTool;
   }, [selectedTool]);
 
-  const getPreservationLayer = useCallback(() => {
-    let l = getView().map?.findLayerById(
-      'easa-sora-preserved-graphics',
-    ) as GraphicsLayer;
-    if (!l) {
-      l = new GraphicsLayer({ id: 'easa-sora-preserved-graphics' });
-      getView().map?.add(l);
-    }
-    return l;
-  }, []);
+  // Keep the isMultiMode ref in sync with the prop
+  useEffect(() => {
+    isMultiModeRef.current = isMultiMode;
+  }, [isMultiMode]);
 
   const enterCreateMode = useCallback(() => {
     const currentSelectedTool = selectedToolRef.current;
@@ -207,27 +204,13 @@ export const Toolbar = (props: Props) => {
     }
   }, [pendingRadius, updateCircleRadius]);
 
-  // Watch for changes in isAddMode and notify parent when entering create mode
+  // Watch for changes in isMultiMode and notify parent when entering create mode
   useEffect(() => {
     // Lock existing graphics by moving them to a separate layer
     // and prepare SketchViewModel for new drawing
-    if (isAddMode && sketchViewModelRef.current) {
+    if (isMultiMode && sketchViewModelRef.current) {
       // Cancel any current editing
       sketchViewModelRef.current.cancel();
-
-      // Move existing graphics to a separate layer to preserve them
-      const existingGraphics =
-        sketchViewModelRef.current.layer.graphics.toArray();
-      if (existingGraphics.length > 0) {
-        // Create a preservation layer if it doesn't exist
-        const preservationLayer = getPreservationLayer();
-
-        // Move existing graphics to preservation layer
-        existingGraphics.forEach((existingGraphic) => {
-          sketchViewModelRef.current?.layer.remove(existingGraphic);
-          preservationLayer.add(existingGraphic);
-        });
-      }
 
       getView()
         .when(() => getView().ready && sketchViewModelRef.current)
@@ -236,32 +219,19 @@ export const Toolbar = (props: Props) => {
         });
     }
 
-    // Update the previous isAddMode ref
-    previousIsAddModeRef.current = isAddMode;
-  }, [isAddMode, selectedTool, getPreservationLayer, enterCreateMode]);
-
-  const getBufferLayer = useCallback(() => {
-    let l = getView().map?.findLayerById(
-      bufferGraphicsLayerId,
-    ) as GraphicsLayer;
-    if (!l) {
-      l = new GraphicsLayer({ id: bufferGraphicsLayerId });
-      getView().map?.add(l);
-    }
-    return l;
-  }, []);
+    // Update the previous isMultiMode ref
+    previousIsMultiModeRef.current = isMultiMode;
+  }, [isMultiMode, selectedTool, enterCreateMode]);
 
   const onCreate = useCallback(
     (event: any) => {
       if (event.state === 'start') {
-        setGraphic(null);
+        // setGraphic(null);
         // Clear the last processed graphic ref when starting a new drawing
         lastProcessedGraphicRef.current = null;
         // Only clear graphics if not in add mode
-        if (!isAddMode) {
+        if (!isMultiModeRef.current) {
           sketchViewModelRef.current?.layer.removeAll();
-          const l = getBufferLayer();
-          l?.removeAll();
         }
       }
       if (
@@ -310,35 +280,33 @@ export const Toolbar = (props: Props) => {
 
           sketchViewModelRef.current?.complete();
           sketchViewModelRef.current?.create('circle');
-        } else if (isAddMode) {
-          // Only call onFlightGeographyChange if we have a valid graphic and haven't processed it already
-          if (
-            event.graphic &&
-            event.graphic.geometry &&
-            event.graphic !== lastProcessedGraphicRef.current
-          ) {
-            lastProcessedGraphicRef.current = event.graphic;
-            onFlightGeographyChange(event.graphic, autoZoomToFlightPath);
-          }
-          // Clear the graphic state since we're in add mode
-          setGraphic(null);
-        } else {
-          // Normal mode - update the SketchViewModel and set the graphic
-          sketchViewModelRef.current?.update([event.graphic]);
-          setGraphic(event.graphic);
+          // } else if (isMultiModeRef.current) {
+          //   // Only call onFlightGeographyChange if we have a valid graphic and haven't processed it already
+          //   if (
+          //     event.graphic &&
+          //     event.graphic.geometry &&
+          //     event.graphic !== lastProcessedGraphicRef.current
+          //   ) {
+          //     lastProcessedGraphicRef.current = event.graphic;
+          //     onFlightGeographyChange(event.graphic, autoZoomToFlightPath);
+          //   }
+          //   // Clear the graphic state since we're in add mode
+          //   setGraphic(null);
         }
+        //  else {
+        // Normal mode - update the SketchViewModel and set the graphic
+        // sketchViewModelRef.current?.update([event.graphic]);
+        // setGraphic(event.graphic);
+        // }
+        // sketchViewModelRef.current?.update([event.graphic]);
+        setGraphic(event.graphic);
+        // clear the svm layer
+        sketchViewModelRef.current?.layer.removeAll();
         // keep the create mode active so user can continue adding more paths
         enterCreateMode();
       }
     },
-    [
-      getBufferLayer,
-      sketchViewModelRef,
-      isAddMode,
-      onFlightGeographyChange,
-      autoZoomToFlightPath,
-      enterCreateMode,
-    ],
+    [sketchViewModelRef, enterCreateMode],
   );
 
   const onUpdate = useCallback(
@@ -464,11 +432,8 @@ export const Toolbar = (props: Props) => {
   useEffect(() => {
     if (!graphic) {
       // Only clear graphics if not in add mode
-      if (!isAddMode) {
-        const l = getBufferLayer();
-        l?.removeAll();
+      if (!isMultiModeRef.current) {
         onFlightGeographyChange(null);
-        // onFlightPathChange(null);
       }
       return;
     }
@@ -484,9 +449,6 @@ export const Toolbar = (props: Props) => {
       graphic?.geometry.type === 'polyline' ||
       graphic?.geometry.type === 'polygon'
     ) {
-      const l = getBufferLayer();
-      l?.removeAll();
-
       const buffer = geometryEngine.buffer(
         graphic.geometry as __esri.Polyline,
         cd * 3, // minimum is 3 times the drone width as per annex
@@ -495,7 +457,7 @@ export const Toolbar = (props: Props) => {
         geometry: buffer,
         symbol: getFillSymbol(false),
       });
-      l?.add(g);
+
       onFlightGeographyChange(g, autoZoomToFlightPath);
     } else {
       onFlightGeographyChange(graphic, autoZoomToFlightPath);
@@ -506,15 +468,7 @@ export const Toolbar = (props: Props) => {
     // moved this to the onCreate function so it does not appear when loading a stored flight path
     // sketchViewModel?.update([graphic]);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [
-    graphic,
-    selectedTool,
-    cd,
-    getBufferLayer,
-    sketchViewModelRef,
-    autoZoomToFlightPath,
-    isAddMode,
-  ]);
+  }, [graphic, selectedTool, cd, sketchViewModelRef, autoZoomToFlightPath]);
 
   useEffect(() => {
     return () => {
@@ -524,25 +478,38 @@ export const Toolbar = (props: Props) => {
 
   const clearCurrentDrawing = useCallback(() => {
     // Only clear everything if not in add mode
-    if (!isAddMode) {
+    if (!isMultiModeRef.current) {
       sketchViewModelRef.current?.layer.removeAll();
-      const l = getView().map?.findLayerById(
-        bufferGraphicsLayerId,
-      ) as GraphicsLayer;
-      l?.removeAll();
+      // const l = getView().map?.findLayerById(
+      //   bufferGraphicsLayerId,
+      // ) as GraphicsLayer;
+      // l?.removeAll();
       setGraphic(null);
       setIsLiveUpdating(false);
-      sketchViewModelRef.current?.cancel();
-      onFlightGeographyChange(null);
+      // sketchViewModelRef.current?.cancel();
+      // Don't clear flight paths when changing tools - only clear when explicitly requested
+      // onFlightGeographyChange(null);
     } else {
-      sketchViewModelRef.current?.cancel();
+      // sketchViewModelRef.current?.cancel();
       setGraphic(null);
       setIsLiveUpdating(false);
 
-      const l = getPreservationLayer();
-      l?.removeAll();
+      // const l = getPreservationLayer();
+      // l?.removeAll();
     }
-  }, [isAddMode, onFlightGeographyChange, getPreservationLayer]);
+  }, []);
+
+  // Function to clear flight paths (used by clear button)
+  const clearFlightPaths = useCallback(() => {
+    onFlightGeographyChange(null);
+  }, [onFlightGeographyChange]);
+
+  // Handle force clear prop
+  useEffect(() => {
+    if (forceClear) {
+      clearCurrentDrawing();
+    }
+  }, [forceClear, clearCurrentDrawing]);
 
   const getToolFromGeometry = (geometry: __esri.Geometry): Tool | null => {
     if (geometry.type === 'polyline') return 'polyline';
@@ -591,13 +558,13 @@ export const Toolbar = (props: Props) => {
     if (tool === selectedTool) {
       if (tool === 'geozone') {
         geozoneClickHandle?.remove();
-        if (!isAddMode) {
+        if (!isMultiModeRef.current) {
           getView().graphics.removeAll();
         }
         onGeozoneInfoChange(null);
       }
       // Don't clear selected tool when in add mode - we want to keep the tool active
-      if (!isAddMode) {
+      if (!isMultiModeRef.current) {
         setSelectedTool(null);
       }
     } else {
@@ -629,7 +596,7 @@ export const Toolbar = (props: Props) => {
         }
       }
       // Only clear graphics if not in add mode
-      if (!isAddMode) {
+      if (!isMultiModeRef.current) {
         getView().graphics.removeAll();
       }
       onGeozoneInfoChange(null);
@@ -750,23 +717,13 @@ export const Toolbar = (props: Props) => {
             const hu = sketchViewModelRef.current?.on('update', onUpdate);
             setHandleUpdate(hu);
 
-            getBufferLayer();
-
-            // const existingLayer = getView().map.findLayerById(
-            //   sketchViewModelRef.current?.layer?.id,
-            // );
-            // if (!existingLayer) {
-            //   getView().map.add(sketchViewModelRef.current.layer);
-            // }
-
             // Add the sketch view model's layer to the map
             if (skvm.layer && getView().map) {
               getView().map.add(skvm.layer);
             }
           });
       });
-    // setSketchViewModel(skvm);
-  }, [getBufferLayer, onCreate, onUpdate]);
+  }, [onCreate, onUpdate]);
 
   // Set up the sketch view model
 
@@ -774,7 +731,9 @@ export const Toolbar = (props: Props) => {
 
   // Handle trash button click
   const handleTrashClick = useCallback(() => {
+    sketchViewModelRef.current?.layer.removeAll();
     clearCurrentDrawing();
+    clearFlightPaths(); // Clear flight paths when clear button is clicked
     if (
       selectedTool &&
       sketchViewModelRef.current &&
@@ -786,7 +745,7 @@ export const Toolbar = (props: Props) => {
       }
       enterCreateMode();
     }
-  }, [selectedTool, clearCurrentDrawing, enterCreateMode]);
+  }, [selectedTool, clearCurrentDrawing, clearFlightPaths, enterCreateMode]);
 
   const uploadModal = useCallback(() => {
     return (

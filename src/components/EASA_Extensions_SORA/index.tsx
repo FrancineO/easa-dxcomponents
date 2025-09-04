@@ -15,7 +15,7 @@ import '../create-nonce';
 import { Toolbar } from './tools/toolbar/toolbar';
 import SearchTool from './tools/search-tool';
 import { useGetPopulationDensity } from './hooks/useGetPopulationDensity';
-import useCalculateFlightVolume from './hooks/useCalculateFlightVolume';
+import useCalculateFlightVolumes from './hooks/useCalculateFlightVolume';
 import {
   validateComponentProps,
   type ComponentProps,
@@ -35,6 +35,7 @@ import LayerList from './tools/layer-list';
 import useGetIntersectingGeozones from './hooks/useGetIntersectingGeozones';
 import PopulationDensityOverrideModal from './components/population-density-override-modal';
 import PopDensitySourceInfo from './components/pop-density-source-info';
+import FlightPaths from './components/flight-paths';
 
 import Legends from './legends/legends';
 import { getFlightGeography } from './tools/toolbar/draw-utils';
@@ -107,7 +108,8 @@ export const EasaExtensionsSORA = (props: ComponentProps) => {
   const [overriddenLandUse, setOverriddenLandUse] = useState<
     ImpactedLandUse[] | null
   >(null);
-  const [isAddMode, setIsAddMode] = useState(false);
+  const [isMultiMode, setIsMultiMode] = useState(true);
+  const [forceClearToolbar, setForceClearToolbar] = useState(false);
 
   const { create } = useModalManager();
 
@@ -149,7 +151,7 @@ export const EasaExtensionsSORA = (props: ComponentProps) => {
     props.vWind,
   ]);
 
-  const { flightVolumes, calculateVolume } = useCalculateFlightVolume({
+  const { flightVolumes, calculateVolume } = useCalculateFlightVolumes({
     ...props,
     flightGeographies, // Pass the array of flight geographies
   });
@@ -159,7 +161,7 @@ export const EasaExtensionsSORA = (props: ComponentProps) => {
     () => {
       if (!layersAdded || !propsValid) return;
       setErrorText(null);
-      if (flightGeographies?.length > 0 && !isAddMode) {
+      if (flightGeographies?.length > 0 && !isMultiMode) {
         setLoading(true);
       }
       try {
@@ -175,23 +177,51 @@ export const EasaExtensionsSORA = (props: ComponentProps) => {
   );
 
   // Function to toggle drawing mode for additional flight paths
-  const handleAddFlightPath = useCallback(() => {
+  const handleMultiModeToggleClick = useCallback(() => {
     if (propsValid) {
-      if (isAddMode) {
-        // Exit add mode
-        setIsAddMode(false);
-      } else {
-        // Enable drawing mode for a new flight path
-        // The current flightGeography will persist
-        // User can draw another path
-        setIsAddMode(true);
-        // The toolbar will handle the drawing mode
-        // We just need to ensure it's ready to accept new paths
-        // and that existing paths are preserved and locked
-      }
+      // toggle add mode
+      setIsMultiMode(!isMultiMode);
       setShowPopulationDensityCorrection(false); // Close any open modals
     }
-  }, [propsValid, isAddMode]);
+  }, [propsValid, isMultiMode]);
+
+  // Function to remove a specific flight path
+  const handleRemoveFlightPath = useCallback((index: number) => {
+    setFlightGeographies((prev) => {
+      const updated = prev.filter((_, i) => i !== index);
+
+      // If no flight paths remain, clear all graphics
+      if (updated.length === 0) {
+        // Clear sketch view model layer graphics
+        const view = getView();
+        const sketchLayer = view.map?.findLayerById(
+          'easa-sora-sketch-layer',
+        ) as any;
+        sketchLayer?.removeAll();
+
+        // Force clear the toolbar state
+        setForceClearToolbar(true);
+      }
+
+      return updated;
+    });
+  }, []);
+
+  // Function to clear all flight paths
+  const handleClearAllFlightPaths = useCallback(() => {
+    setFlightGeographies([]);
+    // setIsMultiMode(false);
+
+    // Clear all graphics layers
+    const view = getView();
+    const sketchLayer = view.map?.findLayerById(
+      'easa-sora-sketch-layer',
+    ) as any;
+    sketchLayer?.removeAll();
+
+    // Force clear the toolbar state
+    setForceClearToolbar(true);
+  }, []);
 
   // Set up the hook for population density
   const { populationDensity, calculatePopDensities } = useGetPopulationDensity(
@@ -507,6 +537,13 @@ export const EasaExtensionsSORA = (props: ComponentProps) => {
     populationDensityCorrectionModal,
   ]);
 
+  // Reset force clear flag after it's been used
+  useEffect(() => {
+    if (forceClearToolbar) {
+      setForceClearToolbar(false);
+    }
+  }, [forceClearToolbar]);
+
   return (
     <Card style={{ height: '100%' }}>
       <CardContent style={{ height: '100%' }}>
@@ -585,7 +622,7 @@ export const EasaExtensionsSORA = (props: ComponentProps) => {
                         return prev; // Don't add duplicate
                       }
 
-                      return isAddMode ? [...prev, g] : [g];
+                      return isMultiMode ? [...prev, g] : [g];
                     });
                     // Keep add mode active so user can continue adding more paths
                     // Add mode will be exited when user clicks the button again or clears
@@ -603,7 +640,8 @@ export const EasaExtensionsSORA = (props: ComponentProps) => {
                 flightPathJSON={flightPathJSON}
                 onGeozoneInfoChange={setGeozoneInfo}
                 enabled={propsValid}
-                isAddMode={isAddMode}
+                isMultiMode={isMultiMode}
+                forceClear={forceClearToolbar}
               />
             </div>
           </div>
@@ -681,29 +719,15 @@ export const EasaExtensionsSORA = (props: ComponentProps) => {
             }
           />
 
-          {/* Add Flight Path Button - positioned over top right corner of map */}
-          {flightGeographies.length > 0 && (
-            <div
-              style={{
-                position: 'absolute',
-                top: '10px',
-                right: '10px',
-                zIndex: 1000,
-              }}
-            >
-              <Button
-                variant='primary'
-                onClick={handleAddFlightPath}
-                disabled={!propsValid}
-                style={{
-                  boxShadow: '0 2px 8px rgba(0, 0, 0, 0.15)',
-                  border: '1px solid #e0e0e0',
-                }}
-              >
-                {isAddMode ? 'Exit Add Mode' : 'Add Flight Path'}
-              </Button>
-            </div>
-          )}
+          {/* Flight Paths Component - positioned at top right corner of map */}
+          <FlightPaths
+            flightGeographies={flightGeographies}
+            onRemoveFlightPath={handleRemoveFlightPath}
+            onClearAllFlightPaths={handleClearAllFlightPaths}
+            onMultiModeToggleClick={handleMultiModeToggleClick}
+            isMultiMode={isMultiMode}
+            disabled={!propsValid}
+          />
 
           {/* Population Density Correction Button - positioned over bottom left corner of map */}
           {intersectingLanduseClasses &&

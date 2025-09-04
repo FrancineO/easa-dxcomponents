@@ -9,7 +9,10 @@ export default {
         disable: true,
       },
     },
-    dismissAction: { control: 'string', if: { arg: 'dismissible', eq: true } },
+    dismissAction: {
+      control: 'text' as const,
+      if: { arg: 'dismissible', eq: true },
+    },
   },
   component: PegaExtensionsBanner,
 };

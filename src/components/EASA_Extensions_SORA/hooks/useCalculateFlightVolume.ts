@@ -6,9 +6,10 @@ import {
   getContingencyVolume,
   getGroundRiskVolume,
 } from '../flight-volume/flight-volume-calculations';
-import type { FlightVolume, FlightVolumeParams } from '../types';
+import type { FlightVolume, FlightVolumesParams } from '../types';
+import { omit } from 'lodash';
 
-const useCalculateFlightVolume = (params: FlightVolumeParams) => {
+const useCalculateFlightVolumes = (params: FlightVolumesParams) => {
   const [flightVolumes, setFlightVolumes] = useState<FlightVolume[]>([]);
   const paramsRef = useRef(params);
   const calculationInProgress = useRef(false);
@@ -64,8 +65,9 @@ const useCalculateFlightVolume = (params: FlightVolumeParams) => {
 
         // Create params for this specific flight path
         const pathParams = {
-          ...currentParams,
-          flightGeography: flightGeography,
+          // don't pass the flightGeographies in the currentParams
+          ...omit(currentParams, 'flightGeographies'),
+          flightGeography,
         };
 
         // Calculate volumes for this path
@@ -86,6 +88,7 @@ const useCalculateFlightVolume = (params: FlightVolumeParams) => {
           cvResult.contingencyVolume,
           grVolumeResult.groundRiskVolume,
           aaResult.adjacentArea,
+          flightGeography,
         );
 
         // Create flight volume for this path
@@ -93,7 +96,7 @@ const useCalculateFlightVolume = (params: FlightVolumeParams) => {
           contingencyVolume: cvResult.contingencyVolume,
           groundRiskVolume: grVolumeResult.groundRiskVolume,
           adjacentArea: aaResult.adjacentArea,
-          flightGeography: flightGeography,
+          flightGeography,
           contingencyVolumeHeight: cvResult.contingencyVolumeHeight,
           contingencyVolumeWidth: cvResult.contingencyVolumeWidth,
           groundRiskBufferWidth: grVolumeResult.groundRiskBufferWidth,
@@ -121,4 +124,4 @@ const useCalculateFlightVolume = (params: FlightVolumeParams) => {
   return { flightVolumes, calculateVolume };
 };
 
-export default useCalculateFlightVolume;
+export default useCalculateFlightVolumes;
