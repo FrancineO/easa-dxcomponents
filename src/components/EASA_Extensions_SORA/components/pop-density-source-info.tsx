@@ -65,13 +65,32 @@ export const PopDensitySourceInfo = (props: PopDensitySourceInfoProps) => {
   };
 
   // Helper function to find all landuse classes with the highest default density
-  const findAllHighestLanduseClasses = (landuseClasses: number[] | null) => {
+  const findAllHighestLanduseClasses = (
+    landuseClasses: number[] | null,
+    overriddenLandUseData: ImpactedLandUse[] | null = null,
+  ) => {
     if (!landuseClasses || landuseClasses.length === 0) return null;
+
+    // Filter out overridden landuse classes if overrides exist
+    let filteredLanduseClasses = landuseClasses;
+    if (overriddenLandUseData && overriddenLandUseData.length > 0) {
+      // Get the codes of landuse classes that have actual override values (not null)
+      const overriddenCodes = overriddenLandUseData
+        .filter((override) => override.OverridePopulationDensity !== null)
+        .map((override) => parseInt(override.Code, 10));
+      // Filter out the overridden classes
+      filteredLanduseClasses = landuseClasses.filter(
+        (code) => !overriddenCodes.includes(code),
+      );
+    }
+
+    // If all classes are overridden, return null
+    if (filteredLanduseClasses.length === 0) return null;
 
     let maxDensity = 0;
     let maxLanduseClasses: { code: number; label: string }[] = [];
 
-    landuseClasses.forEach((landuseCode) => {
+    filteredLanduseClasses.forEach((landuseCode) => {
       const density = getOriginalLanduseDensity(landuseCode);
       if (density > maxDensity) {
         maxDensity = density;
@@ -155,8 +174,10 @@ export const PopDensitySourceInfo = (props: PopDensitySourceInfoProps) => {
         };
       case 'landuse': {
         // Find which landuse class has the highest default density
+        // Exclude overridden classes when there are overrides
         const highestLanduseClasses = findAllHighestLanduseClasses(
           intersectingLanduseClasses,
+          overriddenLandUse,
         );
         return {
           title: 'Landuse Classification',

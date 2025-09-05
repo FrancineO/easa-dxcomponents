@@ -12,7 +12,7 @@ import {
 import { merge } from 'lodash';
 import { useEffect, useMemo, useState, useCallback } from 'react';
 import '../create-nonce';
-import { Toolbar } from './tools/toolbar/toolbar';
+import { Toolbar, type Tool } from './tools/toolbar/toolbar';
 import SearchTool from './tools/search-tool';
 import { useGetPopulationDensity } from './hooks/useGetPopulationDensity';
 import useCalculateFlightVolumes from './hooks/useCalculateFlightVolume';
@@ -38,7 +38,7 @@ import PopDensitySourceInfo from './components/pop-density-source-info';
 import FlightPaths from './components/flight-paths';
 
 import Legends from './legends/legends';
-import { getFlightGeography } from './tools/toolbar/draw-utils';
+import { getFlightGeographies } from './tools/toolbar/draw-utils';
 import useGetIntersectingLanduses from './hooks/useGetIntersectingLanduses';
 import { getView } from './map/view';
 import {
@@ -47,6 +47,7 @@ import {
   landusePopDensityLookup,
 } from './renderers';
 import geozonesDefintions from './geozone-definitions';
+import CircleRadius from './tools/toolbar/circle-radius';
 
 // eslint-disable-next-line no-console
 console.log(
@@ -110,6 +111,10 @@ export const EasaExtensionsSORA = (props: ComponentProps) => {
   >(null);
   const [isMultiMode, setIsMultiMode] = useState(true);
   const [forceClearToolbar, setForceClearToolbar] = useState(false);
+  const [circleRadius, setCircleRadius] = useState<number | undefined>(
+    undefined,
+  );
+  const [selectedTool, setSelectedTool] = useState<Tool | null>(null);
 
   const { create } = useModalManager();
 
@@ -306,28 +311,41 @@ export const EasaExtensionsSORA = (props: ComponentProps) => {
       .filter((value, index, self) => self.indexOf(value) === index);
   }, [intersectingLanduseClasses, overriddenLandUse]);
 
+  // TODO: do we need to send contingencyVolumeHeight, adjacentVolumeWidth, contingencyVolumeWidth, groundRiskBufferWidth as an array?
+  // Or do we need to send the max values?
+
   // Set up the hook for updating Pega props
   const updatePegaProps = useUpdatePegaProps(
     pConnect,
     populationDensity,
     printRequest,
-    flightGeographies.length > 0
-      ? (flightGeographies[0]?.geometry ?? null)
-      : null,
+    flightGeographies?.map((fg) => fg.geometry as __esri.Geometry) ?? null,
     mapState,
     groundRisk,
     errorText,
-    flightVolumes.length > 0
-      ? (flightVolumes[0]?.contingencyVolumeHeight ?? null)
+    flightVolumes?.length > 0
+      ? flightVolumes
+          .filter((fv) => fv.contingencyVolumeHeight !== null)
+          .map((fv) => fv.contingencyVolumeHeight!)
+          .reduce((max, current) => Math.max(max, current), 0)
       : null,
-    flightVolumes.length > 0
-      ? (flightVolumes[0]?.adjacentVolumeWidth ?? null)
+    flightVolumes?.length > 0
+      ? flightVolumes
+          .filter((fv) => fv.adjacentVolumeWidth !== null)
+          .map((fv) => fv.adjacentVolumeWidth!)
+          .reduce((max, current) => Math.max(max, current), 0)
       : null,
-    flightVolumes.length > 0
-      ? (flightVolumes[0]?.contingencyVolumeWidth ?? null)
+    flightVolumes?.length > 0
+      ? flightVolumes
+          .filter((fv) => fv.contingencyVolumeWidth !== null)
+          .map((fv) => fv.contingencyVolumeWidth!)
+          .reduce((max, current) => Math.max(max, current), 0)
       : null,
-    flightVolumes.length > 0
-      ? (flightVolumes[0]?.groundRiskBufferWidth ?? null)
+    flightVolumes?.length > 0
+      ? flightVolumes
+          .filter((fv) => fv.groundRiskBufferWidth !== null)
+          .map((fv) => fv.groundRiskBufferWidth!)
+          .reduce((max, current) => Math.max(max, current), 0)
       : null,
     intersectingGeozones
       ?.map((geozone: __esri.Graphic) => {
@@ -358,7 +376,7 @@ export const EasaExtensionsSORA = (props: ComponentProps) => {
       // Reset corrected landuse when flight geometry changes
       setOverriddenLandUse(null);
 
-      const fg = getFlightGeography(flightPathJSON);
+      const fg = getFlightGeographies(flightPathJSON);
       if (!fg) return;
       setFlightGeographies([fg]);
     }
@@ -602,27 +620,45 @@ export const EasaExtensionsSORA = (props: ComponentProps) => {
               )}
               <Toolbar
                 cd={cd}
-                onFlightGeographyChange={(g, autoZoomToFlightPath) => {
-                  // Reset corrected landuse when user draws new flight path
+                onSelectedToolChange={setSelectedTool}
+                flightGeographies={flightGeographies}
+                onNewFlightGeographies={(graphics, autoZoomToFlightPath) => {
+                  if (!isMultiMode) {
+                    setFlightGeographies(graphics || []);
+                    return;
+                  }
 
-                  if (g) {
+                  if (graphics) {
                     // Check if this graphic is already in the array to prevent duplicates
                     setFlightGeographies((prev) => {
-                      // Check if the graphic is already in the array by comparing geometries
-                      const isDuplicate = prev.some(
-                        (existingG) =>
-                          existingG.geometry &&
-                          g.geometry &&
-                          existingG.geometry.type === g.geometry.type &&
-                          JSON.stringify(existingG.geometry.toJSON()) ===
-                            JSON.stringify(g.geometry.toJSON()),
-                      );
-
-                      if (isDuplicate) {
-                        return prev; // Don't add duplicate
+                      // compare the arrays and return only those that are not in both arrays
+                      if (prev.length === 0) {
+                        return graphics;
                       }
+                      const allGraphics = [...prev, ...graphics];
 
-                      return isMultiMode ? [...prev, g] : [g];
+                      // remove all duplicate graphics from the allGraphics array
+                      const uniqueGraphics: __esri.Graphic[] = [];
+                      allGraphics.forEach((g, i) => {
+                        if (i === allGraphics.length - 1) {
+                          uniqueGraphics.push(g);
+                          return;
+                        }
+                        const nextGraphic = allGraphics[i + 1];
+
+                        const isDuplicate =
+                          g.geometry &&
+                          nextGraphic.geometry &&
+                          g.geometry.type === nextGraphic.geometry.type &&
+                          JSON.stringify(g.geometry.toJSON()) ===
+                            JSON.stringify(nextGraphic.geometry.toJSON());
+
+                        if (!isDuplicate) {
+                          uniqueGraphics.push(g);
+                        }
+                      });
+
+                      return uniqueGraphics;
                     });
                     // Keep add mode active so user can continue adding more paths
                     // Add mode will be exited when user clicks the button again or clears
@@ -630,9 +666,11 @@ export const EasaExtensionsSORA = (props: ComponentProps) => {
                     setFlightGeographies([]);
                   }
 
-                  if (autoZoomToFlightPath && g) {
+                  if (autoZoomToFlightPath && graphics) {
                     getView().goTo(
-                      (g.geometry as __esri.Geometry)?.extent?.expand(1.5),
+                      (graphics[0].geometry as __esri.Geometry)?.extent?.expand(
+                        1.5,
+                      ),
                     );
                   }
                 }}
@@ -642,6 +680,8 @@ export const EasaExtensionsSORA = (props: ComponentProps) => {
                 enabled={propsValid}
                 isMultiMode={isMultiMode}
                 forceClear={forceClearToolbar}
+                circleRadius={circleRadius}
+                onCircleRadiusChange={setCircleRadius}
               />
             </div>
           </div>
@@ -719,15 +759,23 @@ export const EasaExtensionsSORA = (props: ComponentProps) => {
             }
           />
 
-          {/* Flight Paths Component - positioned at top right corner of map */}
-          <FlightPaths
-            flightGeographies={flightGeographies}
-            onRemoveFlightPath={handleRemoveFlightPath}
-            onClearAllFlightPaths={handleClearAllFlightPaths}
-            onMultiModeToggleClick={handleMultiModeToggleClick}
-            isMultiMode={isMultiMode}
-            disabled={!propsValid}
-          />
+          {(selectedTool === 'circle' || flightGeographies.length > 0) && (
+            <FlightPaths
+              flightGeographies={flightGeographies}
+              onRemoveFlightPath={handleRemoveFlightPath}
+              onClearAllFlightPaths={handleClearAllFlightPaths}
+              onMultiModeToggleClick={handleMultiModeToggleClick}
+              isMultiMode={isMultiMode}
+              disabled={!propsValid}
+            >
+              {selectedTool === 'circle' && (
+                <CircleRadius
+                  onCircleRadiusChange={setCircleRadius}
+                  circleRadius={circleRadius}
+                />
+              )}
+            </FlightPaths>
+          )}
 
           {/* Population Density Correction Button - positioned over bottom left corner of map */}
           {intersectingLanduseClasses &&

@@ -1,9 +1,4 @@
-import {
-  Icon,
-  Input,
-  useModalManager,
-  useTheme,
-} from '@pega/cosmos-react-core';
+import { Icon, useModalManager } from '@pega/cosmos-react-core';
 import { Button } from '@pega/cosmos-react-core';
 import { CardContent } from '@pega/cosmos-react-core';
 import { Card } from '@pega/cosmos-react-core';
@@ -13,7 +8,7 @@ import { getView } from '../../map/view';
 import SketchViewModel from '@arcgis/core/widgets/Sketch/SketchViewModel';
 import GraphicsLayer from '@arcgis/core/layers/GraphicsLayer';
 import Graphic from '@arcgis/core/Graphic';
-import { getFillSymbol, getFlightGeography, getSymbol } from './draw-utils';
+import { getFillSymbol, getFlightGeographies, getSymbol } from './draw-utils';
 import type SimpleLineSymbol from '@arcgis/core/symbols/SimpleLineSymbol';
 import type SimpleFillSymbol from '@arcgis/core/symbols/SimpleFillSymbol';
 import type SimpleMarkerSymbol from '@arcgis/core/symbols/SimpleMarkerSymbol';
@@ -32,8 +27,6 @@ import VertexInfo from './vertex-info';
 
 import UploadModal from '../../components/upload-modal';
 import DownloadModal from '../../components/download-modal';
-
-import { merge } from '@storybook/manager-api';
 
 registerIcon(
   CircleIcon,
@@ -57,16 +50,20 @@ export type Tool = 'circle' | 'polyline' | 'polygon' | 'geozone';
 type Props = {
   style?: React.CSSProperties;
   cd: number;
-  onFlightGeographyChange: (
-    graphic: Graphic | null,
+  flightGeographies: Graphic[];
+  onNewFlightGeographies: (
+    graphics: Graphic[] | null,
     autoZoomToFlightPath?: boolean,
   ) => void;
   flightPathJSON: string | null;
   // onFlightPathChange: (path: __esri.Geometry | null) => void;
   onGeozoneInfoChange: (info: string | null) => void;
+  onSelectedToolChange: (tool: Tool | null) => void;
   enabled: boolean;
   isMultiMode?: boolean; // New prop to indicate if we're adding to existing paths
   forceClear?: boolean; // New prop to force clear the toolbar state
+  circleRadius?: number;
+  onCircleRadiusChange?: (radius: number) => void;
 };
 
 // const bufferGraphicsLayerId = 'easa-sora-tool-buffer-graphics';
@@ -78,38 +75,30 @@ type Props = {
  */
 export const Toolbar = (props: Props) => {
   const {
-    onFlightGeographyChange,
+    flightGeographies,
+    onNewFlightGeographies,
     cd,
     flightPathJSON,
     // onFlightPathChange,
     onGeozoneInfoChange,
+    onSelectedToolChange,
     enabled,
     isMultiMode = false,
     forceClear = false, // Default to false for backward compatibility
+    circleRadius,
+    onCircleRadiusChange,
   } = props;
-
-  let PCore: any;
-  const defaultTheme = useTheme();
-  const theme = PCore
-    ? merge(defaultTheme, PCore.getEnvironmentInfo().getTheme())
-    : defaultTheme;
 
   const [selectedTool, setSelectedTool] = useState<Tool | null>(null);
   const [handleCreate, setHandleCreate] = useState<any>();
   const [handleUpdate, setHandleUpdate] = useState<any>();
   const [graphic, setGraphic] = useState<Graphic | null>(null);
-  const hasGraphic = useMemo(() => {
-    return graphic !== null;
-  }, [graphic]);
 
   const [geozoneClickHandle, setGeozoneClickHandle] = useState<any>();
   const [uploadFileModalVisible, setUploadFileModalVisible] = useState(false);
   const [downloadFileModalVisible, setDownloadFileModalVisible] =
     useState(false);
   const [autoZoomToFlightPath, setAutoZoomToFlightPath] = useState(false);
-  const [isLiveUpdating, setIsLiveUpdating] = useState(false);
-  const [pendingRadius, setPendingRadius] = useState(500);
-  const pendingRadiusRef = useRef(500);
   const radiusRef = useRef(500);
   const sketchViewModelRef = useRef<SketchViewModel | null>(null);
   const lastProcessedGraphicRef = useRef<__esri.Graphic | null>(null);
@@ -120,7 +109,9 @@ export const Toolbar = (props: Props) => {
   // Keep the ref in sync with the state
   useEffect(() => {
     selectedToolRef.current = selectedTool;
-  }, [selectedTool]);
+    if (!onSelectedToolChange) return;
+    onSelectedToolChange(selectedTool);
+  }, [selectedTool, onSelectedToolChange]);
 
   // Keep the isMultiMode ref in sync with the prop
   useEffect(() => {
@@ -143,66 +134,6 @@ export const Toolbar = (props: Props) => {
       );
     }
   }, []);
-
-  useEffect(() => {
-    pendingRadiusRef.current = pendingRadius;
-  }, [pendingRadius]);
-
-  // Initialize pending radius when circle tool is selected
-  useEffect(() => {
-    if (selectedTool === 'circle') {
-      setPendingRadius(radiusRef.current);
-    }
-  }, [selectedTool]);
-
-  // Function to update circle radius
-  const updateCircleRadius = useCallback(
-    (newRadius: number) => {
-      if (selectedTool !== 'circle' || !graphic) {
-        return;
-      }
-
-      const newCircle = new Circle({
-        center: graphic.geometry.extent.center,
-        radius: newRadius,
-        radiusUnit: 'meters',
-      });
-
-      const updatedGraphic = new Graphic({
-        geometry: newCircle,
-        symbol: graphic.symbol,
-        attributes: graphic.attributes,
-      });
-
-      setGraphic(updatedGraphic);
-
-      // Update the graphic in the sketch view model
-      if (sketchViewModelRef.current?.layer) {
-        // Check if we're currently updating a graphic
-        const isUpdating = sketchViewModelRef.current.updateGraphics.length > 0;
-
-        // Remove all graphics and add the updated one
-        sketchViewModelRef.current.layer.removeAll();
-        sketchViewModelRef.current.layer.add(updatedGraphic);
-
-        // Restore edit mode if we were editing
-        if (isUpdating) {
-          sketchViewModelRef.current.update([updatedGraphic]);
-        }
-      }
-    },
-    [selectedTool, graphic, sketchViewModelRef],
-  );
-
-  // Function to apply radius changes
-  const applyRadiusChange = useCallback(() => {
-    if (pendingRadius !== radiusRef.current) {
-      radiusRef.current = pendingRadius;
-      setIsLiveUpdating(false);
-      // Update the current circle on the map with the new radius
-      updateCircleRadius(pendingRadius);
-    }
-  }, [pendingRadius, updateCircleRadius]);
 
   // Watch for changes in isMultiMode and notify parent when entering create mode
   useEffect(() => {
@@ -249,28 +180,24 @@ export const Toolbar = (props: Props) => {
           if (width > 0 && height > 0) {
             // Calculate radius from extent (assuming it's roughly circular)
             const calculatedRadius = Math.min(width, height) / 2;
-            setPendingRadius(Math.round(calculatedRadius));
-            setIsLiveUpdating(true);
+            onCircleRadiusChange?.(calculatedRadius);
           }
         } else if (geometry.type === 'circle') {
           // Fallback for actual circle geometry
           const circle = geometry as __esri.Circle;
           const currentRadius = circle.radius;
           if (currentRadius && currentRadius > 0) {
-            setPendingRadius(Math.round(currentRadius));
-            setIsLiveUpdating(true);
+            onCircleRadiusChange?.(currentRadius);
           }
         }
       }
       if (event.state === 'complete') {
-        setIsLiveUpdating(false);
         if (event.tool === 'circle') {
           // The circle tool creates a polygon, so we need to convert it to a proper circle
           // We'll use the current radius value for consistency
           const polygon = event.graphic.geometry as __esri.Polygon;
           const center = polygon.centroid;
-          const finalRadius = pendingRadiusRef.current ?? radiusRef.current;
-          radiusRef.current = finalRadius;
+          const finalRadius = radiusRef.current;
 
           event.graphic.geometry = new Circle({
             center,
@@ -279,7 +206,6 @@ export const Toolbar = (props: Props) => {
           });
 
           sketchViewModelRef.current?.complete();
-          sketchViewModelRef.current?.create('circle');
           // } else if (isMultiModeRef.current) {
           //   // Only call onFlightGeographyChange if we have a valid graphic and haven't processed it already
           //   if (
@@ -306,7 +232,7 @@ export const Toolbar = (props: Props) => {
         enterCreateMode();
       }
     },
-    [sketchViewModelRef, enterCreateMode],
+    [sketchViewModelRef, enterCreateMode, onCircleRadiusChange],
   );
 
   const onUpdate = useCallback(
@@ -326,8 +252,7 @@ export const Toolbar = (props: Props) => {
           if (width > 0 && height > 0) {
             // Calculate radius from extent (assuming it's roughly circular)
             const calculatedRadius = Math.min(width, height) / 2;
-            setPendingRadius(Math.round(calculatedRadius));
-            setIsLiveUpdating(true);
+            onCircleRadiusChange?.(calculatedRadius);
           }
         }
       }
@@ -399,11 +324,10 @@ export const Toolbar = (props: Props) => {
         event.state === 'active' &&
         event.toolEventInfo.type === 'scale-stop'
       ) {
-        setIsLiveUpdating(false);
         sketchViewModelRef.current?.complete();
       }
     },
-    [sketchViewModelRef],
+    [sketchViewModelRef, onCircleRadiusChange],
   );
 
   useEffect(() => {
@@ -420,7 +344,7 @@ export const Toolbar = (props: Props) => {
       reactiveUtils
         .whenOnce(() => getView().ready)
         .then(() => {
-          const fg = getFlightGeography(flightPathJSON);
+          const fg = getFlightGeographies(flightPathJSON);
           if (!fg) return;
 
           setSelectedTool(fg.geometry.type as Tool);
@@ -433,7 +357,7 @@ export const Toolbar = (props: Props) => {
     if (!graphic) {
       // Only clear graphics if not in add mode
       if (!isMultiModeRef.current) {
-        onFlightGeographyChange(null);
+        onNewFlightGeographies(null);
       }
       return;
     }
@@ -458,9 +382,9 @@ export const Toolbar = (props: Props) => {
         symbol: getFillSymbol(false),
       });
 
-      onFlightGeographyChange(g, autoZoomToFlightPath);
+      onNewFlightGeographies([g], autoZoomToFlightPath);
     } else {
-      onFlightGeographyChange(graphic, autoZoomToFlightPath);
+      onNewFlightGeographies([graphic], autoZoomToFlightPath);
     }
     setAutoZoomToFlightPath(false);
 
@@ -485,14 +409,14 @@ export const Toolbar = (props: Props) => {
       // ) as GraphicsLayer;
       // l?.removeAll();
       setGraphic(null);
-      setIsLiveUpdating(false);
+      // setIsLiveUpdating(false);
       // sketchViewModelRef.current?.cancel();
       // Don't clear flight paths when changing tools - only clear when explicitly requested
       // onFlightGeographyChange(null);
     } else {
       // sketchViewModelRef.current?.cancel();
       setGraphic(null);
-      setIsLiveUpdating(false);
+      // setIsLiveUpdating(false);
 
       // const l = getPreservationLayer();
       // l?.removeAll();
@@ -501,8 +425,8 @@ export const Toolbar = (props: Props) => {
 
   // Function to clear flight paths (used by clear button)
   const clearFlightPaths = useCallback(() => {
-    onFlightGeographyChange(null);
-  }, [onFlightGeographyChange]);
+    onNewFlightGeographies(null);
+  }, [onNewFlightGeographies]);
 
   // Handle force clear prop
   useEffect(() => {
@@ -613,7 +537,7 @@ export const Toolbar = (props: Props) => {
 
         // For circle tool, ensure the radius is properly set
         if (tool === 'circle') {
-          setPendingRadius(radiusRef.current);
+          // Radius update handled by CircleRadius component
         }
 
         // Create the drawing mode immediately if the view is ready
@@ -741,7 +665,7 @@ export const Toolbar = (props: Props) => {
     ) {
       // For circle tool, ensure the radius is properly set
       if (selectedTool === 'circle') {
-        setPendingRadius(radiusRef.current);
+        // Radius update handled by CircleRadius component
       }
       enterCreateMode();
     }
@@ -750,50 +674,58 @@ export const Toolbar = (props: Props) => {
   const uploadModal = useCallback(() => {
     return (
       <UploadModal
-        onUpload={(g: __esri.Graphic) => {
-          setSelectedTool(getToolFromGeometry(g.geometry));
+        onUpload={(graphics: __esri.Graphic[]) => {
+          setSelectedTool(getToolFromGeometry(graphics[0].geometry));
           setAutoZoomToFlightPath(true);
-          setGraphic(g);
-          if (sketchViewModelRef.current && sketchViewModelRef.current.layer) {
-            // Update immediately if the view is ready
-            if (getView().ready) {
-              try {
-                sketchViewModelRef.current.update(g);
-              } catch (error) {
-                // If immediate update fails, wait for the view to be ready
-                reactiveUtils
-                  .whenOnce(() => getView().ready)
-                  .then(() => {
-                    if (sketchViewModelRef.current) {
-                      sketchViewModelRef.current.update(g);
-                    }
-                  });
-              }
-            } else {
-              // Wait for the view to be ready before updating
-              reactiveUtils
-                .whenOnce(() => getView().ready)
-                .then(() => {
-                  if (sketchViewModelRef.current) {
-                    sketchViewModelRef.current.update(g);
-                  }
-                });
-            }
-          }
+          // setGraphic(graphics[0]);
+          onNewFlightGeographies(graphics, false);
+          // close the modal
+          // if (sketchViewModelRef.current && sketchViewModelRef.current.layer) {
+          //   // Update immediately if the view is ready
+          //   if (getView().ready) {
+          //     try {
+          //       sketchViewModelRef.current.update(graphics[0]);
+          //     } catch (error) {
+          //       // If immediate update fails, wait for the view to be ready
+          //       reactiveUtils
+          //         .whenOnce(() => getView().ready)
+          //         .then(() => {
+          //           if (sketchViewModelRef.current) {
+          //             sketchViewModelRef.current.update(graphics[0]);
+          //           }
+          //         });
+          //     }
+          //   } else {
+          //     // Wait for the view to be ready before updating
+          //     reactiveUtils
+          //       .whenOnce(() => getView().ready)
+          //       .then(() => {
+          //         if (sketchViewModelRef.current) {
+          //           sketchViewModelRef.current.update(graphics[0]);
+          //         }
+          //       });
+          //   }
+          // }
         }}
         onClose={() => setUploadFileModalVisible(false)}
       />
     );
-  }, [sketchViewModelRef]);
+  }, [onNewFlightGeographies]);
 
   const downloadModal = useCallback(() => {
     return (
       <DownloadModal
-        graphic={graphic}
+        flightGeographies={flightGeographies}
         onClose={() => setDownloadFileModalVisible(false)}
       />
     );
-  }, [graphic]);
+  }, [flightGeographies]);
+
+  useEffect(() => {
+    if (circleRadius) {
+      radiusRef.current = circleRadius;
+    }
+  }, [circleRadius]);
 
   useEffect(() => {
     if (uploadFileModalVisible) {
@@ -814,161 +746,116 @@ export const Toolbar = (props: Props) => {
   // if a crowded area, then pop density set to 50000
 
   return (
-    <>
-      <Card
-        style={{ ...props.style, backgroundColor: 'white', padding: '6px' }}
+    <Card style={{ ...props.style, backgroundColor: 'white', padding: '6px' }}>
+      <CardContent
+        style={{ display: 'flex', flexDirection: 'row', gap: '2px' }}
       >
-        <CardContent
-          style={{ display: 'flex', flexDirection: 'row', gap: '2px' }}
+        <Button
+          variant='text'
+          label='Download KML or GeoJSON file'
+          onClick={() => setDownloadFileModalVisible(true)}
+          compact
+          disabled={!enabled || !flightGeographies.length}
         >
-          <Button
-            variant='text'
-            label='Download KML or GeoJSON file'
-            onClick={() => setDownloadFileModalVisible(true)}
-            compact
-            disabled={!enabled || !graphic}
-          >
-            <Icon
-              name='download'
-              role='img'
-              aria-label='download icon'
-              className='icon'
-            />
-          </Button>
-          <Button
-            variant='text'
-            label='Upload KML or GeoJSON file'
-            onClick={() => setUploadFileModalVisible(true)}
-            compact
-            disabled={!enabled}
-          >
-            <Icon
-              name='upload'
-              role='img'
-              aria-label='upload icon'
-              className='icon'
-            />
-          </Button>
-          <Button
-            variant={selectedTool === 'circle' ? 'link' : 'text'}
-            label='Draw path with circle'
-            onClick={() => handleToolClick('circle')}
-            compact
-            disabled={!enabled}
-          >
-            <Icon
-              name='circle'
-              role='img'
-              aria-label='circle icon'
-              className='icon'
-            />
-          </Button>
-          <Button
-            variant={selectedTool === 'polyline' ? 'link' : 'text'}
-            label='Draw path with line'
-            onClick={() => handleToolClick('polyline')}
-            compact
-            disabled={!enabled}
-          >
-            <Icon
-              name='share-point-up'
-              role='img'
-              aria-label='share point up icon'
-              className='icon'
-            />
-          </Button>
-          <Button
-            variant={selectedTool === 'polygon' ? 'link' : 'text'}
-            label='Draw path with polygon'
-            onClick={() => handleToolClick('polygon')}
-            compact
-            disabled={!enabled}
-          >
-            <Icon
-              name='rectangle'
-              role='img'
-              aria-label='rectangle icon'
-              className='icon'
-            />
-          </Button>
-          <Button
-            variant={selectedTool === 'geozone' ? 'link' : 'text'}
-            label='Get geozone info'
-            onClick={() => {
-              handleToolClick('geozone');
-            }}
-            compact
-            disabled={!enabled}
-          >
-            <Icon
-              name='waypoint'
-              role='img'
-              aria-label='waypoint icon'
-              className='icon'
-            />
-          </Button>
-
-          {hasGraphic && (
-            <Button
-              variant='link'
-              label='Clear'
-              onClick={handleTrashClick}
-              compact
-              disabled={!enabled}
-            >
-              <Icon
-                name='trash'
-                role='img'
-                aria-label='trash icon'
-                className='icon'
-              />
-            </Button>
-          )}
-          <VertexInfo />
-        </CardContent>
-      </Card>
-
-      {selectedTool === 'circle' && (
-        <div
-          style={{
-            position: 'absolute',
-            top: '4rem',
-            right: '1.25rem',
-            maxWidth: '50%',
-            zIndex: 1000,
-            backgroundColor: 'white',
-            padding: '0.5rem',
-            borderRadius: '0.5rem',
-            border: `1px solid ${theme.base.palette['brand-primary']}`,
-            minWidth: '14rem',
-            display: 'flex',
-            flexDirection: 'column',
-            gap: '0.5rem',
-          }}
-        >
-          <Input
-            type='number'
-            label={
-              isLiveUpdating
-                ? `Radius (m) - Live (Current: ${radiusRef.current}m)`
-                : 'Radius (m)'
-            }
-            value={`${pendingRadius}`}
-            min={10}
-            max={10000}
-            onChange={(e: any) => setPendingRadius(Number(e.target.value))}
+          <Icon
+            name='download'
+            role='img'
+            aria-label='download icon'
+            className='icon'
           />
+        </Button>
+        <Button
+          variant='text'
+          label='Upload KML or GeoJSON file'
+          onClick={() => setUploadFileModalVisible(true)}
+          compact
+          disabled={!enabled}
+        >
+          <Icon
+            name='upload'
+            role='img'
+            aria-label='upload icon'
+            className='icon'
+          />
+        </Button>
+        <Button
+          variant={selectedTool === 'circle' ? 'link' : 'text'}
+          label='Draw path with circle'
+          onClick={() => handleToolClick('circle')}
+          compact
+          disabled={!enabled}
+        >
+          <Icon
+            name='circle'
+            role='img'
+            aria-label='circle icon'
+            className='icon'
+          />
+        </Button>
+        <Button
+          variant={selectedTool === 'polyline' ? 'link' : 'text'}
+          label='Draw path with line'
+          onClick={() => handleToolClick('polyline')}
+          compact
+          disabled={!enabled}
+        >
+          <Icon
+            name='share-point-up'
+            role='img'
+            aria-label='share point up icon'
+            className='icon'
+          />
+        </Button>
+        <Button
+          variant={selectedTool === 'polygon' ? 'link' : 'text'}
+          label='Draw path with polygon'
+          onClick={() => handleToolClick('polygon')}
+          compact
+          disabled={!enabled}
+        >
+          <Icon
+            name='rectangle'
+            role='img'
+            aria-label='rectangle icon'
+            className='icon'
+          />
+        </Button>
+        <Button
+          variant={selectedTool === 'geozone' ? 'link' : 'text'}
+          label='Get geozone info'
+          onClick={() => {
+            handleToolClick('geozone');
+          }}
+          compact
+          disabled={!enabled}
+        >
+          <Icon
+            name='waypoint'
+            role='img'
+            aria-label='waypoint icon'
+            className='icon'
+          />
+        </Button>
+
+        {flightGeographies.length > 0 && (
           <Button
-            variant='primary'
-            onClick={applyRadiusChange}
+            variant='link'
+            label='Clear'
+            onClick={handleTrashClick}
             compact
-            disabled={pendingRadius === radiusRef.current}
+            disabled={!enabled}
           >
-            OK
+            <Icon
+              name='trash'
+              role='img'
+              aria-label='trash icon'
+              className='icon'
+            />
           </Button>
-        </div>
-      )}
-    </>
+        )}
+        <VertexInfo />
+      </CardContent>
+    </Card>
   );
 };
 

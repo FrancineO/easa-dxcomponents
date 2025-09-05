@@ -14,7 +14,7 @@ import { getSymbol } from '../tools/toolbar/draw-utils';
 import * as geometryEngine from '@arcgis/core/geometry/geometryEngine';
 
 interface Props {
-  onUpload: (flightPath: __esri.Graphic) => void;
+  onUpload: (flightPath: __esri.Graphic[]) => void;
 }
 
 export const UploadFlightPath = (props: Props) => {
@@ -103,20 +103,22 @@ export const UploadFlightPath = (props: Props) => {
         }
 
         if (geojson?.features?.length > 0) {
-          const feature = geojson.features[0];
-          const esriGraphic = geojsonToArcGIS(feature) as __esri.Graphic;
+          const graphics = geojson.features.map((feature: any) => {
+            const esriGraphic = geojsonToArcGIS(feature) as __esri.Graphic;
 
-          const geometry = reproject(esriGraphic.geometry);
-          const graphic = new Graphic({
-            geometry,
-            attributes: esriGraphic.attributes,
-            symbol:
-              geometry.type === 'polygon'
-                ? (getSymbol('polygon') as SimpleFillSymbol)
-                : undefined,
+            const geometry = reproject(esriGraphic.geometry);
+            const graphic = new Graphic({
+              geometry,
+              attributes: esriGraphic.attributes,
+              symbol:
+                geometry.type === 'polygon'
+                  ? (getSymbol('polygon') as SimpleFillSymbol)
+                  : undefined,
+            });
+            return graphic;
           });
 
-          props.onUpload(graphic);
+          props.onUpload(graphics);
         } else {
           setError(
             'No geometry found in the file. Please try a different file.',

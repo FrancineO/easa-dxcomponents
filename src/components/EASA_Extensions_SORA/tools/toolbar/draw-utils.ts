@@ -161,19 +161,21 @@ export const addPoint = (
 //   }
 // };
 
-export const getFlightGeography = (flightGeometryString: string | null) => {
+export const getFlightGeographies = (flightGeometryString: string | null) => {
   if (!flightGeometryString) {
     return null;
   }
 
-  const flightGeometry = JSON.parse(flightGeometryString);
+  const flightGeometries = JSON.parse(flightGeometryString);
 
-  if (!flightGeometry) {
+  if (!flightGeometries) {
     return null;
   }
 
-  return new Graphic({
-    geometry: geometryJsonUtils.fromJSON(flightGeometry),
-    symbol: getSymbol(flightGeometry.type),
+  return flightGeometries.map((fg: any) => {
+    return new Graphic({
+      geometry: geometryJsonUtils.fromJSON(fg),
+      symbol: getSymbol(fg.type),
+    });
   });
 };

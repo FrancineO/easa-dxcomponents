@@ -17,6 +17,7 @@ interface FlightPathsProps {
   onMultiModeToggleClick: () => void;
   isMultiMode: boolean;
   disabled?: boolean;
+  children?: React.ReactNode;
 }
 
 export const FlightPaths: React.FC<FlightPathsProps> = ({
@@ -26,6 +27,7 @@ export const FlightPaths: React.FC<FlightPathsProps> = ({
   onMultiModeToggleClick,
   isMultiMode,
   disabled = false,
+  children,
 }) => {
   const theme = useTheme();
 
@@ -71,11 +73,6 @@ export const FlightPaths: React.FC<FlightPathsProps> = ({
     };
   }, []);
 
-  // Only show the component when there is at least one flight path
-  if (flightGeographies.length === 0) {
-    return null;
-  }
-
   return (
     <Card
       style={{
@@ -93,37 +90,40 @@ export const FlightPaths: React.FC<FlightPathsProps> = ({
       }}
     >
       <CardContent>
+        <div style={{ marginBottom: '0.5rem' }}>{children}</div>
         {/* Flight Paths List Header - show when there are one or more paths */}
-        <div
-          style={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            marginBottom: '8px',
-          }}
-        >
-          <Text variant='h4' style={{ margin: 0 }}>
-            Flight Paths ({flightGeographies.length})
-          </Text>
-          {flightGeographies.length > 1 && (
-            <Button
-              variant='secondary'
-              size='small'
-              onClick={() => {
-                handleHighlightFlightPath(null); // Clear highlighting
-                onClearAllFlightPaths();
-              }}
-              disabled={disabled}
-              style={{
-                padding: '4px 8px',
-                fontSize: '12px',
-              }}
-              title='Remove all flight paths from the map'
-            >
-              Clear All
-            </Button>
-          )}
-        </div>
+        {flightGeographies.length > 0 && (
+          <div
+            style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              marginBottom: '8px',
+            }}
+          >
+            <Text variant='h4' style={{ margin: 0 }}>
+              Flight Paths ({flightGeographies.length})
+            </Text>
+            {flightGeographies.length > 1 && (
+              <Button
+                variant='secondary'
+                size='small'
+                onClick={() => {
+                  handleHighlightFlightPath(null); // Clear highlighting
+                  onClearAllFlightPaths();
+                }}
+                disabled={disabled}
+                style={{
+                  padding: '4px 8px',
+                  fontSize: '12px',
+                }}
+                title='Remove all flight paths from the map'
+              >
+                Clear All
+              </Button>
+            )}
+          </div>
+        )}
 
         {/* Flight Paths List - show when there are one or more paths */}
         <div

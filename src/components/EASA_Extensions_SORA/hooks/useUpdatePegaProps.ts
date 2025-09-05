@@ -6,7 +6,7 @@ const useUpdatePegaProps = (
   pConnect: any,
   populationDensity: PopulationDensity | null,
   printRequest: any,
-  flightPath: __esri.Geometry | null,
+  flightPaths: __esri.Geometry[] | null,
   mapState: MapState | null,
   groundRisk: 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | null,
   errorText: string | null,
@@ -22,7 +22,7 @@ const useUpdatePegaProps = (
     pConnect,
     populationDensity,
     printRequest,
-    flightPath,
+    flightPaths,
     mapState,
     groundRisk,
     errorText,
@@ -41,7 +41,7 @@ const useUpdatePegaProps = (
     pConnect,
     populationDensity,
     printRequest,
-    flightPath,
+    flightPaths,
     mapState,
     groundRisk,
     errorText,
@@ -63,7 +63,7 @@ const useUpdatePegaProps = (
       printRequest: pR,
       pConnect: pC,
       groundRisk: gR,
-      flightPath: fP,
+      flightPaths: fPs,
       mapState: mS,
       errorText: eT,
       contingencyVolumeHeight: hCV,
@@ -97,7 +97,7 @@ const useUpdatePegaProps = (
     // eslint-disable-next-line no-console
     console.log('%c   printRequest:', `color: ${color}`, pR);
     // eslint-disable-next-line no-console
-    console.log('%c   flightPath:', `color: ${color}`, fP);
+    console.log('%c   flightPath:', `color: ${color}`, fPs);
     // eslint-disable-next-line no-console
     console.log('%c   mapState:', `color: ${color}`, mS);
     // eslint-disable-next-line no-console
@@ -140,10 +140,13 @@ const useUpdatePegaProps = (
       }
 
       let flightGeometryJSON = null;
-      if (fP) {
-        const json = fP.toJSON();
-        // for some reason the js api does not set type on the json object
-        json.type = fP.type;
+      if (fPs) {
+        const json = fPs.map((fP) => {
+          const fpAsJson = fP.toJSON();
+          // for some reason the js api does not set type on the json object
+          fpAsJson.type = fP.type;
+          return fpAsJson;
+        });
         flightGeometryJSON = JSON.stringify(json);
       }
 

@@ -6,7 +6,7 @@ import { toKML } from '@placemarkio/tokml';
 import type { FeatureCollection } from 'geojson';
 
 interface Props {
-  graphic: __esri.Graphic | null;
+  flightGeographies: __esri.Graphic[];
   onClose: () => void;
 }
 
@@ -14,18 +14,25 @@ export const DownloadModal = (props: Props) => {
   const { dismiss } = useModalContext();
 
   const handleDownload = (format: 'kml' | 'geojson') => {
-    if (!props.graphic) return;
+    if (!props.flightGeographies.length) return;
 
     const wgs84 = new SpatialReference({ wkid: 4326 });
-    const wgs84Geometry = projection.project(props.graphic.geometry, wgs84);
+
+    const features = props.flightGeographies.map((flightGeography) => {
+      const wgs84Geometry = projection.project(
+        flightGeography.geometry as __esri.Geometry,
+        wgs84,
+      );
+      return {
+        type: 'Feature',
+        properties: null,
+        geometry: arcgisToGeoJSON(wgs84Geometry as __esri.Geometry),
+      };
+    });
+
     const geojson = {
       type: 'FeatureCollection',
-      features: [
-        {
-          type: 'Feature',
-          geometry: arcgisToGeoJSON(wgs84Geometry as __esri.Geometry),
-        },
-      ],
+      features,
     };
 
     if (format === 'kml') {
@@ -77,7 +84,7 @@ export const DownloadModal = (props: Props) => {
           variant='primary'
           onClick={() => handleDownload('geojson')}
           style={{ margin: '0' }}
-          disabled={!props.graphic}
+          disabled={!props.flightGeographies.length}
         >
           Download as GeoJSON
         </Button>
@@ -85,7 +92,7 @@ export const DownloadModal = (props: Props) => {
           variant='primary'
           onClick={() => handleDownload('kml')}
           style={{ margin: '0' }}
-          disabled={!props.graphic}
+          disabled={!props.flightGeographies.length}
         >
           Download as KML
         </Button>
