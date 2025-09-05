@@ -8,6 +8,9 @@ import {
 } from '../flight-volume/flight-volume-calculations';
 import type { FlightVolume, FlightVolumesParams } from '../types';
 import { omit } from 'lodash';
+import * as geometryEngine from '@arcgis/core/geometry/geometryEngine';
+import Graphic from '@arcgis/core/Graphic';
+import { getFillSymbol } from '../tools/toolbar/draw-utils';
 
 const useCalculateFlightVolumes = (params: FlightVolumesParams) => {
   const [flightVolumes, setFlightVolumes] = useState<FlightVolume[]>([]);
@@ -25,10 +28,7 @@ const useCalculateFlightVolumes = (params: FlightVolumesParams) => {
     if (calculationInProgress.current) return;
 
     // Only proceed if we have flight geographies
-    if (
-      !currentParams.flightGeographies ||
-      currentParams.flightGeographies.length === 0
-    ) {
+    if (!currentParams.flightPaths || currentParams.flightPaths.length === 0) {
       // clear the flight volumes
       const layer = getView().map?.findLayerById(
         'flight-volumes',
@@ -60,24 +60,40 @@ const useCalculateFlightVolumes = (params: FlightVolumesParams) => {
       const allGraphics: __esri.Graphic[] = [];
 
       // Calculate volumes for each flight path
-      for (let i = 0; i < currentParams.flightGeographies.length; i++) {
-        const flightGeography = currentParams.flightGeographies[i];
+      for (let i = 0; i < currentParams.flightPaths.length; i++) {
+        const flightPath = currentParams.flightPaths[i];
 
         // Create params for this specific flight path
         const pathParams = {
-          // don't pass the flightGeographies in the currentParams
-          ...omit(currentParams, 'flightGeographies'),
-          flightGeography,
+          // don't pass the flightPaths in the currentParams
+          ...omit(currentParams, 'flightPaths'),
+          flightPath,
         };
 
+        // Create flight geography
+        const buffer = geometryEngine.buffer(
+          flightPath.geometry as __esri.Polyline,
+          currentParams.cd * 3, // minimum is 3 times the drone width as per annex
+        ) as __esri.Polygon;
+        const flightGeography = new Graphic({
+          geometry: buffer,
+          symbol: getFillSymbol(false),
+        });
+
         // Calculate volumes for this path
-        const cvResult = getContingencyVolume(pathParams);
+        const cvResult = getContingencyVolume({
+          ...pathParams,
+          flightGeography,
+        });
         if (!cvResult) continue;
-        const grVolumeResult = getGroundRiskVolume(pathParams, cvResult);
+        const grVolumeResult = getGroundRiskVolume(
+          { ...pathParams, flightGeography },
+          cvResult,
+        );
         if (!grVolumeResult) continue;
 
         const aaResult = getAdjacentArea(
-          pathParams,
+          { ...pathParams, flightGeography },
           cvResult.contingencyVolume.geometry,
           grVolumeResult.groundRiskVolume.geometry,
         );

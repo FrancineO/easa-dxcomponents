@@ -11,7 +11,7 @@ import SimpleFillSymbol from '@arcgis/core/symbols/SimpleFillSymbol';
 import { getView } from '../map/view';
 
 interface FlightPathsProps {
-  flightGeographies: __esri.Graphic[];
+  flightPaths: __esri.Graphic[];
   onRemoveFlightPath: (index: number) => void;
   onClearAllFlightPaths: () => void;
   onMultiModeToggleClick: () => void;
@@ -21,7 +21,7 @@ interface FlightPathsProps {
 }
 
 export const FlightPaths: React.FC<FlightPathsProps> = ({
-  flightGeographies,
+  flightPaths,
   onRemoveFlightPath,
   onClearAllFlightPaths,
   onMultiModeToggleClick,
@@ -64,7 +64,7 @@ export const FlightPaths: React.FC<FlightPathsProps> = ({
   // Clear highlighting when flight paths change
   useEffect(() => {
     handleHighlightFlightPath(null);
-  }, [flightGeographies, handleHighlightFlightPath]);
+  }, [flightPaths, handleHighlightFlightPath]);
 
   // Cleanup view graphics on unmount
   useEffect(() => {
@@ -92,7 +92,7 @@ export const FlightPaths: React.FC<FlightPathsProps> = ({
       <CardContent>
         <div style={{ marginBottom: '0.5rem' }}>{children}</div>
         {/* Flight Paths List Header - show when there are one or more paths */}
-        {flightGeographies.length > 0 && (
+        {flightPaths.length > 0 && (
           <div
             style={{
               display: 'flex',
@@ -102,9 +102,9 @@ export const FlightPaths: React.FC<FlightPathsProps> = ({
             }}
           >
             <Text variant='h4' style={{ margin: 0 }}>
-              Flight Paths ({flightGeographies.length})
+              Flight Paths ({flightPaths.length})
             </Text>
-            {flightGeographies.length > 1 && (
+            {flightPaths.length > 1 && (
               <Button
                 variant='secondary'
                 size='small'
@@ -135,7 +135,7 @@ export const FlightPaths: React.FC<FlightPathsProps> = ({
             overflowY: 'auto',
           }}
         >
-          {flightGeographies.map((flightPath, index) => (
+          {flightPaths.map((flightPath, index) => (
             <div
               key={`flight-path-${flightPath.geometry?.type || 'unknown'}-${flightPath.geometry?.toJSON ? JSON.stringify(flightPath.geometry.toJSON()).slice(0, 20) : index}`}
               style={{

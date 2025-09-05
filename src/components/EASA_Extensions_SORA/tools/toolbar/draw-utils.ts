@@ -1,6 +1,5 @@
 import Graphic from '@arcgis/core/Graphic';
 import * as webMercatorUtils from '@arcgis/core/geometry/support/webMercatorUtils';
-import GraphicsLayer from '@arcgis/core/layers/GraphicsLayer';
 import SimpleLineSymbol from '@arcgis/core/symbols/SimpleLineSymbol';
 import SimpleFillSymbol from '@arcgis/core/symbols/SimpleFillSymbol';
 import Color from '@arcgis/core/Color';
@@ -161,18 +160,18 @@ export const addPoint = (
 //   }
 // };
 
-export const getFlightGeographies = (flightGeometryString: string | null) => {
-  if (!flightGeometryString) {
+export const getFlightPaths = (flightPathsString: string | null) => {
+  if (!flightPathsString) {
     return null;
   }
 
-  const flightGeometries = JSON.parse(flightGeometryString);
+  const flightpaths = JSON.parse(flightPathsString);
 
-  if (!flightGeometries) {
+  if (!flightpaths) {
     return null;
   }
 
-  return flightGeometries.map((fg: any) => {
+  return flightpaths.map((fg: any) => {
     return new Graphic({
       geometry: geometryJsonUtils.fromJSON(fg),
       symbol: getSymbol(fg.type),

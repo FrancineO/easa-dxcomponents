@@ -70,7 +70,7 @@ export type ComponentProps = {
 } & MapProps;
 
 export type FlightVolumesParams = {
-  flightGeographies: __esri.Graphic[];
+  flightPaths: __esri.Graphic[];
 } & ComponentProps;
 
 export type FlightVolumeParams = {

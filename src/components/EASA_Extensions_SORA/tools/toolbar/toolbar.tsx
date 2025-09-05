@@ -2,13 +2,13 @@ import { Icon, useModalManager } from '@pega/cosmos-react-core';
 import { Button } from '@pega/cosmos-react-core';
 import { CardContent } from '@pega/cosmos-react-core';
 import { Card } from '@pega/cosmos-react-core';
-import { useEffect, useState, useCallback, useMemo, useRef } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 
 import { getView } from '../../map/view';
 import SketchViewModel from '@arcgis/core/widgets/Sketch/SketchViewModel';
 import GraphicsLayer from '@arcgis/core/layers/GraphicsLayer';
 import Graphic from '@arcgis/core/Graphic';
-import { getFillSymbol, getFlightGeographies, getSymbol } from './draw-utils';
+import { getFlightPaths, getSymbol } from './draw-utils';
 import type SimpleLineSymbol from '@arcgis/core/symbols/SimpleLineSymbol';
 import type SimpleFillSymbol from '@arcgis/core/symbols/SimpleFillSymbol';
 import type SimpleMarkerSymbol from '@arcgis/core/symbols/SimpleMarkerSymbol';
@@ -20,7 +20,6 @@ import * as Trash from '@pega/cosmos-react-core/lib/components/Icon/icons/trash.
 import * as Waypoint from '@pega/cosmos-react-core/lib/components/Icon/icons/waypoint.icon';
 import * as Upload from '@pega/cosmos-react-core/lib/components/Icon/icons/upload.icon';
 import * as Download from '@pega/cosmos-react-core/lib/components/Icon/icons/download.icon';
-import * as geometryEngine from '@arcgis/core/geometry/geometryEngine';
 import * as reactiveUtils from '@arcgis/core/core/reactiveUtils';
 import Circle from '@arcgis/core/geometry/Circle';
 import VertexInfo from './vertex-info';
@@ -40,18 +39,11 @@ registerIcon(
 
 export type Tool = 'circle' | 'polyline' | 'polygon' | 'geozone';
 
-/**
- * Props for the DrawToolbar component
- * @type {Props}
- * @property {React.CSSProperties} style - The style of the toolbar
- * @property {number} cd - The diameter of the drone in meters
- * @property {(graphic: Graphic | null) => void} onFlightGeographyChange - The function to call when the flight geography changes
- */
 type Props = {
   style?: React.CSSProperties;
   cd: number;
-  flightGeographies: Graphic[];
-  onNewFlightGeographies: (
+  flightPaths: Graphic[];
+  onNewFlightPaths: (
     graphics: Graphic[] | null,
     autoZoomToFlightPath?: boolean,
   ) => void;
@@ -75,8 +67,8 @@ type Props = {
  */
 export const Toolbar = (props: Props) => {
   const {
-    flightGeographies,
-    onNewFlightGeographies,
+    flightPaths,
+    onNewFlightPaths,
     cd,
     flightPathJSON,
     // onFlightPathChange,
@@ -344,7 +336,7 @@ export const Toolbar = (props: Props) => {
       reactiveUtils
         .whenOnce(() => getView().ready)
         .then(() => {
-          const fg = getFlightGeographies(flightPathJSON);
+          const fg = getFlightPaths(flightPathJSON);
           if (!fg) return;
 
           setSelectedTool(fg.geometry.type as Tool);
@@ -357,7 +349,7 @@ export const Toolbar = (props: Props) => {
     if (!graphic) {
       // Only clear graphics if not in add mode
       if (!isMultiModeRef.current) {
-        onNewFlightGeographies(null);
+        onNewFlightPaths(null);
       }
       return;
     }
@@ -369,23 +361,18 @@ export const Toolbar = (props: Props) => {
       sketchViewModelRef.current?.layer.add(graphic);
     }
 
-    if (
-      graphic?.geometry.type === 'polyline' ||
-      graphic?.geometry.type === 'polygon'
-    ) {
-      const buffer = geometryEngine.buffer(
-        graphic.geometry as __esri.Polyline,
-        cd * 3, // minimum is 3 times the drone width as per annex
-      ) as __esri.Polygon;
-      const g = new Graphic({
-        geometry: buffer,
-        symbol: getFillSymbol(false),
-      });
+    //  TODO: this buffer needs to be done outside here.
+    // should only be dealing with flight paths here.
+    // const buffer = geometryEngine.buffer(
+    //   graphic.geometry as __esri.Polyline,
+    //   cd * 3, // minimum is 3 times the drone width as per annex
+    // ) as __esri.Polygon;
+    // const g = new Graphic({
+    //   geometry: buffer,
+    //   symbol: getFillSymbol(false),
+    // });
 
-      onNewFlightGeographies([g], autoZoomToFlightPath);
-    } else {
-      onNewFlightGeographies([graphic], autoZoomToFlightPath);
-    }
+    onNewFlightPaths([graphic], autoZoomToFlightPath);
     setAutoZoomToFlightPath(false);
 
     // onFlightPathChange(graphic.geometry);
@@ -425,8 +412,8 @@ export const Toolbar = (props: Props) => {
 
   // Function to clear flight paths (used by clear button)
   const clearFlightPaths = useCallback(() => {
-    onNewFlightGeographies(null);
-  }, [onNewFlightGeographies]);
+    onNewFlightPaths(null);
+  }, [onNewFlightPaths]);
 
   // Handle force clear prop
   useEffect(() => {
@@ -677,49 +664,21 @@ export const Toolbar = (props: Props) => {
         onUpload={(graphics: __esri.Graphic[]) => {
           setSelectedTool(getToolFromGeometry(graphics[0].geometry));
           setAutoZoomToFlightPath(true);
-          // setGraphic(graphics[0]);
-          onNewFlightGeographies(graphics, false);
-          // close the modal
-          // if (sketchViewModelRef.current && sketchViewModelRef.current.layer) {
-          //   // Update immediately if the view is ready
-          //   if (getView().ready) {
-          //     try {
-          //       sketchViewModelRef.current.update(graphics[0]);
-          //     } catch (error) {
-          //       // If immediate update fails, wait for the view to be ready
-          //       reactiveUtils
-          //         .whenOnce(() => getView().ready)
-          //         .then(() => {
-          //           if (sketchViewModelRef.current) {
-          //             sketchViewModelRef.current.update(graphics[0]);
-          //           }
-          //         });
-          //     }
-          //   } else {
-          //     // Wait for the view to be ready before updating
-          //     reactiveUtils
-          //       .whenOnce(() => getView().ready)
-          //       .then(() => {
-          //         if (sketchViewModelRef.current) {
-          //           sketchViewModelRef.current.update(graphics[0]);
-          //         }
-          //       });
-          //   }
-          // }
+          onNewFlightPaths(graphics, false);
         }}
         onClose={() => setUploadFileModalVisible(false)}
       />
     );
-  }, [onNewFlightGeographies]);
+  }, [onNewFlightPaths]);
 
   const downloadModal = useCallback(() => {
     return (
       <DownloadModal
-        flightGeographies={flightGeographies}
+        flightPaths={flightPaths}
         onClose={() => setDownloadFileModalVisible(false)}
       />
     );
-  }, [flightGeographies]);
+  }, [flightPaths]);
 
   useEffect(() => {
     if (circleRadius) {
@@ -755,7 +714,7 @@ export const Toolbar = (props: Props) => {
           label='Download KML or GeoJSON file'
           onClick={() => setDownloadFileModalVisible(true)}
           compact
-          disabled={!enabled || !flightGeographies.length}
+          disabled={!enabled || !flightPaths.length}
         >
           <Icon
             name='download'
@@ -837,7 +796,7 @@ export const Toolbar = (props: Props) => {
           />
         </Button>
 
-        {flightGeographies.length > 0 && (
+        {flightPaths.length > 0 && (
           <Button
             variant='link'
             label='Clear'
