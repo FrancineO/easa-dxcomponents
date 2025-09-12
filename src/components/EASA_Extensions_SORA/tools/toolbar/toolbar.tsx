@@ -2,7 +2,13 @@ import { Icon, useModalManager } from '@pega/cosmos-react-core';
 import { Button } from '@pega/cosmos-react-core';
 import { CardContent } from '@pega/cosmos-react-core';
 import { Card } from '@pega/cosmos-react-core';
-import React, { useEffect, useState, useCallback, useRef } from 'react';
+import React, {
+  useEffect,
+  useState,
+  useCallback,
+  useRef,
+  useMemo,
+} from 'react';
 
 import { getView } from '../../map/view';
 import SketchViewModel from '@arcgis/core/widgets/Sketch/SketchViewModel';
@@ -66,7 +72,9 @@ type Props = {
   ) => void;
   flightPathJSON: string | null;
   // onFlightPathChange: (path: __esri.Geometry | null) => void;
-  onGeozoneInfoChange: (info: string | null) => void;
+  onGeozoneInfoChange: (
+    info: { attributes: any; portalItemId?: string } | null,
+  ) => void;
   onSelectedToolChange: (tool: Tool | null) => void;
   enabled: boolean;
   isMultiMode?: boolean; // New prop to indicate if we're adding to existing paths
@@ -75,6 +83,7 @@ type Props = {
   onCircleRadiusChange?: (radius: number) => void;
   selectedFlightPath: FlightPath | null;
   onEnterCreateModeRef?: React.MutableRefObject<(() => void) | null>; // New prop to expose enterCreateMode function
+  geozonePortalItemIds?: string; // New prop for geozone portal item IDs
 };
 
 // const bufferGraphicsLayerId = 'easa-sora-tool-buffer-graphics';
@@ -100,6 +109,7 @@ export const Toolbar = (props: Props) => {
     onCircleRadiusChange,
     selectedFlightPath,
     onEnterCreateModeRef,
+    geozonePortalItemIds,
   } = props;
 
   const [selectedTool, setSelectedTool] = useState<Tool | null>(null);
@@ -112,6 +122,18 @@ export const Toolbar = (props: Props) => {
   const [downloadFileModalVisible, setDownloadFileModalVisible] =
     useState(false);
   const [autoZoomToFlightPath, setAutoZoomToFlightPath] = useState(false);
+
+  // Create array of geozone portal item IDs
+  const geozonePortalItemIdsArray = useMemo(() => {
+    if (!geozonePortalItemIds) {
+      return [
+        '961089b2b5934678966938195a745029',
+        'eebdb68dbdb44859925d868399cecdf3',
+        '2375bb13147443fe9e42c629ff87d821',
+      ];
+    }
+    return geozonePortalItemIds.split(',').map((id) => id.trim());
+  }, [geozonePortalItemIds]);
   const radiusRef = useRef(500);
   const sketchViewModelRef = useRef<SketchViewModel | null>(null);
   const lastProcessedGraphicRef = useRef<__esri.Graphic | null>(null);
@@ -487,9 +509,6 @@ export const Toolbar = (props: Props) => {
     return null;
   };
 
-  const rowStyle =
-    'display: flex; flex-direction: row; justify-content: space-between;';
-  const labelStyle = 'padding-right: 8px;';
   const handleMapClick = (event: any) => {
     getView()
       .hitTest(event)
@@ -497,25 +516,27 @@ export const Toolbar = (props: Props) => {
         getView().graphics.removeAll();
         if (result.results.length > 0 && result.results[0].type === 'graphic') {
           const hitGraphic = result.results[0].graphic as Graphic;
-          const attributes = hitGraphic.attributes;
-          const g = new Graphic({
-            geometry: hitGraphic.geometry,
-            symbol: getSymbol('polygon') as SimpleFillSymbol,
-          });
-          getView().graphics.add(g);
-          onGeozoneInfoChange(
-            `<div style="font-size: 12px; line-height: 1.5; display: flex; flex-direction: column; gap: 4px; flex-grow: 1;">
-              ${attributes.Name ? `<div style="${rowStyle}"><div style="${labelStyle}">Name:</div><div>${attributes.Name ?? '-'}</div></div>` : ''}
-              ${attributes.Type ? `<div style="${rowStyle}"><div style="${labelStyle}">Type:</div><div>${attributes.Type}</div></div>` : ''}
-              ${attributes.NOTAMS_url ? `<div style="${rowStyle}"><div style="${labelStyle}">NOTAMS:</div><div><a href="${attributes.NOTAMS_url}" target="_blank">Link</a></div></div>` : ''}
-              ${attributes.Unit ? `<div style="${rowStyle}"><div style="${labelStyle}">Unit:</div><div>${attributes.Unit}</div></div>` : ''}
-              ${attributes.Requirements ? `<div style="${rowStyle}"><div style="${labelStyle}">Requirements:</div><div>${attributes.Requirements}</div></div>` : ''}
-              ${attributes.Category ? `<div style="${rowStyle}"><div style="${labelStyle}">Category:</div><div>${attributes.Category}</div></div>` : ''}
-              ${attributes.Area_Type ? `<div style="${rowStyle}"><div style="${labelStyle}">Area Type:</div><div>${attributes.Area_Type}</div></div>` : ''}
-              ${attributes.Bufferzone ? `<div style="${rowStyle}"><div style="${labelStyle}">Bufferzone:</div><div>${attributes.Bufferzone}</div></div>` : ''}
-              ${attributes.Restricted ? `<div style="${rowStyle}"><div style="${labelStyle}">Restricted:</div><div>${attributes.Restricted}</div></div>` : ''}
-            </div>`,
-          );
+          const layer = result.results[0].layer;
+
+          // Check if the clicked graphic is from a geozone layer
+          const isGeozoneLayer =
+            layer &&
+            (layer as any).portalItem &&
+            geozonePortalItemIdsArray.includes((layer as any).portalItem.id);
+
+          if (isGeozoneLayer) {
+            const attributes = hitGraphic.attributes;
+            const portalItemId = (layer as any).portalItem.id;
+            const g = new Graphic({
+              geometry: hitGraphic.geometry,
+              symbol: getSymbol('polygon') as SimpleFillSymbol,
+            });
+            getView().graphics.add(g);
+            onGeozoneInfoChange({ attributes, portalItemId });
+          } else {
+            // Not a geozone layer, clear the geozone info
+            onGeozoneInfoChange(null);
+          }
         } else {
           onGeozoneInfoChange(null);
         }
@@ -528,6 +549,7 @@ export const Toolbar = (props: Props) => {
     if (tool === selectedTool) {
       if (tool === 'geozone') {
         geozoneClickHandle?.remove();
+        setGeozoneClickHandle(undefined);
         if (!isMultiModeRef.current) {
           getView().graphics.removeAll();
         }
@@ -539,10 +561,13 @@ export const Toolbar = (props: Props) => {
       setSelectedTool(tool);
       if (tool === 'geozone') {
         geozoneClickHandle?.remove();
-        setGeozoneClickHandle(getView().on('click', handleMapClick));
-        return;
+        // Cancel any active sketch operations that might interfere with click events
+        sketchViewModelRef.current?.cancel();
+        const handle = getView().on('immediate-click', handleMapClick);
+        setGeozoneClickHandle(handle);
+        // Don't return here - let the function continue to set the selected tool
       }
-      if (sketchViewModelRef.current) {
+      if (sketchViewModelRef.current && tool !== 'geozone') {
         if (tool === 'circle') {
           sketchViewModelRef.current.defaultUpdateOptions = {
             tool: 'move',

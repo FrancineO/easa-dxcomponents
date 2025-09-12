@@ -37,6 +37,8 @@ import useGetIntersectingGeozones from './hooks/useGetIntersectingGeozones';
 import PopulationDensityOverrideModal from './components/population-density-override-modal';
 import PopDensitySourceInfo from './components/pop-density-source-info';
 import FlightPaths from './components/flight-paths';
+import GeozoneInfo from './components/geozone-info';
+import { getGeozoneFields } from './config/geozone-fields';
 
 import Legends from './legends/legends';
 import { getFlightPaths } from './tools/toolbar/draw-utils';
@@ -85,6 +87,7 @@ export const EasaExtensionsSORA = (props: ComponentProps) => {
     printHeight,
     printFormat,
     printDpi,
+    geozonePortalItemIds,
   } = props;
 
   const [flightPaths, setFlightPaths] = useState<FlightPath[]>([]);
@@ -93,7 +96,11 @@ export const EasaExtensionsSORA = (props: ComponentProps) => {
   const [mapState, setMapState] = useState<MapState | null>(null);
   const [errorText, setErrorText] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-  const [geozoneInfo, setGeozoneInfo] = useState<string | null>(null);
+  const [geozoneInfo, setGeozoneInfo] = useState<{
+    attributes: any;
+    portalItemId?: string;
+  } | null>(null);
+
   const [propsValid, setPropsValid] = useState(false);
   const [geozonesRenderer, setGeozonesRenderer] =
     useState<__esri.UniqueValueRenderer | null>(null);
@@ -658,6 +665,7 @@ export const EasaExtensionsSORA = (props: ComponentProps) => {
                 onSelectedToolChange={setSelectedTool}
                 flightPaths={flightPaths}
                 onEnterCreateModeRef={enterCreateModeRef}
+                geozonePortalItemIds={geozonePortalItemIds}
                 onNewFlightPaths={(graphics, autoZoomToFlightPath) => {
                   // If we're in update mode (selectedFlightPath exists), replace the old flight path
                   if (selectedFlightPath && graphics && graphics.length > 0) {
@@ -800,13 +808,9 @@ export const EasaExtensionsSORA = (props: ComponentProps) => {
                 x
               </div>
             </div>
-            <div
-              style={{
-                display: 'flex',
-                fontSize: '1.5rem',
-              }}
-              // eslint-disable-next-line react/no-danger
-              dangerouslySetInnerHTML={{ __html: geozoneInfo }}
+            <GeozoneInfo
+              attributes={geozoneInfo?.attributes}
+              fields={getGeozoneFields(geozoneInfo?.portalItemId || '')}
             />
           </div>
         )}
