@@ -20,6 +20,8 @@ interface FlightPathsProps {
   isMultiMode: boolean;
   disabled?: boolean;
   children?: React.ReactNode;
+  onFlightPathSelected: (flightPath: FlightPath | null) => void;
+  selectedFlightPath?: FlightPath | null;
 }
 
 export const FlightPaths: React.FC<FlightPathsProps> = ({
@@ -30,6 +32,8 @@ export const FlightPaths: React.FC<FlightPathsProps> = ({
   isMultiMode,
   disabled = false,
   children,
+  onFlightPathSelected,
+  selectedFlightPath,
 }) => {
   const theme = useTheme();
   const [selectedFlightPathIndex, setSelectedFlightPathIndex] = useState<
@@ -79,11 +83,9 @@ export const FlightPaths: React.FC<FlightPathsProps> = ({
   // Function to handle hover highlighting (only if no item is selected)
   const handleHoverHighlight = useCallback(
     (flightPath: __esri.Graphic | null) => {
-      if (selectedFlightPathIndex === null) {
-        handleHighlightFlightPath(flightPath);
-      }
+      handleHighlightFlightPath(flightPath);
     },
-    [selectedFlightPathIndex, handleHighlightFlightPath],
+    [handleHighlightFlightPath],
   );
 
   // Function to handle flight path selection/deselection
@@ -92,31 +94,46 @@ export const FlightPaths: React.FC<FlightPathsProps> = ({
       if (selectedFlightPathIndex === index) {
         // Deselect if clicking the same item
         setSelectedFlightPathIndex(null);
-        handleHighlightFlightPath(null);
+        onFlightPathSelected(null);
       } else {
         // Select new item
         setSelectedFlightPathIndex(index);
-        handleHighlightFlightPath(flightPaths[index]);
+        onFlightPathSelected(flightPaths[index]);
       }
     },
-    [selectedFlightPathIndex, flightPaths, handleHighlightFlightPath],
+    [selectedFlightPathIndex, flightPaths, onFlightPathSelected],
   );
 
-  // Clear highlighting and selection when flight paths change
+  // Update selection when selectedFlightPath prop changes
   useEffect(() => {
-    setSelectedFlightPathIndex(null);
-    handleHighlightFlightPath(null);
-  }, [flightPaths, handleHighlightFlightPath]);
-
-  // Maintain highlighting for selected item
-  useEffect(() => {
-    if (
-      selectedFlightPathIndex !== null &&
-      flightPaths[selectedFlightPathIndex]
-    ) {
-      handleHighlightFlightPath(flightPaths[selectedFlightPathIndex]);
+    if (selectedFlightPath) {
+      // Find the index of the selected flight path
+      const index = flightPaths.findIndex(
+        (path) => path.attributes.id === selectedFlightPath.attributes.id,
+      );
+      if (index !== -1) {
+        setSelectedFlightPathIndex(index);
+        // Don't highlight when selection is updated via prop - only highlight on user interaction
+        // handleHighlightFlightPath(selectedFlightPath);
+      } else {
+        setSelectedFlightPathIndex(null);
+        handleHighlightFlightPath(null);
+      }
+    } else {
+      setSelectedFlightPathIndex(null);
+      handleHighlightFlightPath(null);
     }
-  }, [selectedFlightPathIndex, flightPaths, handleHighlightFlightPath]);
+  }, [selectedFlightPath, flightPaths, handleHighlightFlightPath]);
+
+  // // Maintain highlighting for selected item
+  // useEffect(() => {
+  //   if (
+  //     selectedFlightPathIndex !== null &&
+  //     flightPaths[selectedFlightPathIndex]
+  //   ) {
+  //     handleHighlightFlightPath(flightPaths[selectedFlightPathIndex]);
+  //   }
+  // }, [selectedFlightPathIndex, flightPaths, handleHighlightFlightPath]);
 
   // Cleanup view graphics on unmount
   useEffect(() => {
@@ -143,6 +160,33 @@ export const FlightPaths: React.FC<FlightPathsProps> = ({
     >
       <CardContent>
         <div style={{ marginBottom: '0.5rem' }}>{children}</div>
+
+        {/* Instructions */}
+        {flightPaths.length > 0 && (
+          <div
+            style={{
+              marginBottom: '12px',
+              padding: '8px',
+              backgroundColor: theme.base.palette['secondary-background'],
+              borderRadius: '4px',
+              border: `1px solid ${theme.base.palette['brand-primary']}`,
+            }}
+          >
+            <Text
+              variant='secondary'
+              style={{
+                fontSize: '12px',
+                lineHeight: '1.4',
+                margin: 0,
+                color: theme.base.palette['foreground-color'],
+              }}
+            >
+              💡 <strong>Tip:</strong> Click on a path in the list to edit it.
+              Click again to exit edit mode.
+            </Text>
+          </div>
+        )}
+
         {/* Flight Paths List Header - show when there are one or more paths */}
         {flightPaths.length > 0 && (
           <div

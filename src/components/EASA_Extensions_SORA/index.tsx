@@ -10,7 +10,7 @@ import {
   useModalManager,
 } from '@pega/cosmos-react-core';
 import { merge } from 'lodash';
-import { useEffect, useMemo, useState, useCallback } from 'react';
+import { useEffect, useMemo, useState, useCallback, useRef } from 'react';
 import '../create-nonce';
 import { Toolbar, type Tool } from './tools/toolbar/toolbar';
 import SearchTool from './tools/search-tool';
@@ -49,12 +49,6 @@ import {
 } from './renderers';
 import geozonesDefintions from './geozone-definitions';
 import CircleRadius from './tools/toolbar/circle-radius';
-
-// eslint-disable-next-line no-console
-console.log(
-  '%c Do not throw errors. Just log them.',
-  `color: ${'rgb(255, 0, 195)'}`,
-);
 
 // https://map.droneguide.be/
 // https://maptool-dipul.dfs.de/
@@ -114,8 +108,13 @@ export const EasaExtensionsSORA = (props: ComponentProps) => {
     undefined,
   );
   const [selectedTool, setSelectedTool] = useState<Tool | null>(null);
+  const [selectedFlightPath, setSelectedFlightPath] =
+    useState<FlightPath | null>(null);
 
   const { create } = useModalManager();
+
+  // Ref to access toolbar's enterCreateMode function
+  const enterCreateModeRef = useRef<(() => void) | null>(null);
 
   const pConnect = getPConnect();
   let PCore: any;
@@ -126,15 +125,9 @@ export const EasaExtensionsSORA = (props: ComponentProps) => {
 
   useEffect(() => {
     try {
-      // eslint-disable-next-line no-console
-      console.log('%cValidating props:', `color: ${'rgb(125, 205, 248)'}`);
-      // eslint-disable-next-line no-console
-      console.log(props);
       validateComponentProps(props);
       setPropsValid(true);
       setErrorText(null);
-      // eslint-disable-next-line no-console
-      console.log('%cProps are valid!', `color: ${'rgb(93, 255, 153)'}`);
     } catch (error: any) {
       setErrorText(error.message);
       // eslint-disable-next-line no-console
@@ -239,6 +232,28 @@ export const EasaExtensionsSORA = (props: ComponentProps) => {
     // Force clear the toolbar state
     setForceClearToolbar(true);
   }, []);
+
+  // Function to handle flight path selection/deselection
+  const handleFlightPathSelected = useCallback(
+    (flightPath: FlightPath | null) => {
+      setSelectedFlightPath(flightPath);
+
+      // If deselecting a flight path, cancel the SVM and activate the selected tool
+      if (!flightPath) {
+        const view = getView();
+        const sketchLayer = view.map?.findLayerById(
+          'easa-sora-sketch-layer',
+        ) as any;
+        sketchLayer?.removeAll();
+
+        // Activate the selected tool if there is one
+        if (selectedTool && enterCreateModeRef.current) {
+          enterCreateModeRef.current();
+        }
+      }
+    },
+    [selectedTool],
+  );
 
   // Set up the hook for population density
   const { populationDensity, calculatePopDensities } = useGetPopulationDensity(
@@ -642,8 +657,31 @@ export const EasaExtensionsSORA = (props: ComponentProps) => {
                 cd={cd}
                 onSelectedToolChange={setSelectedTool}
                 flightPaths={flightPaths}
+                onEnterCreateModeRef={enterCreateModeRef}
                 onNewFlightPaths={(graphics, autoZoomToFlightPath) => {
+                  // If we're in update mode (selectedFlightPath exists), replace the old flight path
+                  if (selectedFlightPath && graphics && graphics.length > 0) {
+                    const newGraphic = graphics[0] as FlightPath;
+
+                    setFlightPaths((prev) => {
+                      return prev.map((path) => {
+                        // Replace the selected flight path with the new one
+                        if (
+                          path.attributes.id ===
+                          selectedFlightPath.attributes.id
+                        ) {
+                          return newGraphic;
+                        }
+                        return path;
+                      });
+                    });
+                    // Update the selected flight path to point to the new updated graphic
+                    setSelectedFlightPath(newGraphic);
+                    return;
+                  }
+
                   if (!isMultiMode) {
+                    // Normal single mode - replace all flight paths
                     setFlightPaths((graphics as FlightPath[]) || []);
                     return;
                   }
@@ -705,6 +743,7 @@ export const EasaExtensionsSORA = (props: ComponentProps) => {
                 forceClear={forceClearToolbar}
                 circleRadius={circleRadius}
                 onCircleRadiusChange={setCircleRadius}
+                selectedFlightPath={selectedFlightPath}
               />
             </div>
           </div>
@@ -788,6 +827,8 @@ export const EasaExtensionsSORA = (props: ComponentProps) => {
               onRemoveFlightPath={handleRemoveFlightPath}
               onClearAllFlightPaths={handleClearAllFlightPaths}
               onMultiModeToggleClick={handleMultiModeToggleClick}
+              onFlightPathSelected={handleFlightPathSelected}
+              selectedFlightPath={selectedFlightPath}
               isMultiMode={isMultiMode}
               disabled={!propsValid}
             >

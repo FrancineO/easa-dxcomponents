@@ -2,7 +2,7 @@ import { Icon, useModalManager } from '@pega/cosmos-react-core';
 import { Button } from '@pega/cosmos-react-core';
 import { CardContent } from '@pega/cosmos-react-core';
 import { Card } from '@pega/cosmos-react-core';
-import { useEffect, useState, useCallback, useRef } from 'react';
+import React, { useEffect, useState, useCallback, useRef } from 'react';
 
 import { getView } from '../../map/view';
 import SketchViewModel from '@arcgis/core/widgets/Sketch/SketchViewModel';
@@ -73,6 +73,8 @@ type Props = {
   forceClear?: boolean; // New prop to force clear the toolbar state
   circleRadius?: number;
   onCircleRadiusChange?: (radius: number) => void;
+  selectedFlightPath: FlightPath | null;
+  onEnterCreateModeRef?: React.MutableRefObject<(() => void) | null>; // New prop to expose enterCreateMode function
 };
 
 // const bufferGraphicsLayerId = 'easa-sora-tool-buffer-graphics';
@@ -96,6 +98,8 @@ export const Toolbar = (props: Props) => {
     forceClear = false, // Default to false for backward compatibility
     circleRadius,
     onCircleRadiusChange,
+    selectedFlightPath,
+    onEnterCreateModeRef,
   } = props;
 
   const [selectedTool, setSelectedTool] = useState<Tool | null>(null);
@@ -141,6 +145,24 @@ export const Toolbar = (props: Props) => {
           | 'mesh'
           | 'rectangle',
       );
+    }
+  }, []);
+
+  // Expose enterCreateMode function to parent component
+  useEffect(() => {
+    if (onEnterCreateModeRef) {
+      onEnterCreateModeRef.current = enterCreateMode;
+    }
+  }, [enterCreateMode, onEnterCreateModeRef]);
+
+  const enterUpdateMode = useCallback((g: Graphic) => {
+    if (sketchViewModelRef.current) {
+      // clear the layer
+      sketchViewModelRef.current.layer.removeAll();
+      // add the graphic to the layer
+      sketchViewModelRef.current.layer.add(g);
+      // update the graphic
+      sketchViewModelRef.current.update([g]);
     }
   }, []);
 
@@ -285,11 +307,25 @@ export const Toolbar = (props: Props) => {
           );
         }
 
+        // The graphic being edited by the SketchViewModel should already have the ID
+        const originalGraphicInSketch = event.graphics[0];
+        const graphicIdToPreserve = originalGraphicInSketch.attributes?.id;
+
         const g = new Graphic({
-          geometry: event.graphics[0].geometry.clone(),
-          symbol: event.graphics[0].symbol,
+          geometry: originalGraphicInSketch.geometry.clone(),
+          symbol: originalGraphicInSketch.symbol,
+          attributes: graphicIdToPreserve ? { id: graphicIdToPreserve } : {},
         });
+
         setGraphic(g);
+
+        // Ensure the graphic is in the layer before updating
+        if (
+          sketchViewModelRef.current &&
+          !sketchViewModelRef.current.layer.graphics.includes(g)
+        ) {
+          sketchViewModelRef.current.layer.add(g);
+        }
 
         // Update the graphic in the sketch view model
         sketchViewModelRef.current?.update([g]);
@@ -319,15 +355,8 @@ export const Toolbar = (props: Props) => {
       }
       if (
         event.state === 'active' &&
-        event.toolEventInfo.type === 'move-start'
-      ) {
-        // console.log('move-start', event.graphics[0].geometry.centroid.x);
-      }
-      if (
-        event.state === 'active' &&
         event.toolEventInfo.type === 'move-stop'
       ) {
-        // console.log('move-stop', event.graphics[0].geometry.centroid.x);
         sketchViewModelRef.current?.complete();
       }
       if (
@@ -339,6 +368,13 @@ export const Toolbar = (props: Props) => {
     },
     [sketchViewModelRef, onCircleRadiusChange],
   );
+
+  useEffect(() => {
+    if (selectedFlightPath) {
+      sketchViewModelRef.current?.layer.removeAll();
+      enterUpdateMode(selectedFlightPath);
+    }
+  }, [selectedFlightPath, enterUpdateMode]);
 
   useEffect(() => {
     if (handleCreate || handleUpdate) {
@@ -390,7 +426,12 @@ export const Toolbar = (props: Props) => {
     //   symbol: getFillSymbol(false),
     // });
 
-    onNewFlightPaths([addIdToGraphic(graphic)], autoZoomToFlightPath);
+    // If we're in update mode (selectedFlightPath exists), preserve the original ID
+    const graphicToSend = selectedFlightPath
+      ? (graphic as FlightPath)
+      : addIdToGraphic(graphic);
+
+    onNewFlightPaths([graphicToSend], autoZoomToFlightPath);
     setAutoZoomToFlightPath(false);
 
     // onFlightPathChange(graphic.geometry);
@@ -492,10 +533,8 @@ export const Toolbar = (props: Props) => {
         }
         onGeozoneInfoChange(null);
       }
-      // Don't clear selected tool when in add mode - we want to keep the tool active
-      if (!isMultiModeRef.current) {
-        setSelectedTool(null);
-      }
+      // Toggle off the tool - always allow toggling off drawing tools
+      setSelectedTool(null);
     } else {
       setSelectedTool(tool);
       if (tool === 'geozone') {
