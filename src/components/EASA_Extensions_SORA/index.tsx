@@ -761,7 +761,7 @@ export const EasaExtensionsSORA = (props: ComponentProps) => {
             style={{
               position: 'absolute',
               top: '4rem',
-              right: '1.25rem',
+              left: '4rem',
               maxWidth: '50%',
               zIndex: 1000,
               backgroundColor: 'white',
