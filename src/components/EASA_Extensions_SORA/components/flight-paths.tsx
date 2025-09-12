@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import {
   Button,
   Text,
@@ -9,10 +9,12 @@ import {
 import Graphic from '@arcgis/core/Graphic';
 import SimpleFillSymbol from '@arcgis/core/symbols/SimpleFillSymbol';
 import { getView } from '../map/view';
+import { SimpleLineSymbol } from '@arcgis/core/symbols';
+import type { FlightPath } from '../types';
 
 interface FlightPathsProps {
-  flightPaths: __esri.Graphic[];
-  onRemoveFlightPath: (index: number) => void;
+  flightPaths: FlightPath[];
+  onRemoveFlightPath: (id: string) => void;
   onClearAllFlightPaths: () => void;
   onMultiModeToggleClick: () => void;
   isMultiMode: boolean;
@@ -30,6 +32,9 @@ export const FlightPaths: React.FC<FlightPathsProps> = ({
   children,
 }) => {
   const theme = useTheme();
+  const [selectedFlightPathIndex, setSelectedFlightPathIndex] = useState<
+    number | null
+  >(null);
 
   // Function to highlight a flight path on the map
   const handleHighlightFlightPath = useCallback(
@@ -40,15 +45,25 @@ export const FlightPaths: React.FC<FlightPathsProps> = ({
       view.graphics.removeAll();
 
       if (flightPath && flightPath.geometry) {
+        const highlightRgb = [251, 247, 25]; // Yellow
         // Create a highlighted version of the flight path
-        const highlightSymbol = new SimpleFillSymbol({
-          color: [0, 150, 255, 0.4], // Light blue with transparency for fill
-          outline: {
-            color: [0, 100, 200, 1.0], // Blue outline
-            width: 3,
-            style: 'solid',
-          },
+        let highlightSymbol: __esri.Symbol = new SimpleLineSymbol({
+          color: [...highlightRgb, 0.8],
+          width: 3,
+          style: 'solid',
+          cap: 'round',
+          join: 'round',
         });
+        if (flightPath.geometry.type === 'polygon') {
+          highlightSymbol = new SimpleFillSymbol({
+            color: [...highlightRgb, 0.4],
+            outline: {
+              color: [...highlightRgb, 0.8],
+              width: 3,
+              style: 'solid',
+            },
+          });
+        }
 
         const highlightGraphic = new Graphic({
           geometry: flightPath.geometry,
@@ -61,10 +76,47 @@ export const FlightPaths: React.FC<FlightPathsProps> = ({
     [],
   );
 
-  // Clear highlighting when flight paths change
+  // Function to handle hover highlighting (only if no item is selected)
+  const handleHoverHighlight = useCallback(
+    (flightPath: __esri.Graphic | null) => {
+      if (selectedFlightPathIndex === null) {
+        handleHighlightFlightPath(flightPath);
+      }
+    },
+    [selectedFlightPathIndex, handleHighlightFlightPath],
+  );
+
+  // Function to handle flight path selection/deselection
+  const handleFlightPathClick = useCallback(
+    (index: number) => {
+      if (selectedFlightPathIndex === index) {
+        // Deselect if clicking the same item
+        setSelectedFlightPathIndex(null);
+        handleHighlightFlightPath(null);
+      } else {
+        // Select new item
+        setSelectedFlightPathIndex(index);
+        handleHighlightFlightPath(flightPaths[index]);
+      }
+    },
+    [selectedFlightPathIndex, flightPaths, handleHighlightFlightPath],
+  );
+
+  // Clear highlighting and selection when flight paths change
   useEffect(() => {
+    setSelectedFlightPathIndex(null);
     handleHighlightFlightPath(null);
   }, [flightPaths, handleHighlightFlightPath]);
+
+  // Maintain highlighting for selected item
+  useEffect(() => {
+    if (
+      selectedFlightPathIndex !== null &&
+      flightPaths[selectedFlightPathIndex]
+    ) {
+      handleHighlightFlightPath(flightPaths[selectedFlightPathIndex]);
+    }
+  }, [selectedFlightPathIndex, flightPaths, handleHighlightFlightPath]);
 
   // Cleanup view graphics on unmount
   useEffect(() => {
@@ -109,6 +161,7 @@ export const FlightPaths: React.FC<FlightPathsProps> = ({
                 variant='secondary'
                 size='small'
                 onClick={() => {
+                  setSelectedFlightPathIndex(null); // Clear selection
                   handleHighlightFlightPath(null); // Clear highlighting
                   onClearAllFlightPaths();
                 }}
@@ -135,46 +188,74 @@ export const FlightPaths: React.FC<FlightPathsProps> = ({
             overflowY: 'auto',
           }}
         >
-          {flightPaths.map((flightPath, index) => (
-            <div
-              key={`flight-path-${flightPath.geometry?.type || 'unknown'}-${flightPath.geometry?.toJSON ? JSON.stringify(flightPath.geometry.toJSON()).slice(0, 20) : index}`}
-              style={{
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                padding: '6px 8px',
-                backgroundColor: theme.base.palette['secondary-background'],
-                borderRadius: '4px',
-                border: `1px solid ${theme.base.palette['brand-primary']}`,
-                cursor: 'pointer',
-                transition: 'all 0.2s ease',
-              }}
-              onMouseEnter={() => handleHighlightFlightPath(flightPath)}
-              onMouseLeave={() => handleHighlightFlightPath(null)}
-            >
-              <Text variant='secondary' style={{ margin: 0, fontSize: '14px' }}>
-                Path {index + 1}
-              </Text>
-              <Button
-                variant='secondary'
-                size='small'
-                onClick={() => {
-                  handleHighlightFlightPath(null); // Clear highlighting
-                  onRemoveFlightPath(index);
-                }}
-                disabled={disabled}
+          {flightPaths.map((flightPath, index) => {
+            const isSelected = selectedFlightPathIndex === index;
+            const flightPathId = flightPath.attributes.id;
+            return (
+              <div
+                key={flightPathId}
+                role='button'
+                tabIndex={0}
                 style={{
-                  padding: '2px 6px',
-                  fontSize: '12px',
-                  color: theme.base.palette.urgent,
-                  minWidth: 'auto',
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  padding: '6px 8px',
+                  backgroundColor: isSelected
+                    ? theme.base.palette['brand-primary']
+                    : theme.base.palette['secondary-background'],
+                  borderRadius: '4px',
+                  border: `2px solid ${theme.base.palette['brand-primary']}`,
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease',
+                  boxShadow: isSelected
+                    ? `0 0 8px ${theme.base.palette['brand-primary']}40`
+                    : 'none',
                 }}
-                title={`Remove flight path ${index + 1} from the map`}
+                onClick={() => handleFlightPathClick(index)}
+                onKeyDown={(e: React.KeyboardEvent) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    handleFlightPathClick(index);
+                  }
+                }}
+                onMouseEnter={() => handleHoverHighlight(flightPath)}
+                onMouseLeave={() => handleHoverHighlight(null)}
               >
-                Remove
-              </Button>
-            </div>
-          ))}
+                <Text
+                  variant='secondary'
+                  style={{
+                    margin: 0,
+                    fontSize: '14px',
+                    color: isSelected ? 'white' : undefined,
+                    fontWeight: isSelected ? 'bold' : 'normal',
+                  }}
+                >
+                  Path {index + 1}
+                </Text>
+                <Button
+                  variant='secondary'
+                  size='small'
+                  onClick={(e: React.MouseEvent) => {
+                    e.stopPropagation(); // Prevent triggering the parent click
+                    setSelectedFlightPathIndex(null); // Clear selection
+                    handleHighlightFlightPath(null); // Clear highlighting
+                    onRemoveFlightPath(flightPathId);
+                  }}
+                  disabled={disabled}
+                  style={{
+                    padding: '2px 6px',
+                    fontSize: '12px',
+                    color: theme.base.palette.urgent,
+                    minWidth: 'auto',
+                  }}
+                  title={`Remove flight path ${index + 1} from the map`}
+                >
+                  Remove
+                </Button>
+              </div>
+            );
+          })}
         </div>
 
         {/* Multi Path Mode Button - moved to bottom */}

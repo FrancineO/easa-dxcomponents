@@ -21,6 +21,7 @@ import {
   type ComponentProps,
   type MapState,
   type ImpactedLandUse,
+  type FlightPath,
 } from './types';
 import useUpdatePegaProps from './hooks/useUpdatePegaProps';
 import useDebouncedEffect from './hooks/useDebouncedEffect';
@@ -92,7 +93,7 @@ export const EasaExtensionsSORA = (props: ComponentProps) => {
     printDpi,
   } = props;
 
-  const [flightPaths, setFlightPaths] = useState<__esri.Graphic[]>([]);
+  const [flightPaths, setFlightPaths] = useState<FlightPath[]>([]);
   // const [flightPath, setFlightPath] = useState<__esri.Geometry | null>(null);
   const [layersAdded, setLayersAdded] = useState(false);
   const [mapState, setMapState] = useState<MapState | null>(null);
@@ -189,9 +190,9 @@ export const EasaExtensionsSORA = (props: ComponentProps) => {
   }, [propsValid, isMultiMode]);
 
   // Function to remove a specific flight path
-  const handleRemoveFlightPath = useCallback((index: number) => {
+  const handleRemoveFlightPath = useCallback((id: string) => {
     setFlightPaths((prev) => {
-      const updated = prev.filter((_, i) => i !== index);
+      const updated = prev.filter((path) => path.attributes.id !== id);
 
       // If no flight paths remain, clear all graphics
       if (updated.length === 0) {
@@ -204,6 +205,19 @@ export const EasaExtensionsSORA = (props: ComponentProps) => {
 
         // Force clear the toolbar state
         setForceClearToolbar(true);
+      } else {
+        // Check if the removed flight path is currently being edited in the SVM
+        // We need to get the current graphic from the SVM to compare IDs
+        const view = getView();
+        const sketchLayer = view.map?.findLayerById(
+          'easa-sora-sketch-layer',
+        ) as any;
+        const currentGraphic = sketchLayer?.graphics?.items?.[0];
+
+        if (currentGraphic && currentGraphic.attributes?.id === id) {
+          // The removed flight path is currently being edited, clear the SVM
+          sketchLayer?.removeAll();
+        }
       }
 
       return updated;
@@ -403,7 +417,7 @@ export const EasaExtensionsSORA = (props: ComponentProps) => {
   // Call calculatePopDensities when flightVolumes change
   useEffect(() => {
     queryIntersectingLanduses();
-    if (flightVolumes.length === 0) return;
+    // Always call calculatePopDensities to handle both empty and non-empty cases
     calculatePopDensities()
       .catch((error) => {
         setErrorText(error.message);
@@ -416,7 +430,15 @@ export const EasaExtensionsSORA = (props: ComponentProps) => {
 
   // Recalculate population densities when overrides change
   useEffect(() => {
-    if (flightVolumes.length === 0 || !layersAdded) return;
+    if (!layersAdded) return;
+    if (flightVolumes.length === 0) {
+      // Clear calculations when no flight volumes
+      calculatePopDensities().catch((error) => {
+        setErrorText(error.message);
+        // Silently handle errors
+      });
+      return;
+    }
     setLoading(true);
     calculatePopDensities().catch((error) => {
       setErrorText(error.message);
@@ -622,7 +644,7 @@ export const EasaExtensionsSORA = (props: ComponentProps) => {
                 flightPaths={flightPaths}
                 onNewFlightPaths={(graphics, autoZoomToFlightPath) => {
                   if (!isMultiMode) {
-                    setFlightPaths(graphics || []);
+                    setFlightPaths((graphics as FlightPath[]) || []);
                     return;
                   }
 
@@ -631,12 +653,15 @@ export const EasaExtensionsSORA = (props: ComponentProps) => {
                     setFlightPaths((prev) => {
                       // compare the arrays and return only those that are not in both arrays
                       if (prev.length === 0) {
-                        return graphics;
+                        return graphics as FlightPath[];
                       }
-                      const allGraphics = [...prev, ...graphics];
+                      const allGraphics = [
+                        ...prev,
+                        ...(graphics as FlightPath[]),
+                      ];
 
                       // remove all duplicate graphics from the allGraphics array
-                      const uniqueGraphics: __esri.Graphic[] = [];
+                      const uniqueGraphics: FlightPath[] = [];
                       allGraphics.forEach((g, i) => {
                         if (i === allGraphics.length - 1) {
                           uniqueGraphics.push(g);

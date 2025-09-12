@@ -69,8 +69,12 @@ export type ComponentProps = {
   criticalArea: number | null;
 } & MapProps;
 
+export type FlightPath = __esri.Graphic & {
+  id: string;
+};
+
 export type FlightVolumesParams = {
-  flightPaths: __esri.Graphic[];
+  flightPaths: FlightPath[];
 } & ComponentProps;
 
 export type FlightVolumeParams = {

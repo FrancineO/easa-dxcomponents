@@ -26,6 +26,23 @@ import VertexInfo from './vertex-info';
 
 import UploadModal from '../../components/upload-modal';
 import DownloadModal from '../../components/download-modal';
+import type { FlightPath } from '../../types';
+
+// Utility function to generate unique IDs
+const generateId = (): string => {
+  return `flight-path-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+};
+
+// Utility function to add ID to a graphic
+const addIdToGraphic = (graphic: __esri.Graphic): FlightPath => {
+  if (!graphic.attributes) {
+    graphic.attributes = {};
+  }
+  if (!graphic.attributes.id) {
+    graphic.attributes.id = generateId();
+  }
+  return graphic as FlightPath;
+};
 
 registerIcon(
   CircleIcon,
@@ -42,9 +59,9 @@ export type Tool = 'circle' | 'polyline' | 'polygon' | 'geozone';
 type Props = {
   style?: React.CSSProperties;
   cd: number;
-  flightPaths: Graphic[];
+  flightPaths: FlightPath[];
   onNewFlightPaths: (
-    graphics: Graphic[] | null,
+    graphics: FlightPath[] | null,
     autoZoomToFlightPath?: boolean,
   ) => void;
   flightPathJSON: string | null;
@@ -216,8 +233,9 @@ export const Toolbar = (props: Props) => {
         // sketchViewModelRef.current?.update([event.graphic]);
         // setGraphic(event.graphic);
         // }
-        // sketchViewModelRef.current?.update([event.graphic]);
-        setGraphic(event.graphic);
+        // Add ID to the graphic and set it
+        const graphicWithId = addIdToGraphic(event.graphic);
+        setGraphic(graphicWithId);
         // clear the svm layer
         sketchViewModelRef.current?.layer.removeAll();
         // keep the create mode active so user can continue adding more paths
@@ -372,7 +390,7 @@ export const Toolbar = (props: Props) => {
     //   symbol: getFillSymbol(false),
     // });
 
-    onNewFlightPaths([graphic], autoZoomToFlightPath);
+    onNewFlightPaths([addIdToGraphic(graphic)], autoZoomToFlightPath);
     setAutoZoomToFlightPath(false);
 
     // onFlightPathChange(graphic.geometry);
@@ -662,9 +680,11 @@ export const Toolbar = (props: Props) => {
     return (
       <UploadModal
         onUpload={(graphics: __esri.Graphic[]) => {
-          setSelectedTool(getToolFromGeometry(graphics[0].geometry));
+          // Add IDs to uploaded graphics
+          const graphicsWithIds = graphics.map(addIdToGraphic);
+          setSelectedTool(getToolFromGeometry(graphicsWithIds[0].geometry));
           setAutoZoomToFlightPath(true);
-          onNewFlightPaths(graphics, false);
+          onNewFlightPaths(graphicsWithIds, false);
         }}
         onClose={() => setUploadFileModalVisible(false)}
       />
