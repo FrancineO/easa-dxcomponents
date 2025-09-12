@@ -1,6 +1,6 @@
 import Graphic from '@arcgis/core/Graphic';
 import * as geometryEngine from '@arcgis/core/geometry/geometryEngine';
-import type { FlightVolumeParams, FlightVolumesParams } from '../types';
+import type { FlightVolumeParams } from '../types';
 import {
   adjacentAreaSymbol,
   groundRiskVolumeSymbol,

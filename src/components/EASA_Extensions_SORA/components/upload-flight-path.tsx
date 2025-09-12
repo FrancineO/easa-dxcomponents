@@ -107,7 +107,7 @@ export const UploadFlightPath = (props: Props) => {
             const esriGraphic = geojsonToArcGIS(feature) as __esri.Graphic;
 
             const geometry = reproject(esriGraphic.geometry);
-            const graphic = new Graphic({
+            return new Graphic({
               geometry,
               attributes: esriGraphic.attributes,
               symbol:
@@ -115,7 +115,6 @@ export const UploadFlightPath = (props: Props) => {
                   ? (getSymbol('polygon') as SimpleFillSymbol)
                   : undefined,
             });
-            return graphic;
           });
 
           props.onUpload(graphics);
