@@ -187,7 +187,7 @@ export const PopDensitySourceInfo = (props: PopDensitySourceInfoProps) => {
             'Assumed population density value based on landuse classification',
           infoLink: 'https://data.jrc.ec.europa.eu/dataset?collection=LUISA',
           tooltipContent:
-            'This is an assumed population density value based on landuse classification. You can override this value by clicking the "Override Landuse Population Density" button at the top of the map.',
+            'This is an assumed population density value based on landuse classification. You can override this value by clicking the "Correct errors in population density values" button at the top of the map.',
         };
       }
       case 'overridden-landuse': {

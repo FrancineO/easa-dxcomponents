@@ -9,12 +9,13 @@ import {
 import {
   landusePopDensityLookup,
   landUseLabels,
-  landuseColors,
+  getLanduseColor,
 } from '../renderers';
 import TooltipElement from '../components/tooltip-element';
 import * as Information from '@pega/cosmos-react-core/lib/components/Icon/icons/information.icon';
 import * as CaretDown from '@pega/cosmos-react-core/lib/components/Icon/icons/caret-down.icon';
 import * as CaretUp from '@pega/cosmos-react-core/lib/components/Icon/icons/caret-up.icon';
+import * as ArrowUpDown from '@pega/cosmos-react-core/lib/components/Icon/icons/arrow-up-down.icon';
 import { registerIcon } from '@pega/cosmos-react-core';
 import { useState } from 'react';
 import getLanduseIcon from './landuse-icons';
@@ -22,6 +23,7 @@ import getLanduseIcon from './landuse-icons';
 registerIcon(Information);
 registerIcon(CaretDown);
 registerIcon(CaretUp);
+registerIcon(ArrowUpDown);
 
 const infoText = [
   'The  static population density map is based on census data.',
@@ -30,6 +32,8 @@ const infoText = [
   ' The UAS operator might then in the SORA step#3 (ground mitigation)  justify a lower population density.',
 ];
 
+type SortOption = 'alphabetical' | 'density';
+
 const LandusePopDensityLegend = ({
   intersectingLanduseClasses,
 }: {
@@ -37,45 +41,79 @@ const LandusePopDensityLegend = ({
 }) => {
   // State to track which groups are expanded
   const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
+  // State to track sorting option
+  const [sortOption, setSortOption] = useState<SortOption>('density');
 
   // Toggle expanded state for a group
-  const toggleGroup = (colorKey: string) => {
+  const toggleGroup = (groupKey: string) => {
     const newExpanded = new Set(expandedGroups);
-    if (newExpanded.has(colorKey)) {
-      newExpanded.delete(colorKey);
+    if (newExpanded.has(groupKey)) {
+      newExpanded.delete(groupKey);
     } else {
-      newExpanded.add(colorKey);
+      newExpanded.add(groupKey);
     }
     setExpandedGroups(newExpanded);
   };
 
-  // Group entries by color
+  // Group entries by population density thresholds
   const groupedEntries = Object.entries(landusePopDensityLookup).reduce(
     (acc, [landuse, density]) => {
-      const colorKey = landuseColors[landuse as unknown as number].join(',');
-      if (!acc[colorKey]) {
-        acc[colorKey] = {
-          color: landuseColors[landuse as unknown as number],
+      const landuseNumber = Number(landuse);
+      const color = getLanduseColor(landuseNumber);
+
+      // Handle null density values - place in separate "Other" group
+      if (density === null) {
+        const groupKey = 'noData';
+        const groupLabel = 'Other';
+
+        if (!acc[groupKey]) {
+          acc[groupKey] = {
+            label: groupLabel,
+            color,
+            landuses: [],
+            maxDensity: 0,
+          };
+        }
+        acc[groupKey].landuses.push({
+          label: landUseLabels[landuseNumber],
+          density: null,
+          landuse: landuseNumber,
+          color,
+        });
+        return acc;
+      }
+
+      // Determine which group this landuse belongs to based on density
+      const groupKey = density < 5000 ? 'low' : 'high';
+      const groupLabel = density < 5000 ? '< 5000 per km²' : '< 50000 per km²';
+
+      if (!acc[groupKey]) {
+        acc[groupKey] = {
+          label: groupLabel,
+          color,
           landuses: [],
           maxDensity: 0,
         };
       }
-      acc[colorKey].landuses.push({
-        label: landUseLabels[landuse as unknown as number],
+      acc[groupKey].landuses.push({
+        label: landUseLabels[landuseNumber],
         density,
-        landuse: Number(landuse),
+        landuse: landuseNumber,
+        color,
       });
-      acc[colorKey].maxDensity = Math.max(acc[colorKey].maxDensity, density);
+      acc[groupKey].maxDensity = Math.max(acc[groupKey].maxDensity, density);
       return acc;
     },
     {} as Record<
       string,
       {
+        label: string;
         color: number[];
         landuses: {
           label: string;
           landuse: number;
-          density: number;
+          density: number | null;
+          color: number[];
         }[];
         maxDensity: number;
       }
@@ -83,34 +121,103 @@ const LandusePopDensityLegend = ({
   );
 
   const getIntersectingLanduse = (group: {
-    landuses: { label: string; density: number; landuse: number }[];
+    landuses: { label: string; density: number | null; landuse: number }[];
   }) => {
     return group.landuses.filter((l) =>
       intersectingLanduseClasses?.includes(l.landuse),
     );
   };
 
-  const isGroupExpanded = (colorKey: string) => expandedGroups.has(colorKey);
+  const isGroupExpanded = (groupKey: string) => expandedGroups.has(groupKey);
+
+  // Toggle between sorting options
+  const toggleSortOption = () => {
+    setSortOption((prev) =>
+      prev === 'alphabetical' ? 'density' : 'alphabetical',
+    );
+  };
+
+  // Function to sort landuses based on selected option
+  const sortLanduses = (
+    landuses: Array<{
+      label: string;
+      landuse: number;
+      density: number | null;
+      color: number[];
+    }>,
+  ) => {
+    return [...landuses].sort((a, b) => {
+      if (sortOption === 'alphabetical') {
+        return a.label.localeCompare(b.label);
+      }
+      // Sort by density (descending - highest first)
+      // Handle null values by placing them at the end
+      if (a.density === null && b.density === null) return 0;
+      if (a.density === null) return 1;
+      if (b.density === null) return -1;
+      return b.density - a.density;
+    });
+  };
 
   return (
     <Card>
       <CardContent>
-        <div style={{ display: 'flex', gap: '0.5rem' }}>
-          <Alert
-            style={{
-              visibility: 'hidden',
-            }}
-            variant='urgent'
-          />
+        <div
+          style={{
+            display: 'flex',
+            gap: '0.5rem',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+          }}
+        >
           <div style={{ display: 'flex', gap: '0.5rem' }}>
-            <Text variant='h3'>Population Density by Land Use</Text>
-            <TooltipElement tooltipContent={infoText}>
-              <Icon
-                name='information'
-                role='img'
-                aria-label='information circle icon'
-                className='icon'
-              />
+            <Alert
+              style={{
+                visibility: 'hidden',
+              }}
+              variant='urgent'
+            />
+            <div style={{ display: 'flex', gap: '0.5rem' }}>
+              <Text variant='h3'>Population Density by Land Use</Text>
+              <TooltipElement tooltipContent={infoText}>
+                <Icon
+                  name='information'
+                  role='img'
+                  aria-label='information circle icon'
+                  className='icon'
+                />
+              </TooltipElement>
+            </div>
+          </div>
+
+          {/* Sorting controls */}
+          <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+            <TooltipElement
+              tooltipContent={[
+                `Sorting: ${sortOption === 'alphabetical' ? 'Alphabetical' : 'Population Density'}`,
+                `Click to sort by ${sortOption !== 'alphabetical' ? 'Alphabetical' : 'Population Density'}`,
+              ]}
+            >
+              <Button
+                variant='text'
+                compact
+                onClick={toggleSortOption}
+                style={{
+                  padding: '0.25rem',
+                  minWidth: 'auto',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+              >
+                <Icon
+                  name='arrow-up-down'
+                  role='img'
+                  aria-label='toggle sort options'
+                  className='icon'
+                  style={{ fontSize: '1rem' }}
+                />
+              </Button>
             </TooltipElement>
           </div>
         </div>
@@ -123,18 +230,25 @@ const LandusePopDensityLegend = ({
           }}
         >
           {Object.entries(groupedEntries)
-            // eslint-disable-next-line @typescript-eslint/no-unused-vars
-            .sort(([_, group1], [__, group2]) => {
-              const color1Sum = group1.color.reduce((a, b) => a + b, 0);
-              const color2Sum = group2.color.reduce((a, b) => a + b, 0);
-              return color1Sum - color2Sum;
+            // Sort groups: low density first, then high density, then no data at the end
+            .sort(([key1]) => {
+              if (key1 === 'low') return -1;
+              if (key1 === 'high') return 0;
+              if (key1 === 'noData') return 1;
+              return 0;
             })
-            .map(([colorKey, group]) => {
-              const isExpanded = isGroupExpanded(colorKey);
+            .map(([groupKey, group]) => {
+              const isExpanded = isGroupExpanded(groupKey);
               const intersectingLanduses = getIntersectingLanduse(group);
 
+              // Deduplicate landuses by label for accurate counting
+              const uniqueLanduses = group.landuses.filter(
+                (l, index, self) =>
+                  index === self.findIndex((t) => t.label === l.label),
+              );
+
               return (
-                <div key={colorKey}>
+                <div key={groupKey}>
                   {/* Group Header */}
                   <div
                     style={{
@@ -164,7 +278,7 @@ const LandusePopDensityLegend = ({
                     <Button
                       variant='text'
                       compact
-                      onClick={() => toggleGroup(colorKey)}
+                      onClick={() => toggleGroup(groupKey)}
                       style={{
                         padding: '0.25rem',
                         minWidth: 'auto',
@@ -184,22 +298,13 @@ const LandusePopDensityLegend = ({
                       />
                     </Button>
 
-                    <TooltipElement
+                    <div
                       style={{
                         display: 'flex',
                         gap: '0.5rem',
                         minWidth: '250px',
                         alignItems: 'center',
                       }}
-                      tooltipContent={group.landuses
-                        // filter duplicate labels
-                        .filter(
-                          (l, index, self) =>
-                            index ===
-                            self.findIndex((t) => t.label === l.label),
-                        )
-                        .map((l) => l.label)
-                        .sort((a, b) => a.localeCompare(b))}
                     >
                       <div
                         style={{
@@ -226,24 +331,20 @@ const LandusePopDensityLegend = ({
                             textOverflow: 'ellipsis',
                             width: '15rem',
                           }}
-                        >{`${group.landuses
-                          // filter duplicate labels
-                          .filter(
-                            (l, index, self) =>
-                              index ===
-                              self.findIndex((t) => t.label === l.label),
-                          )
-                          .map((l) => l.label)
-                          .sort((a, b) => a.localeCompare(b))
-                          .join(' / ')}`}</Text>
+                        >
+                          {group.label}
+                        </Text>
                         <Text
                           style={{
                             width: '6rem',
                             textAlign: 'right',
                           }}
-                        >{`${group.maxDensity >= 1000 ? `${group.maxDensity / 1000}K` : group.maxDensity} per km²`}</Text>
+                        >
+                          {uniqueLanduses.length} landuse
+                          {uniqueLanduses.length !== 1 ? 's' : ''}
+                        </Text>
                       </div>
-                    </TooltipElement>
+                    </div>
                   </div>
 
                   {/* Expanded Individual Landuse Classes */}
@@ -257,45 +358,44 @@ const LandusePopDensityLegend = ({
                         gap: '0.25rem',
                       }}
                     >
-                      {group.landuses
-                        .filter(
-                          (l, index, self) =>
-                            index ===
-                            self.findIndex((t) => t.label === l.label),
-                        )
-                        .sort((a, b) => a.label.localeCompare(b.label))
-                        .map((landuse) => {
-                          const isIntersecting =
-                            intersectingLanduseClasses?.includes(
-                              landuse.landuse,
-                            );
+                      {sortLanduses(uniqueLanduses).map((landuse) => {
+                        const isIntersecting =
+                          intersectingLanduseClasses?.includes(landuse.landuse);
 
-                          return (
+                        return (
+                          <div
+                            key={landuse.landuse}
+                            style={{
+                              display: 'flex',
+                              gap: '0.5rem',
+                              alignItems: 'center',
+                              padding: '0.25rem 0',
+                            }}
+                          >
+                            {/* Alert for intersecting individual landuse */}
+                            <Alert
+                              style={{
+                                visibility: isIntersecting
+                                  ? 'visible'
+                                  : 'hidden',
+                              }}
+                              variant='urgent'
+                            />
+
+                            {/* Individual landuse info */}
                             <div
-                              key={landuse.landuse}
                               style={{
                                 display: 'flex',
                                 gap: '0.5rem',
+                                flexGrow: 1,
                                 alignItems: 'center',
-                                padding: '0.25rem 0',
+                                justifyContent: 'space-between',
                               }}
                             >
-                              {/* Alert for intersecting individual landuse */}
-                              <Alert
-                                style={{
-                                  visibility: isIntersecting
-                                    ? 'visible'
-                                    : 'hidden',
-                                }}
-                                variant='urgent'
-                              />
-
-                              {/* Individual landuse info */}
                               <div
                                 style={{
                                   display: 'flex',
                                   gap: '0.5rem',
-                                  flexGrow: 1,
                                   alignItems: 'center',
                                 }}
                               >
@@ -324,9 +424,29 @@ const LandusePopDensityLegend = ({
                                   {landuse.label}
                                 </Text>
                               </div>
+
+                              {/* Population density value */}
+                              {landuse.density !== null && (
+                                <Text
+                                  style={{
+                                    fontSize: '0.875rem',
+                                    color: isIntersecting
+                                      ? '#d32f2f'
+                                      : 'inherit',
+                                    fontWeight: isIntersecting
+                                      ? '600'
+                                      : 'normal',
+                                    minWidth: '6rem',
+                                    textAlign: 'right',
+                                  }}
+                                >
+                                  {landuse.density.toLocaleString()} per km²
+                                </Text>
+                              )}
                             </div>
-                          );
-                        })}
+                          </div>
+                        );
+                      })}
                     </div>
                   )}
                 </div>

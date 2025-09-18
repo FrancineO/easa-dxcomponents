@@ -26,145 +26,151 @@ import {
   TbBuildings,
 } from 'react-icons/tb';
 
+// Helper function to check if label contains a full word
+const containsWord = (label: string, word: string): boolean => {
+  const regex = new RegExp(`\\b${word}\\b`, 'i');
+  return regex.test(label);
+};
+
 // Function to get appropriate icon for landuse type
 const getLanduseIcon = (landuseLabel: string) => {
   const label = landuseLabel.toLowerCase();
 
   if (
-    label.includes('green') ||
-    label.includes('vegetation') ||
-    label.includes('garden') ||
-    label.includes('park')
+    containsWord(label, 'green') ||
+    containsWord(label, 'vegetation') ||
+    containsWord(label, 'garden') ||
+    containsWord(label, 'park')
   ) {
     return TbTrees({ size: 16 });
   }
   if (
-    label.includes('urban fabric') ||
-    label.includes('urban') ||
-    label.includes('city')
+    containsWord(label, 'urban fabric') ||
+    containsWord(label, 'urban') ||
+    containsWord(label, 'city')
   ) {
     return TbBuildings({ size: 16 });
   }
   if (
-    label.includes('residential') ||
-    label.includes('house') ||
-    label.includes('dwelling')
+    containsWord(label, 'residential') ||
+    containsWord(label, 'house') ||
+    containsWord(label, 'dwelling')
   ) {
     return TbHome({ size: 16 });
   }
   if (
-    label.includes('commercial') ||
-    label.includes('office') ||
-    label.includes('business')
+    containsWord(label, 'commercial') ||
+    containsWord(label, 'office') ||
+    containsWord(label, 'business')
   ) {
     return TbBuilding({ size: 16 });
   }
   if (
-    label.includes('industrial') ||
-    label.includes('factory') ||
-    label.includes('manufacturing')
+    containsWord(label, 'industrial') ||
+    containsWord(label, 'factory') ||
+    containsWord(label, 'manufacturing')
   ) {
     return TbBuildingFactory({ size: 16 });
   }
   if (
-    label.includes('sport') ||
-    label.includes('stadium') ||
-    label.includes('athletic') ||
-    label.includes('fitness')
+    containsWord(label, 'sport') ||
+    containsWord(label, 'stadium') ||
+    containsWord(label, 'athletic') ||
+    containsWord(label, 'fitness')
   ) {
     return TbBallBasketball({ size: 16 });
   }
   if (
-    label.includes('forest') ||
-    label.includes('woodland') ||
-    label.includes('tree')
+    containsWord(label, 'forest') ||
+    containsWord(label, 'woodland') ||
+    containsWord(label, 'tree')
   ) {
     return TbTree({ size: 16 });
   }
   if (
-    label.includes('agricultural') ||
-    label.includes('farm') ||
-    label.includes('crop')
+    containsWord(label, 'agricultural') ||
+    containsWord(label, 'farm') ||
+    containsWord(label, 'crop')
   ) {
     return TbWheat({ size: 16 });
   }
   if (
-    label.includes('water') ||
-    label.includes('river') ||
-    label.includes('lake') ||
-    label.includes('sea')
+    containsWord(label, 'water') ||
+    containsWord(label, 'river') ||
+    containsWord(label, 'lake') ||
+    containsWord(label, 'sea')
   ) {
     return TbDroplet({ size: 16 });
   }
   if (
-    label.includes('road') ||
-    label.includes('highway') ||
-    label.includes('street')
+    containsWord(label, 'road') ||
+    containsWord(label, 'highway') ||
+    containsWord(label, 'street')
   ) {
     return TbRoad({ size: 16 });
   }
-  if (label.includes('parking') || label.includes('car park')) {
+  if (containsWord(label, 'parking') || containsWord(label, 'car park')) {
     return TbParking({ size: 16 });
   }
-  if (label.includes('school') || label.includes('education')) {
+  if (containsWord(label, 'school') || containsWord(label, 'education')) {
     return TbSchool({ size: 16 });
   }
-  if (label.includes('hospital') || label.includes('medical')) {
+  if (containsWord(label, 'hospital') || containsWord(label, 'medical')) {
     return TbBuildingHospital({ size: 16 });
   }
   if (
-    label.includes('retail') ||
-    label.includes('shop') ||
-    label.includes('mall')
+    containsWord(label, 'retail') ||
+    containsWord(label, 'shop') ||
+    containsWord(label, 'mall')
   ) {
     return TbShoppingCart({ size: 16 });
   }
-  if (label.includes('warehouse') || label.includes('storage')) {
+  if (containsWord(label, 'warehouse') || containsWord(label, 'storage')) {
     return TbBuildingWarehouse({ size: 16 });
   }
   if (
-    label.includes('airport') ||
-    label.includes('aerodrome') ||
-    label.includes('airfield')
+    containsWord(label, 'airport') ||
+    containsWord(label, 'aerodrome') ||
+    containsWord(label, 'airfield')
   ) {
     return TbPlane({ size: 16 });
   }
   if (
-    label.includes('port') ||
-    label.includes('harbor') ||
-    label.includes('marina')
+    containsWord(label, 'port') ||
+    containsWord(label, 'harbor') ||
+    containsWord(label, 'marina')
   ) {
     return TbShip({ size: 16 });
   }
-  if (label.includes('station') || label.includes('terminal')) {
+  if (containsWord(label, 'station') || containsWord(label, 'terminal')) {
     return TbTrain({ size: 16 });
   }
-  if (label.includes('transport')) {
+  if (containsWord(label, 'transport')) {
     return TbTruck({ size: 16 });
   }
-  if (label.includes('mountain') || label.includes('hill')) {
+  if (containsWord(label, 'mountain') || containsWord(label, 'hill')) {
     return TbMountain({ size: 16 });
   }
-  if (label.includes('beach') || label.includes('coast')) {
+  if (containsWord(label, 'beach') || containsWord(label, 'coast')) {
     return TbBeach({ size: 16 });
   }
   if (
-    label.includes('recreation') ||
-    label.includes('park') ||
-    label.includes('golf')
+    containsWord(label, 'recreation') ||
+    containsWord(label, 'park') ||
+    containsWord(label, 'golf')
   ) {
     return TbFlag({ size: 16 });
   }
-  if (label.includes('construction') || label.includes('building')) {
+  if (containsWord(label, 'construction') || containsWord(label, 'building')) {
     return TbShovel({ size: 16 });
   }
-  if (label.includes('mining') || label.includes('quarry')) {
+  if (containsWord(label, 'mining') || containsWord(label, 'quarry')) {
     return TbTruck({ size: 16 });
   }
-  if (label.includes('infrastructure') || label.includes('utility')) {
+  if (containsWord(label, 'infrastructure') || containsWord(label, 'utility')) {
     return TbTank({ size: 16 });
   }
-  if (label.includes('energy') || label.includes('power')) {
+  if (containsWord(label, 'energy') || containsWord(label, 'power')) {
     return TbBolt({ size: 16 });
   }
 

@@ -81,6 +81,11 @@ const geozonesDefintions = [
     label: 'Sensitive, privacy',
     color: [0, 0, 0],
   },
+  {
+    value: 'FIR',
+    label: 'Flight Information Region',
+    color: [0, 0, 0],
+  },
 ];
 
 export default geozonesDefintions;

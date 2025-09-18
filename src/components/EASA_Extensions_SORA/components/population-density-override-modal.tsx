@@ -154,8 +154,7 @@ export const PopulationDensityOverrideModal = (props: Props) => {
               OverrideReason:
                 newDensity === originalDensity
                   ? null
-                  : landUse.OverrideReason ||
-                    'Population density corrected by operator',
+                  : landUse.OverrideReason || null, // Don't prefill, leave empty for user to fill
             }
           : landUse,
       ),
@@ -248,9 +247,9 @@ export const PopulationDensityOverrideModal = (props: Props) => {
   return (
     <Modal
       dismissible
-      heading='Override Landuse Population Density'
+      heading='Correct Errors in Population Density Values'
       onAfterClose={props.onClose}
-      title='Override Landuse Population Density'
+      title='Correct Errors in Population Density Values'
       size='large'
     >
       <div
@@ -533,13 +532,29 @@ export const PopulationDensityOverrideModal = (props: Props) => {
                 {/* Bottom row: Justification takes full width */}
                 <div style={{ width: '100%' }}>
                   <TextArea
-                    label='Justification *'
+                    label='Justification'
                     placeholder='Please provide a reason for this correction...'
                     value={landUse.OverrideReason || ''}
                     onChange={(e) =>
                       handleJustificationChange(landUse.Code, e.target.value)
                     }
                     rows={3}
+                    required={hasOverride}
+                    error={
+                      isIncomplete
+                        ? 'Justification is required when overriding population density'
+                        : undefined
+                    }
+                    style={{
+                      borderColor:
+                        hasOverride && !landUse.OverrideReason
+                          ? '#d32f2f'
+                          : undefined,
+                      backgroundColor:
+                        hasOverride && !landUse.OverrideReason
+                          ? '#ffebee'
+                          : undefined,
+                    }}
                   />
                 </div>
               </div>

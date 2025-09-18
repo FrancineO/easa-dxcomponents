@@ -11,6 +11,8 @@ import {
   flightGeographyColor,
   flightPathColor,
 } from '../../flight-volume/flight-volume-symbols';
+import generateId from '../../utils/id-utils';
+import type { FlightPath } from '../../types';
 
 export const getPolylineSymbol = () => {
   return new SimpleLineSymbol({
@@ -160,21 +162,26 @@ export const addPoint = (
 //   }
 // };
 
-export const getFlightPaths = (flightPathsString: string | null) => {
+export const getFlightPaths = (
+  flightPathsString: string | null,
+): FlightPath[] | null => {
   if (!flightPathsString) {
     return null;
   }
 
-  const flightpaths = JSON.parse(flightPathsString);
+  const flightpathsGeometries = JSON.parse(flightPathsString);
 
-  if (!flightpaths) {
+  if (!flightpathsGeometries) {
     return null;
   }
 
-  return flightpaths.map((fg: any) => {
+  return flightpathsGeometries.map((fg: any) => {
     return new Graphic({
       geometry: geometryJsonUtils.fromJSON(fg),
       symbol: getSymbol(fg.type),
-    });
+      attributes: {
+        id: generateId(),
+      },
+    }) as FlightPath;
   });
 };

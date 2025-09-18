@@ -30,53 +30,58 @@ export const populationDensityRenderer = {
   })),
 };
 
-export const landuseColors: Record<number, Array<number>> = {
-  1111: [200, 157, 236, 255], // New, using Urban vegetation color
-  1121: [200, 157, 236, 255], // New, using Urban vegetation color
-  1130: [200, 157, 236, 255],
-  1210: [200, 157, 236, 255],
-  1221: [200, 157, 236, 255], // New, using Urban vegetation color
-  1222: [200, 157, 236, 255],
-  1230: [200, 157, 236, 255],
-  1242: [152, 118, 198, 255],
-  1330: [152, 118, 198, 255],
-  1410: [200, 157, 236, 255],
-  1421: [224, 176, 255, 255],
-  1422: [75, 0, 130, 255],
-  3310: [75, 0, 130, 255],
-  3311: [75, 0, 130, 255], // New, using Beaches color
-  3312: [75, 0, 130, 255], // New
-  3313: [75, 0, 130, 255], // New
-  3314: [75, 0, 130, 255], // New
-  3315: [75, 0, 130, 255], // New
-  3316: [75, 0, 130, 255], // New
-  3317: [75, 0, 130, 255], // New
-  3318: [75, 0, 130, 255], // New
+export const landusePopDensityLookup: Record<number, number | null> = {
+  1111: 13400,
+  1121: 8500,
+  1130: 4000,
+  1210: 6500,
+  1221: null,
+  1222: 49900,
+  1230: 7300,
+  1242: 49900,
+  1330: 3500,
+  1410: 10000,
+  1421: 4500,
+  1422: 8200,
+  3310: 49900,
+  3311: 49900,
+  3312: 49900,
+  3313: 49900,
+  3314: 49900,
+  3315: 49900,
+  3316: 49900,
+  3317: 49900,
+  3318: 49900,
 };
 
-export const landusePopDensityLookup: Record<number, number> = {
-  1111: 10000,
-  1121: 5000,
-  1130: 10000,
-  1210: 10000,
-  1221: 10000,
-  1222: 10000,
-  1230: 10000,
-  1242: 20000,
-  1330: 20000,
-  1410: 10000,
-  1421: 5000,
-  1422: 50000,
-  3310: 50000,
-  3311: 50000,
-  3312: 50000,
-  3313: 50000,
-  3314: 50000,
-  3315: 50000,
-  3316: 50000,
-  3317: 50000,
-  3318: 50000,
+// Color definitions for population density groups
+const LOW_DENSITY_COLOR = [200, 157, 236, 255]; // Light purple
+const HIGH_DENSITY_COLOR = [75, 0, 130, 255]; // Dark purple
+
+// Function to get landuse color based on population density
+export const getLanduseColor = (landuseCode: number): number[] => {
+  const density = landusePopDensityLookup[landuseCode];
+  if (!density || density === undefined) {
+    // Default color for unknown landuse codes
+    return [128, 128, 128, 255]; // Gray
+  }
+
+  // Return color based on density threshold
+  return density !== null && density < 5000
+    ? LOW_DENSITY_COLOR
+    : HIGH_DENSITY_COLOR;
 };
+
+// Legacy export for backward compatibility (if needed elsewhere)
+export const landuseColors: Record<number, Array<number>> = new Proxy(
+  {} as Record<number, Array<number>>,
+  {
+    get(target, prop) {
+      const landuseCode = Number(prop);
+      return getLanduseColor(landuseCode);
+    },
+  },
+);
 
 // comes from the pdf in email the email (ExtMsg: RE: Proposal for SFSTRY0002297 M1(A) Sheltering: operating over area where people not sheltered)
 // from emiliano page 9, last column (Potential recurrent presence of assemblies of people outdoor)
@@ -87,7 +92,6 @@ export const landusePeopleOutdoor: Array<number> = [
 ];
 
 // TODO: 1122 and 1123 should be excluded from the map
-
 export const landUseLabels: Record<number, string> = {
   1111: 'Urban fabric',
   1121: 'Urban fabric',
@@ -113,110 +117,25 @@ export const landUseLabels: Record<number, string> = {
 };
 
 export const landuseRenderer = {
-  authoringInfo: {
-    classificationMethod: 'esriClassifyManual',
-    colorRamp: {
-      type: 'algorithmic',
-      algorithm: 'esriHSVAlgorithm',
-      fromColor: [245, 245, 0, 255],
-      toColor: [255, 0, 0, 255],
-    },
-  },
   type: 'classBreaks',
-  classBreakInfos: [
-    {
-      label: `${landUseLabels[1130]} - ${landusePopDensityLookup[1130]}`,
-      classMaxValue: 1130,
-      symbol: {
-        type: 'esriSFS',
-        color: landuseColors[1130],
-        style: 'esriSFSSolid',
-      },
-    },
-    {
-      label: `${landUseLabels[1210]} - ${landusePopDensityLookup[1210]}`,
-      classMaxValue: 1210,
-      symbol: {
-        type: 'esriSFS',
-        color: landuseColors[1210],
-        style: 'esriSFSSolid',
-      },
-    },
-    {
-      label: `${landUseLabels[1222]} - ${landusePopDensityLookup[1222]}`,
-      classMaxValue: 1222,
-      symbol: {
-        type: 'esriSFS',
-        color: landuseColors[1222],
-        style: 'esriSFSSolid',
-      },
-    },
-    {
-      label: `${landUseLabels[1230]} - ${landusePopDensityLookup[1230]}`,
-      classMaxValue: 1230,
-      symbol: {
-        type: 'esriSFS',
-        color: landuseColors[1230],
-        style: 'esriSFSSolid',
-      },
-    },
-    {
-      label: `${landUseLabels[1242]} - ${landusePopDensityLookup[1242]}`,
-      classMaxValue: 1242,
-      symbol: {
-        type: 'esriSFS',
-        color: landuseColors[1242],
-        style: 'esriSFSSolid',
-      },
-    },
-    {
-      label: `${landUseLabels[1330]} - ${landusePopDensityLookup[1330]}`,
-      classMaxValue: 1330,
-      symbol: {
-        type: 'esriSFS',
-        color: landuseColors[1330],
-        style: 'esriSFSSolid',
-      },
-    },
-    {
-      label: `${landUseLabels[1410]} - ${landusePopDensityLookup[1410]}`,
-      classMaxValue: 1410,
-      symbol: {
-        type: 'esriSFS',
-        color: landuseColors[1410],
-        style: 'esriSFSSolid',
-      },
-    },
-    {
-      label: `${landUseLabels[1421]} - ${landusePopDensityLookup[1421]}`,
-      classMaxValue: 1421,
-      symbol: {
-        type: 'esriSFS',
-        color: landuseColors[1421],
-        style: 'esriSFSSolid',
-      },
-    },
-    {
-      label: `${landUseLabels[1422]} - ${landusePopDensityLookup[1422]}`,
-      classMaxValue: 1422,
-      symbol: {
-        type: 'esriSFS',
-        color: landuseColors[1422],
-        style: 'esriSFSSolid',
-      },
-    },
-    {
-      label: `${landUseLabels[3310]} - ${landusePopDensityLookup[3310]}`,
-      classMaxValue: 3310,
-      symbol: {
-        type: 'esriSFS',
-        color: landuseColors[3310],
-        style: 'esriSFSSolid',
-      },
-    },
-  ],
   field: 'value',
-  minValue: 0,
+  classBreakInfos: Object.keys(landusePopDensityLookup).map((landuseCode) => {
+    const code = Number(landuseCode);
+    const density = landusePopDensityLookup[code];
+    const label = landUseLabels[code] || `Landuse ${code}`;
+    const densityLabel = density !== null ? density : 'No data';
+
+    return {
+      classMinValue: code,
+      classMaxValue: code,
+      label: `${label} - ${densityLabel}`,
+      symbol: {
+        type: 'esriSFS',
+        color: getLanduseColor(code),
+        style: 'esriSFSSolid',
+      },
+    };
+  }),
 };
 
 // export const geozoneRenderer = {

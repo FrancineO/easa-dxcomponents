@@ -292,6 +292,8 @@ export const FlightPaths: React.FC<FlightPathsProps> = ({
                     fontSize: '12px',
                     color: theme.base.palette.urgent,
                     minWidth: 'auto',
+                    backgroundColor: 'white',
+                    border: `1px solid ${theme.base.palette['brand-primary']}`,
                   }}
                   title={`Remove flight path ${index + 1} from the map`}
                 >

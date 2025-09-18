@@ -38,6 +38,7 @@ import PopulationDensityOverrideModal from './components/population-density-over
 import PopDensitySourceInfo from './components/pop-density-source-info';
 import FlightPaths from './components/flight-paths';
 import GeozoneInfo from './components/geozone-info';
+import TooltipElement from './components/tooltip-element';
 import { getGeozoneFields } from './config/geozone-fields';
 
 import Legends from './legends/legends';
@@ -410,9 +411,9 @@ export const EasaExtensionsSORA = (props: ComponentProps) => {
       // Reset corrected landuse when flight geometry changes
       setOverriddenLandUse(null);
 
-      const fg = getFlightPaths(flightPathJSON);
-      if (!fg) return;
-      setFlightPaths([fg]);
+      const paths = getFlightPaths(flightPathJSON);
+      if (!paths) return;
+      setFlightPaths(paths);
     }
   }, [flightPathJSON, layersAdded]);
 
@@ -856,54 +857,61 @@ export const EasaExtensionsSORA = (props: ComponentProps) => {
                   zIndex: 1000,
                 }}
               >
-                <Button
-                  variant='primary'
-                  onClick={() => setShowPopulationDensityCorrection(true)}
-                  disabled={!propsValid}
-                  style={{
-                    boxShadow: '0 2px 8px rgba(0, 0, 0, 0.15)',
-                    border: '1px solid #e0e0e0',
-                    position: 'relative',
-                  }}
+                <TooltipElement
+                  tooltipContent={[
+                    'In case of known mistakes in the population density values, you may correct them with this button.',
+                    'As an example, in the case of areas which are labelled as construction sites which have been developed into residential areas of which the population density is known.',
+                  ]}
                 >
-                  Override Landuse Population Density?
-                  {/* Badge showing override count */}
-                  {overriddenLandUse &&
-                    overriddenLandUse.length > 0 &&
-                    (() => {
-                      const activeOverrideCount = overriddenLandUse.filter(
-                        (item) =>
-                          item.OverridePopulationDensity !== null ||
-                          item.OverrideReason !== null,
-                      ).length;
+                  <Button
+                    variant='primary'
+                    onClick={() => setShowPopulationDensityCorrection(true)}
+                    disabled={!propsValid}
+                    style={{
+                      boxShadow: '0 2px 8px rgba(0, 0, 0, 0.15)',
+                      border: '1px solid #e0e0e0',
+                      position: 'relative',
+                    }}
+                  >
+                    Correct Errors in Population Density Values?
+                    {/* Badge showing override count */}
+                    {overriddenLandUse &&
+                      overriddenLandUse.length > 0 &&
+                      (() => {
+                        const activeOverrideCount = overriddenLandUse.filter(
+                          (item) =>
+                            item.OverridePopulationDensity !== null ||
+                            item.OverrideReason !== null,
+                        ).length;
 
-                      return activeOverrideCount > 0 ? (
-                        <div
-                          style={{
-                            position: 'absolute',
-                            top: '-6px',
-                            right: '-6px',
-                            backgroundColor: '#f57c00',
-                            color: 'white',
-                            borderRadius: '12px',
-                            minWidth: '20px',
-                            height: '20px',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            fontSize: '11px',
-                            fontWeight: '600',
-                            padding: '0 6px',
-                            border: '2px solid white',
-                            boxShadow: '0 2px 4px rgba(0, 0, 0, 0.15)',
-                            lineHeight: '1',
-                          }}
-                        >
-                          {activeOverrideCount}
-                        </div>
-                      ) : null;
-                    })()}
-                </Button>
+                        return activeOverrideCount > 0 ? (
+                          <div
+                            style={{
+                              position: 'absolute',
+                              top: '-6px',
+                              right: '-6px',
+                              backgroundColor: '#f57c00',
+                              color: 'white',
+                              borderRadius: '12px',
+                              minWidth: '20px',
+                              height: '20px',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              fontSize: '11px',
+                              fontWeight: '600',
+                              padding: '0 6px',
+                              border: '2px solid white',
+                              boxShadow: '0 2px 4px rgba(0, 0, 0, 0.15)',
+                              lineHeight: '1',
+                            }}
+                          >
+                            {activeOverrideCount}
+                          </div>
+                        ) : null;
+                      })()}
+                  </Button>
+                </TooltipElement>
               </div>
             )}
         </div>

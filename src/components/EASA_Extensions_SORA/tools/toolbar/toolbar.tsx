@@ -15,6 +15,7 @@ import SketchViewModel from '@arcgis/core/widgets/Sketch/SketchViewModel';
 import GraphicsLayer from '@arcgis/core/layers/GraphicsLayer';
 import Graphic from '@arcgis/core/Graphic';
 import { getFlightPaths, getSymbol } from './draw-utils';
+import generateId from '../../utils/id-utils';
 import type SimpleLineSymbol from '@arcgis/core/symbols/SimpleLineSymbol';
 import type SimpleFillSymbol from '@arcgis/core/symbols/SimpleFillSymbol';
 import type SimpleMarkerSymbol from '@arcgis/core/symbols/SimpleMarkerSymbol';
@@ -33,11 +34,6 @@ import VertexInfo from './vertex-info';
 import UploadModal from '../../components/upload-modal';
 import DownloadModal from '../../components/download-modal';
 import type { FlightPath } from '../../types';
-
-// Utility function to generate unique IDs
-const generateId = (): string => {
-  return `flight-path-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-};
 
 // Utility function to add ID to a graphic
 const addIdToGraphic = (graphic: __esri.Graphic): FlightPath => {
@@ -413,10 +409,10 @@ export const Toolbar = (props: Props) => {
         .whenOnce(() => getView().ready)
         .then(() => {
           const fg = getFlightPaths(flightPathJSON);
-          if (!fg) return;
+          if (!fg || !fg.length) return;
 
-          setSelectedTool(fg.geometry.type as Tool);
-          setGraphic(fg);
+          setSelectedTool(fg[0].geometry.type as Tool);
+          setGraphic(fg[0]);
         });
     }
   }, [flightPathJSON, onUpdate, onCreate]);

@@ -1,7 +1,8 @@
 import { Alert, Card, CardContent, Text } from '@pega/cosmos-react-core';
 import TooltipElement from '../components/tooltip-element';
-import * as cimSymbolUtils from '@arcgis/core/symbols/support/cimSymbolUtils.js';
+import * as symbolUtils from '@arcgis/core/symbols/support/symbolUtils.js';
 import geozonesDefintions from '../geozone-definitions';
+import { useRef, useEffect } from 'react';
 
 const GeozonesLegend = ({
   intersectingGeozones,
@@ -10,10 +11,28 @@ const GeozonesLegend = ({
   intersectingGeozones: __esri.Graphic[];
   geozonesRenderer: __esri.UniqueValueRenderer | null;
 }) => {
-  const getRgba = (symbol: __esri.CIMSymbol) => {
-    const color = cimSymbolUtils.getCIMSymbolColor(symbol);
-    return `${color.r},${color.g},${color.b},${color.a}`;
-  };
+  const symbolRefs = useRef<{ [key: string]: HTMLDivElement | null }>({});
+
+  useEffect(() => {
+    if (geozonesRenderer?.uniqueValueInfos) {
+      geozonesRenderer.uniqueValueInfos.forEach((zone) => {
+        const container = symbolRefs.current[zone.value];
+        if (container && zone.symbol) {
+          // Clear any existing content
+          container.innerHTML = '';
+          // Render the symbol preview
+          symbolUtils.renderPreviewHTML(zone.symbol, {
+            node: container,
+            size: 14,
+            symbolConfig: {
+              isTall: true,
+              isSquareFill: true,
+            },
+          });
+        }
+      });
+    }
+  }, [geozonesRenderer]);
 
   return (
     <Card>
@@ -58,13 +77,17 @@ const GeozonesLegend = ({
                     />
                   </TooltipElement>
                   <div
+                    ref={(el) => {
+                      symbolRefs.current[zone.value] = el;
+                    }}
                     style={{
                       width: '1rem',
                       height: '1rem',
                       minWidth: '1rem',
                       minHeight: '1rem',
-                      backgroundColor: `rgba(${getRgba(zone.symbol as __esri.CIMSymbol)})`,
-                      border: `1px solid rgba(${getRgba(zone.symbol as __esri.CIMSymbol)})`,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
                     }}
                   />
                   <Text>
