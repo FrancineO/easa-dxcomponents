@@ -162,6 +162,7 @@ const useUpdatePegaProps = (
               pD?.avgPopDensityAdjacentArea,
             MapImageJSON: pR ? JSON.stringify(pR) : null,
             FlightGeometryJSON: flightGeometryJSON,
+            FlightPathCount: fPs?.length ?? 0,
             MapStateJSON: mS ? JSON.stringify(mS) : null,
             IntrinsicGroundRisk: eT ? -1 : gR,
             ErrorText: eT,
