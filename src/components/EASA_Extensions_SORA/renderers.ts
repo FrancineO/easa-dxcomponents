@@ -93,8 +93,8 @@ export const landusePeopleOutdoor: Array<number> = [
 
 // TODO: 1122 and 1123 should be excluded from the map
 export const landUseLabels: Record<number, string> = {
-  1111: 'Urban fabric',
-  1121: 'Urban fabric',
+  1111: 'High density urban fabric',
+  1121: 'Medium density urban fabric',
   1130: 'Urban vegetation',
   1210: 'Industrial or commercial units',
   1221: 'Transport infrastructure',
