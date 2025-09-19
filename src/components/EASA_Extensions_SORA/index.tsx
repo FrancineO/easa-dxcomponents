@@ -673,6 +673,12 @@ export const EasaExtensionsSORA = (props: ComponentProps) => {
                     const newGraphic = graphics[0] as FlightPath;
 
                     setFlightPaths((prev) => {
+                      // If flight paths array is empty, just add the new graphic
+                      if (prev.length === 0) {
+                        return [newGraphic];
+                      }
+
+                      // Otherwise, map over existing flight paths and replace the matching one
                       return prev.map((path) => {
                         // Replace the selected flight path with the new one
                         if (
