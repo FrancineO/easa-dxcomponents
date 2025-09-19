@@ -1,13 +1,15 @@
 import { useCallback, useState, useRef } from 'react';
 import { getView } from '../map/view';
 import * as geometryEngine from '@arcgis/core/geometry/geometryEngine';
-import type {
-  FlightVolume,
-  PopulationDensity,
-  ImpactedLandUse,
+import {
+  type FlightVolume,
+  type PopulationDensity,
+  type ImpactedLandUse,
+  LayerId,
 } from '../types';
 import { landusePopDensityLookup } from '../renderers';
 import _ from 'lodash';
+// import * as reactiveUtils from '@arcgis/core/core/reactiveUtils';
 
 // const pixelSizes: { maxHeight: number; resolution: number }[] = [
 //   { maxHeight: 152, resolution: 200 },
@@ -186,6 +188,61 @@ export const useGetPopulationDensity = (
     [],
   );
 
+  // const waitForLayerViewsToUpdate = useCallback(async (layerIds: LayerId[]) => {
+  //   const view = getView();
+
+  //   // get the layers from the map
+  //   const layersNotLoaded: LayerId[] = [];
+  //   layerIds.forEach((layerId) => {
+  //     const layer = view.map.allLayers.find((l) => l.id === layerId);
+  //     if (layer && !layer.loaded) {
+  //       layersNotLoaded.push(layerId);
+  //     }
+  //   });
+
+  //   if (layersNotLoaded.length > 0) {
+  //     await reactiveUtils.whenOnce(() =>
+  //       layersNotLoaded.every(
+  //         (layerId) => view.map.allLayers.find((l) => l.id === layerId)?.loaded,
+  //       ),
+  //     );
+  //   }
+
+  //   const additionalTimeout = 100;
+  //   const promises: Promise<undefined>[] = [];
+  //   const layerViews: __esri.LayerView[] = [];
+  //   layerIds.forEach((layerId) => {
+  //     const layerView = view.allLayerViews.find((l) => l.layer.id === layerId);
+  //     if (layerView) {
+  //       layerViews.push(layerView);
+  //     }
+  //   });
+  //   layerViews.forEach((layerView) => {
+  //     promises.push(
+  //       new Promise<undefined>((resolve) => {
+  //         if (!layerView?.updating) {
+  //           // wait for 100ms
+  //           setTimeout(() => {
+  //             resolve(undefined);
+  //           }, additionalTimeout);
+  //         }
+  //         reactiveUtils.watch(
+  //           () => layerView?.updating,
+  //           (updating: boolean) => {
+  //             if (!updating) {
+  //               setTimeout(() => {
+  //                 resolve(undefined);
+  //               }, additionalTimeout);
+  //             }
+  //           },
+  //         );
+  //       }),
+  //     );
+  //   });
+
+  //   await Promise.all(promises);
+  // }, []);
+
   const getLanduseMaxPopDensityOperationalGroundrisk = useCallback(
     async (layer: __esri.ImageryLayer) => {
       if (hFG < 0) {
@@ -301,21 +358,28 @@ export const useGetPopulationDensity = (
       return;
     }
 
-    const popDensityLayer = getView().map.layers.find(
-      (layer) => layer.id === 'PopulationDensity',
-    ) as __esri.ImageryLayer;
-
-    const landuseLayer = getView().map.layers.find(
-      (layer) => layer.id === 'Landuse',
-    ) as __esri.ImageryLayer;
-
-    if (!popDensityLayer) return;
-
     try {
       calculationInProgress.current = true;
+      const view = getView();
 
-      // Ensure the view is ready before accessing map layers
-      await getView().when();
+      // Ensure the view and layers are ready before accessing map layers
+      await view.when();
+
+      // // Wait for layer views to finish updating
+      // await waitForLayerViewsToUpdate([
+      //   LayerId.populationDensity,
+      //   LayerId.landuse,
+      // ]);
+
+      const popDensityLayer = view.map.layers.find(
+        (layer) => layer.id === LayerId.populationDensity,
+      ) as __esri.ImageryLayer;
+
+      const landuseLayer = view.map.layers.find(
+        (layer) => layer.id === LayerId.landuse,
+      ) as __esri.ImageryLayer;
+
+      if (!popDensityLayer) return;
 
       // First, get the landuse-based calculation for operational ground risk area
       let maxPopDensityOperationalGroundRisk = null;

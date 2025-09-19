@@ -87,6 +87,8 @@ const SoraMap = (props: Props) => {
   const [signInError, setSignInError] = useState<string | null>(null);
   const [locateVM, setLocateVM] = useState<LocateViewModel | null>(null);
   const [locateError, setLocateError] = useState<string | null>(null);
+  const [addingLayers, setAddingLayers] = useState(false);
+  const [loadingDots, setLoadingDots] = useState(1);
   const checkingSignInStatus = useRef(false);
 
   const checkSignInStatus = useCallback(() => {
@@ -140,111 +142,159 @@ const SoraMap = (props: Props) => {
     [popDensityPortalItemId, landusePortalItemId, geozonePortalItemIdsArray],
   );
 
-  const addLayers = useCallback(
-    (map: Map) => {
-      const promises: Promise<__esri.Layer>[] = [];
+  const configureGeozonesLayer = useCallback(
+    (layer: Layer) => {
+      (layer as FeatureLayer).popupEnabled = false;
+      (layer as FeatureLayer).outFields = ['*'];
+      const hasGeozonesVisibilityProperty =
+        mapState?.layerVisibility &&
+        Object.prototype.hasOwnProperty.call(
+          mapState.layerVisibility,
+          'Geozones',
+        );
+
+      if (hasGeozonesVisibilityProperty) {
+        layer.visible = mapState?.layerVisibility?.Geozones as boolean;
+      }
+      reactiveUtils
+        .whenOnce(() => layer.loaded)
+        .then(() => {
+          // Only call onGeozonesLoaded for the first geozone layer in the array
+          if ((layer as any).portalItem?.id === geozonePortalItemIdsArray[0]) {
+            onGeozonesLoaded(
+              (layer as FeatureLayer).renderer as __esri.UniqueValueRenderer,
+            );
+          }
+        });
+    },
+    [mapState, onGeozonesLoaded, geozonePortalItemIdsArray],
+  );
+
+  const configureLandUseAndPopulationDensity = useCallback(
+    (layer: Layer) => {
+      const hasPopulationDensityVisibilityProperty =
+        mapState?.layerVisibility &&
+        Object.prototype.hasOwnProperty.call(
+          mapState.layerVisibility,
+          'PopulationDensity',
+        );
+      if (hasPopulationDensityVisibilityProperty) {
+        layer.visible = mapState?.layerVisibility?.PopulationDensity as boolean;
+      }
+    },
+    [mapState],
+  );
+
+  const configureLayer = useCallback(
+    (layer: Layer) => {
+      applyRenderer(layer as ImageryLayer | FeatureLayer);
+
+      if (layer.id?.startsWith(LayerId.geozones)) {
+        configureGeozonesLayer(layer);
+      }
+      if (
+        layer.id === LayerId.populationDensity ||
+        layer.id === LayerId.landuse
+      ) {
+        configureLandUseAndPopulationDensity(layer);
+      }
+      getView().map.add(layer, 0);
+    },
+    [
+      applyRenderer,
+      configureGeozonesLayer,
+      configureLandUseAndPopulationDensity,
+    ],
+  );
+
+  const createLayersFromPortalIds = useCallback(async (): Promise<Layer[]> => {
+    const promises: Promise<__esri.Layer>[] = [];
+
+    promises.push(
+      Layer.fromPortalItem({
+        portalItem: new PortalItem({
+          id: popDensityPortalItemId,
+          portal: {
+            url: agolUrl,
+          },
+        }),
+      }),
+      Layer.fromPortalItem({
+        portalItem: new PortalItem({
+          id: landusePortalItemId,
+          portal: {
+            url: agolUrl,
+          },
+        }),
+      }),
+      Layer.fromPortalItem({
+        portalItem: new PortalItem({
+          id: landusePortalItemId,
+          portal: {
+            url: agolUrl,
+          },
+        }),
+      }),
+    );
+
+    // Add multiple geozone layers
+    geozonePortalItemIdsArray.forEach((geozoneId) => {
       promises.push(
         Layer.fromPortalItem({
           portalItem: new PortalItem({
-            id: popDensityPortalItemId,
-            portal: {
-              url: agolUrl,
-            },
-          }),
-        }),
-        Layer.fromPortalItem({
-          portalItem: new PortalItem({
-            id: landusePortalItemId,
-            portal: {
-              url: agolUrl,
-            },
-          }),
-        }),
-        Layer.fromPortalItem({
-          portalItem: new PortalItem({
-            id: landusePortalItemId,
+            id: geozoneId,
             portal: {
               url: agolUrl,
             },
           }),
         }),
       );
+    });
 
-      // Add multiple geozone layers
-      geozonePortalItemIdsArray.forEach((geozoneId) => {
-        promises.push(
-          Layer.fromPortalItem({
-            portalItem: new PortalItem({
-              id: geozoneId,
-              portal: {
-                url: agolUrl,
-              },
-            }),
-          }),
-        );
+    const layers = await Promise.all(promises);
+    const layersLoadedPromises: Promise<Layer>[] = [];
+
+    layers.forEach((layer) => {
+      configureLayer(layer);
+
+      const layerPromise = new Promise<Layer>((resolve) => {
+        if (layer.loaded) {
+          resolve(layer);
+        } else {
+          reactiveUtils
+            .whenOnce(() => layer.loaded)
+            .then(() => {
+              resolve(layer);
+            });
+        }
       });
 
-      Promise.all(promises).then((layers) => {
-        layers.forEach((layer) => {
-          applyRenderer(layer as ImageryLayer | FeatureLayer);
-          if (layer.id?.startsWith(LayerId.geozones)) {
-            (layer as FeatureLayer).popupEnabled = false;
-            (layer as FeatureLayer).outFields = ['*'];
-            const hasGeozonesVisibilityProperty =
-              mapState?.layerVisibility &&
-              Object.prototype.hasOwnProperty.call(
-                mapState.layerVisibility,
-                'Geozones',
-              );
+      layersLoadedPromises.push(layerPromise);
+    });
 
-            if (hasGeozonesVisibilityProperty) {
-              layer.visible = mapState?.layerVisibility?.Geozones as boolean;
-            }
-            reactiveUtils
-              .whenOnce(() => layer.loaded)
-              .then(() => {
-                // Only call onGeozonesLoaded for the first geozone layer in the array
-                if (
-                  (layer as any).portalItem?.id === geozonePortalItemIdsArray[0]
-                ) {
-                  onGeozonesLoaded(
-                    (layer as FeatureLayer)
-                      .renderer as __esri.UniqueValueRenderer,
-                  );
-                }
-              });
-          }
-          if (
-            layer.id === LayerId.populationDensity ||
-            layer.id === LayerId.landuse
-          ) {
-            const hasPopulationDensityVisibilityProperty =
-              mapState?.layerVisibility &&
-              Object.prototype.hasOwnProperty.call(
-                mapState.layerVisibility,
-                'PopulationDensity',
-              );
-            if (hasPopulationDensityVisibilityProperty) {
-              layer.visible = mapState?.layerVisibility
-                ?.PopulationDensity as boolean;
-            }
-          }
-          map.add(layer, 0);
+    return Promise.all(layersLoadedPromises);
+  }, [
+    popDensityPortalItemId,
+    landusePortalItemId,
+    geozonePortalItemIdsArray,
+    agolUrl,
+    configureLayer,
+  ]);
+
+  const addLayers = useCallback(() => {
+    setAddingLayers(true);
+    createLayersFromPortalIds().then(() => {
+      // wait for the layerviews to be updated
+      reactiveUtils
+        .whenOnce(() =>
+          getView().allLayerViews.every((layerView) => !layerView.updating),
+        )
+        .then(() => {
+          setAddingLayers(false);
+          onLayersAdded();
         });
-        onLayersAdded();
-      });
-    },
-    [
-      popDensityPortalItemId,
-      landusePortalItemId,
-      geozonePortalItemIdsArray,
-      applyRenderer,
-      agolUrl,
-      onLayersAdded,
-      mapState,
-      onGeozonesLoaded,
-    ],
-  );
+    });
+  }, [createLayersFromPortalIds, onLayersAdded]);
 
   const { create } = useModalManager();
 
@@ -297,8 +347,6 @@ const SoraMap = (props: Props) => {
         basemap,
       });
 
-      addLayers(map);
-
       getView().container = mapDiv.current;
       getView().map = map;
       if (!mapState) {
@@ -308,6 +356,12 @@ const SoraMap = (props: Props) => {
         getView().center = new Point(mapState.center);
         getView().zoom = mapState.zoom ?? 4;
       }
+
+      getView()
+        .when()
+        .then(() => {
+          addLayers();
+        });
 
       getView().focus();
     }
@@ -351,6 +405,16 @@ const SoraMap = (props: Props) => {
     create(locationErrorModal);
   }, [locateError, create, locationErrorModal]);
 
+  useEffect(() => {
+    if (!addingLayers) return;
+
+    const interval = setInterval(() => {
+      setLoadingDots((prev) => (prev >= 3 ? 1 : prev + 1));
+    }, 500);
+
+    return () => clearInterval(interval);
+  }, [addingLayers]);
+
   const locateMe = useCallback(() => {
     if (locateVM) {
       locateVM.locate().catch((error) => {
@@ -363,7 +427,56 @@ const SoraMap = (props: Props) => {
     <>
       {signedIn ? (
         <div style={style}>
-          <div style={{ width: '100%', height: '100%' }} ref={mapDiv} />
+          <div
+            style={{
+              width: '100%',
+              height: '100%',
+              position: 'relative',
+            }}
+            ref={mapDiv}
+          />
+          {addingLayers && (
+            <div
+              style={{
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                right: 0,
+                bottom: 0,
+                backgroundColor: 'rgba(255, 255, 255, 0.8)',
+                display: 'flex',
+                justifyContent: 'center',
+                alignItems: 'center',
+                pointerEvents: 'none',
+                zIndex: 1000,
+              }}
+            >
+              <Card style={{ padding: '1rem' }}>
+                <CardContent
+                  style={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '1rem',
+                  }}
+                >
+                  <Text>
+                    Loading map
+                    <span style={{ opacity: loadingDots >= 1 ? 1 : 0.3 }}>
+                      .
+                    </span>
+                    <span style={{ opacity: loadingDots >= 2 ? 1 : 0.3 }}>
+                      .
+                    </span>
+                    <span style={{ opacity: loadingDots >= 3 ? 1 : 0.3 }}>
+                      .
+                    </span>
+                  </Text>
+                </CardContent>
+              </Card>
+            </div>
+          )}
           <Card style={{ position: 'absolute', top: '0', left: '0' }}>
             <CardContent
               style={{

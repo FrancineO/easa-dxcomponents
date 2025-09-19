@@ -8,13 +8,15 @@ const useMapState = (originalMapState: MapState | null) => {
   const [mapState, setMapState] = useState<MapState | null>(originalMapState);
   const getLayerGroup = (layer: __esri.Layer) => {
     const layerId = layer.id;
-    return layerGroups.find(layerGroup => layerGroup.ids.includes(layerId as LayerId));
+    return layerGroups.find((layerGroup) =>
+      layerGroup.ids.some((id) => layerId === id || layerId?.startsWith(id)),
+    );
   };
 
   const debouncedCallback = useRef(
     debounce((callback: () => void) => {
       callback();
-    }, 500)
+    }, 500),
   ).current;
 
   const updateMapState = () => {
@@ -29,15 +31,17 @@ const useMapState = (originalMapState: MapState | null) => {
       basemap: basemap.portalItem.id,
       center: {
         latitude: center.latitude,
-        longitude: center.longitude
+        longitude: center.longitude,
       },
       zoom,
       layerVisibility: {
         [LayerGroupType.geozones]:
-          map.layers.find(layer => layer.id === LayerId.geozones)?.visible ?? false,
+          map.layers.find((layer) => layer.id?.startsWith(LayerId.geozones))
+            ?.visible ?? false,
         [LayerGroupType.populationDensity]:
-          map.layers.find(layer => layer.id === LayerId.populationDensity)?.visible ?? false
-      }
+          map.layers.find((layer) => layer.id === LayerId.populationDensity)
+            ?.visible ?? false,
+      },
     });
   };
 
@@ -56,7 +60,7 @@ const useMapState = (originalMapState: MapState | null) => {
             debouncedCallback(() => {
               updateMapState();
             });
-          }
+          },
         );
 
         reactiveUtils
@@ -68,21 +72,24 @@ const useMapState = (originalMapState: MapState | null) => {
             });
           });
 
-        getView().on('layerview-create', (event: __esri.ViewLayerviewCreateEvent) => {
-          const layer = event.layerView.layer;
-          const layerGroup = getLayerGroup(layer);
-          if (layerGroup) {
-            reactiveUtils.watch(
-              () => layer.visible,
-              () => {
-                if (!mounted) return;
-                debouncedCallback(() => {
-                  updateMapState();
-                });
-              }
-            );
-          }
-        });
+        getView().on(
+          'layerview-create',
+          (event: __esri.ViewLayerviewCreateEvent) => {
+            const layer = event.layerView.layer;
+            const layerGroup = getLayerGroup(layer);
+            if (layerGroup) {
+              reactiveUtils.watch(
+                () => layer.visible,
+                () => {
+                  if (!mounted) return;
+                  debouncedCallback(() => {
+                    updateMapState();
+                  });
+                },
+              );
+            }
+          },
+        );
 
         return () => {
           mounted = false;

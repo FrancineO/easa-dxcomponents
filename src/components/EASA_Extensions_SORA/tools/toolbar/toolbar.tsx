@@ -411,7 +411,7 @@ export const Toolbar = (props: Props) => {
           const fg = getFlightPaths(flightPathJSON);
           if (!fg || !fg.length) return;
 
-          setSelectedTool(fg[0].geometry.type as Tool);
+          // setSelectedTool(fg[0].geometry.type as Tool);
           setGraphic(fg[0]);
         });
     }
@@ -499,11 +499,11 @@ export const Toolbar = (props: Props) => {
     }
   }, [forceClear, clearCurrentDrawing]);
 
-  const getToolFromGeometry = (geometry: __esri.Geometry): Tool | null => {
-    if (geometry.type === 'polyline') return 'polyline';
-    if (geometry.type === 'polygon') return 'polygon';
-    return null;
-  };
+  // const getToolFromGeometry = (geometry: __esri.Geometry): Tool | null => {
+  //   if (geometry.type === 'polyline') return 'polyline';
+  //   if (geometry.type === 'polygon') return 'polygon';
+  //   return null;
+  // };
 
   const handleMapClick = (event: any) => {
     getView()
@@ -742,7 +742,7 @@ export const Toolbar = (props: Props) => {
         onUpload={(graphics: __esri.Graphic[]) => {
           // Add IDs to uploaded graphics
           const graphicsWithIds = graphics.map(addIdToGraphic);
-          setSelectedTool(getToolFromGeometry(graphicsWithIds[0].geometry));
+          // setSelectedTool(getToolFromGeometry(graphicsWithIds[0].geometry));
           setAutoZoomToFlightPath(true);
           onNewFlightPaths(graphicsWithIds, false);
         }}
