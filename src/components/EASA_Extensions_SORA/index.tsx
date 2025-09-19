@@ -873,7 +873,7 @@ export const EasaExtensionsSORA = (props: ComponentProps) => {
                       position: 'relative',
                     }}
                   >
-                    Correct Errors in Population Density Values?
+                    Correct Errors in Population Density Values
                     {/* Badge showing override count */}
                     {overriddenLandUse &&
                       overriddenLandUse.length > 0 &&
