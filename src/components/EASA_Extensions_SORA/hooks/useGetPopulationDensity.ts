@@ -1,6 +1,7 @@
 import { useCallback, useState, useRef } from 'react';
 import { getView } from '../map/view';
 import * as geometryEngine from '@arcgis/core/geometry/geometryEngine';
+import RasterFunction from '@arcgis/core/layers/support/RasterFunction';
 import {
   type FlightVolume,
   type PopulationDensity,
@@ -257,8 +258,23 @@ export const useGetPopulationDensity = (
         return null;
       }
 
+      // Define a clip raster function to include partial cells
+      // buffer the opAndGr by 1/2 the diagonal of the pixel size to pick up partial cells
+      const bufferedOpAndGr = geometryEngine.buffer(
+        opAndGr as __esri.Polygon,
+        (layer.serviceRasterInfo.pixelSize.x / 2) * 1.22,
+      );
+      const clipRF = new RasterFunction({
+        functionName: 'Clip',
+        functionArguments: {
+          ClippingGeometry: bufferedOpAndGr as __esri.Polygon,
+          ClippingType: 1, // 1 = keep inside, set outside to NoData
+        },
+      });
+
       const landuseHistograms = await layer.computeHistograms({
-        geometry: opAndGr as __esri.Polygon,
+        geometry: bufferedOpAndGr as __esri.Polygon,
+        rasterFunction: clipRF as __esri.RasterFunction,
       });
       const intersectedLanduseClasses: number[] = [];
       const counts = landuseHistograms.histograms?.[0]?.counts;

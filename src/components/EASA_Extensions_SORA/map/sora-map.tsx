@@ -129,7 +129,7 @@ const SoraMap = (props: Props) => {
         layer.renderer = rendererJsonUtils.fromJSON(
           landuseRenderer,
         ) as __esri.ClassBreaksRenderer;
-        layer.opacity = landuseLayer ? 1 : 0.85;
+        layer.opacity = 0.85;
       }
       if (geozonePortalItemIdsArray.includes(layer.portalItem.id)) {
         // Use the portal item ID to create a unique layer ID

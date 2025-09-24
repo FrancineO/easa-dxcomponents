@@ -394,8 +394,7 @@ export const EasaExtensionsSORA = (props: ComponentProps) => {
         return {
           pyLabel: landUseLabels[landuse],
           Code: `${landuse}`,
-          PopulationDensity:
-            populationDensity?.maxPopDensityOperationalGroundRisk ?? 0,
+          PopulationDensity: landusePopDensityLookup[landuse] ?? 0,
           PeopleOutdoor: landusePeopleOutdoor.includes(landuse),
           AssemblyOfPeople: landusePeopleOutdoor.includes(landuse),
           OverridePopulationDensity: null,
@@ -566,8 +565,8 @@ export const EasaExtensionsSORA = (props: ComponentProps) => {
               return {
                 pyLabel: landUseLabels[landuse],
                 Code: `${landuse}`,
-                PopulationDensity:
-                  populationDensity?.maxPopDensityOperationalGroundRisk ?? 0,
+                // get population density form the landuse lookup
+                PopulationDensity: landusePopDensityLookup[landuse] ?? 0,
                 PeopleOutdoor: landusePeopleOutdoor.includes(landuse),
                 AssemblyOfPeople: landusePeopleOutdoor.includes(landuse),
                 OverridePopulationDensity:
@@ -585,7 +584,7 @@ export const EasaExtensionsSORA = (props: ComponentProps) => {
         }}
       />
     );
-  }, [intersectingLanduseClasses, populationDensity, overriddenLandUse]);
+  }, [intersectingLanduseClasses, overriddenLandUse]);
 
   // Create modal when button is clicked
   useEffect(() => {
