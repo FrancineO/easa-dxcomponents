@@ -62,6 +62,11 @@
       "format": "PROPERTY"
     },
     {
+      "name": "operationReactionTime",
+      "label": "Operation reaction time (s)",
+      "format": "PROPERTY"
+    },
+    {
       "name": "tP",
       "label": "Parachute deployment (s)",
       "format": "PROPERTY"
@@ -139,6 +144,26 @@
     {
       "name": "E",
       "label": "Glide ratio",
+      "format": "PROPERTY"
+    },
+    {
+      "name": "directRadioMaxLatency",
+      "label": "Direct radio max latency",
+      "format": "PROPERTY"
+    },
+    {
+      "name": "lte5GMaxLatency",
+      "label": "LTE 5G max latency",
+      "format": "PROPERTY"
+    },
+    {
+      "name": "otherMaxLatency",
+      "label": "Other max latency",
+      "format": "PROPERTY"
+    },
+    {
+      "name": "satelliteMaxLatency",
+      "label": "Satellite max latency",
       "format": "PROPERTY"
     },
     {
@@ -239,6 +264,7 @@
     "cL": 0.5,
     "gliding": true,
     "E": 10,
+    "operationReactionTime": 2,
     "agolToken": "mzFcMRqhxzPAoRJavp2MJnT86fp9vdIuHnlcY6yRjycMNMkD4n52uRAbbfniWAIwgSsF6CP6LtldVUWMYoY-IokPO21DBz15m4ycfl7XtqIco_3kzb_QnEeKShS1Awk6XEt6EAlj4siUrTHPTB0V0PARFWBpR0Tuog2Gk2SDIF8.",
     "agolUrl": "https://easa.maps.arcgis.com/",
     "printServiceUrl": "https://utility.arcgisonline.com/arcgis/rest/services/Utilities/PrintingTools/GPServer/Export%20Web%20Map%20Task",

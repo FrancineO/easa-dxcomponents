@@ -181,6 +181,11 @@ export const Default = {
     cL: 0.5,
     gliding: true,
     E: 10,
+    directRadioMaxLatency: '',
+    lte5GMaxLatency: '',
+    otherMaxLatency: '',
+    satelliteMaxLatency: '',
+    operationReactionTime: 2,
     // To get token for agol use POSTMAN
     // method: POST
     // url: https://easa.maps.arcgis.com/sharing/rest/generateToken

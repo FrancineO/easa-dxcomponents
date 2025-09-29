@@ -39,6 +39,11 @@ export const getContingencyVolume = ({
   multirotor,
   hFG,
   hAM,
+  directRadioMaxLatency,
+  lte5GMaxLatency,
+  otherMaxLatency,
+  satelliteMaxLatency,
+  operationReactionTime,
 }: FlightVolumeParams): ContingencyVolumeResults | null => {
   if (!flightGeography)
     throw new Error(
@@ -67,12 +72,30 @@ export const getContingencyVolume = ({
         multirotor,
         hFG,
         hAM,
+        directRadioMaxLatency,
+        lte5GMaxLatency,
+        otherMaxLatency,
+        satelliteMaxLatency,
+        operationReactionTime,
       },
       null,
       2,
     )}`}`,
     `color: ${color}`,
   );
+
+  // TODO: if tR is empty or zero, then use operationReactionTime (some value from DB that pega will need to pass to me)
+  // if tR is not empty or zero, then use tR plus the highest latency value
+  if (tR === 0) {
+    tR = operationReactionTime;
+  } else {
+    tR += Math.max(
+      directRadioMaxLatency,
+      lte5GMaxLatency,
+      otherMaxLatency,
+      satelliteMaxLatency,
+    );
+  }
 
   const hR = vO * 0.7 * tR;
   let hCM = 0;

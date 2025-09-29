@@ -65,8 +65,13 @@ export type ComponentProps = {
   cL: number;
   gliding: boolean;
   E: number | '';
+  directRadioMaxLatency: number;
+  lte5GMaxLatency: number;
+  otherMaxLatency: number;
+  satelliteMaxLatency: number;
   controlledGroundArea: boolean;
   criticalArea: number | null;
+  operationReactionTime: number;
 } & MapProps;
 
 export type FlightPath = __esri.Graphic & {
@@ -281,8 +286,13 @@ export function validateComponentProps(
     'cL',
     'gliding',
     'E',
+    'directRadioMaxLatency',
+    'lte5GMaxLatency',
+    'otherMaxLatency',
+    'satelliteMaxLatency',
     'controlledGroundArea',
     'criticalArea',
+    'operationReactionTime',
     // MapProps keys:
     'agolUrl',
     'agolToken',
@@ -398,6 +408,38 @@ export function validateComponentProps(
     obj.E,
   );
   assertType(
+    typeof obj.directRadioMaxLatency === 'number' ||
+      obj.directRadioMaxLatency === '' ||
+      obj.directRadioMaxLatency === 'null',
+    'directRadioMaxLatency',
+    "number | string.Empty | 'null'",
+    obj.directRadioMaxLatency,
+  );
+  assertType(
+    typeof obj.lte5GMaxLatency === 'number' ||
+      obj.lte5GMaxLatency === '' ||
+      obj.lte5GMaxLatency === 'null',
+    'lte5GMaxLatency',
+    "number | string.Empty | 'null'",
+    obj.lte5GMaxLatency,
+  );
+  assertType(
+    typeof obj.otherMaxLatency === 'number' ||
+      obj.otherMaxLatency === '' ||
+      obj.otherMaxLatency === 'null',
+    'otherMaxLatency',
+    "number | string.Empty | 'null'",
+    obj.otherMaxLatency,
+  );
+  assertType(
+    typeof obj.satelliteMaxLatency === 'number' ||
+      obj.satelliteMaxLatency === '' ||
+      obj.satelliteMaxLatency === 'null',
+    'satelliteMaxLatency',
+    "number | string.Empty | 'null'",
+    obj.satelliteMaxLatency,
+  );
+  assertType(
     typeof obj.controlledGroundArea === 'boolean',
     'controlledGroundArea',
     'boolean',
@@ -409,7 +451,14 @@ export function validateComponentProps(
     'number | null',
     obj.criticalArea,
   );
-
+  assertType(
+    typeof obj.operationReactionTime === 'number' ||
+      obj.operationReactionTime === '' ||
+      obj.operationReactionTime === 'null',
+    'operationReactionTime',
+    "number | string.Empty | 'null'",
+    obj.operationReactionTime,
+  );
   // Optional fields
   if ('getPConnect' in obj) {
     assertType(
