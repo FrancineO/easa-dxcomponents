@@ -172,9 +172,11 @@ Once the component is successfully published, you need to configure it in the Pe
      - Click "Submit" to confirm
 
    ![Branch Selector](./screenshots/branch-selector.png)
+
    _Branch selector icon in top right corner (icon with branching lines and green dot)_
 
    ![Branch Development Modal](./screenshots/branch-development-modal.png)
+
    _Branch development preferences modal with "Branch development is on" toggle and SORA_Case selection_
 
 #### Configure Component in eSORA Case Type
@@ -185,6 +187,7 @@ Once the component is successfully published, you need to configure it in the Pe
    - From the list of case types, select "eSORA"
 
    ![Case Types Navigation and eSORA Selection](./screenshots/esora-case-type-selection.png)
+
    _Left navigation menu with "Case types" highlighted and case types list with "eSORA" highlighted in blue_
 
 2. **Access Component Configuration**:
@@ -194,6 +197,7 @@ Once the component is successfully published, you need to configure it in the Pe
    - Select "Operation details" from the available views
 
    ![UX and Operation Details](./screenshots/esora-ux-operation-details.png)
+
    _UX menu with "Other Views" and "Operation details" selection_
 
 3. **Locate Flight Path in Form Groups**:
@@ -202,6 +206,7 @@ Once the component is successfully published, you need to configure it in the Pe
    - Click on "Flight Path" to open the component configuration form
 
    ![Flight Path Form Groups](./screenshots/esora-operation-details.png)
+
    _"Flight path" highlighted with red outline in Form groups_
 
 4. **Configure Flight Path Properties**:
@@ -209,6 +214,7 @@ Once the component is successfully published, you need to configure it in the Pe
    - Map all component properties to corresponding Pega database properties
 
    ![Flight Path Configuration](./screenshots/esora-flight-path-configuration.png)
+
    _"Edit View: Flight path" with SORA Component configuration form_
 
 #### Configure CBO (Cross Border Operation) Case Type
@@ -219,6 +225,7 @@ Once the component is successfully published, you need to configure it in the Pe
    - From the list of case types, select "Cross Border Operation"
 
    ![CBO Case Type Selection](./screenshots/cbo-case-type-selection.png)
+
    _Case types list with "Cross Border Operation" selected_
 
 2. **Access CBO Configuration**:
@@ -227,6 +234,7 @@ Once the component is successfully published, you need to configure it in the Pe
    - Select "View" from the configuration options
 
    ![CBO Configure View](./screenshots/cbo-configure-view.png)
+
    _CBO case type with "Configure" menu and "View" selection_
 
 3. **Select Flight Path Display**:
@@ -235,6 +243,7 @@ Once the component is successfully published, you need to configure it in the Pe
    - Select "Flight Path" to configure the component
 
    ![CBO Display](./screenshots/cbo-display.png)
+
    _"Flight Path" option in CBO display configuration_
 
 4. **Configure CBO Flight Path Properties**:
@@ -242,16 +251,18 @@ Once the component is successfully published, you need to configure it in the Pe
    - Map all component properties to corresponding Pega database properties for the CBO case type
 
    ![CBO Flight Path Configuration](./screenshots/cbo-flight-path-configuration.png)
+
    _"Edit View: Flight path" with SORA Component configuration for CBO case type_
 
 ### Property Mapping
 
 All properties in the configuration form need to be mapped to properties from the Pega database for both eSORA and CBO case types.
 
-For assistance with property mapping, contact:
+### ⚠️ Important: Property Changes
 
-- **Emilieno**: Max.MartinezRivera@pega.com
-- **Szymon**: Szymon.Banowski@pega.com
+**If you add or remove any properties from the Flight Path component, you must contact the Pega team to inform them of these changes.**
+
+The Pega team may need to update other configurations in both the eSORA and CBO case types to reflect any component changes. You are responsible for updating the property mappings. Failure to communicate these changes may result in broken functionality or missing properties in the deployed component.
 
 ## Support
 
@@ -261,3 +272,9 @@ For technical support and questions, please refer to the main project documentat
 
 - **Lead Developer**: James Eyre (j.eyre@esri.ch)
 - **Project Manager**: Nina Katharina Jeanne Mannschott (n.mannschott@esri.de)
+
+**Pega Team (for property changes and configuration updates):**
+
+- **Emiliano Martinez-Rivera**: Max.MartinezRivera@pega.com
+- **Szymon Banowski**: Szymon.Banowski@pega.com
+- **Piotr Kopyt**: Piotr.Kopyt@pega.com
