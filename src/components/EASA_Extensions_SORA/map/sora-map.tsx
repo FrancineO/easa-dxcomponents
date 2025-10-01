@@ -7,7 +7,11 @@ import Basemap from '@arcgis/core/Basemap';
 import PortalItem from '@arcgis/core/portal/PortalItem';
 import Map from '@arcgis/core/Map';
 import Point from '@arcgis/core/geometry/Point';
-import { landuseRenderer, populationDensityRenderer } from '../renderers';
+import {
+  landuseRenderer,
+  populationDensityRenderer,
+  getLanduseRasterFunction,
+} from '../renderers';
 import Layer from '@arcgis/core/layers/Layer';
 import FeatureLayer from '@arcgis/core/layers/FeatureLayer';
 import * as rendererJsonUtils from '@arcgis/core/renderers/support/jsonUtils.js';
@@ -126,10 +130,22 @@ const SoraMap = (props: Props) => {
 
         layer.id = landuseLayer ? LayerId.landuseHighlight : LayerId.landuse;
         layer.visible = !landuseLayer;
+
+        // Set renderer for legend compatibility
         layer.renderer = rendererJsonUtils.fromJSON(
           landuseRenderer,
         ) as __esri.ClassBreaksRenderer;
-        layer.opacity = 0.85;
+
+        // For ImageryLayers (raster), set the rasterFunction to generate
+        // the proper Remap → Colormap chain for correct rendering
+        if (!landuseLayer) {
+          // Base landuse layer - apply the raster function
+          (layer as __esri.ImageryLayer).rasterFunction =
+            getLanduseRasterFunction() as any;
+        }
+        // The highlight layer will get its rasterFunction set later via useApplySpatialFilter
+
+        layer.opacity = landuseLayer ? 0.75 : 1;
       }
       if (geozonePortalItemIdsArray.includes(layer.portalItem.id)) {
         // Use the portal item ID to create a unique layer ID
@@ -219,6 +235,8 @@ const SoraMap = (props: Props) => {
           },
         }),
       }),
+
+      // Add landuse layer twice. once for the landuse layer and once for the landuse highlight layer
       Layer.fromPortalItem({
         portalItem: new PortalItem({
           id: landusePortalItemId,

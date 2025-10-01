@@ -2,8 +2,8 @@ import { useCallback } from 'react';
 import { LayerId, type FlightVolume } from '../types';
 import { getView } from '../map/view';
 import type ImageryLayer from '@arcgis/core/layers/ImageryLayer';
-import * as rasterFunctionUtils from '@arcgis/core/layers/support/rasterFunctionUtils';
 import * as geometryEngine from '@arcgis/core/geometry/geometryEngine';
+import { getLanduseRasterFunction } from '../renderers';
 
 export const useHighlightIntersectingLanduse = (
   flightVolumes: FlightVolume[] | null,
@@ -56,10 +56,33 @@ export const useHighlightIntersectingLanduse = (
       allGeometries,
     ) as __esri.Polygon;
 
-    landuseHighlightLayer.rasterFunction = rasterFunctionUtils.clip({
-      geometry: operationalAndGroundRiskGeometry,
-      keepOutside: false,
-    });
+    // Build the complete raster function chain: Clip → Remap → Colormap
+    const landuseRasterFunc = getLanduseRasterFunction();
+
+    // Wrap the Remap → Colormap chain with a Clip function
+    const clippedRasterFunction = {
+      rasterFunction: 'Colormap',
+      rasterFunctionArguments: {
+        Colormap: landuseRasterFunc.rasterFunctionArguments.Colormap,
+        Raster: {
+          rasterFunction: 'Remap',
+          rasterFunctionArguments: {
+            ...landuseRasterFunc.rasterFunctionArguments.Raster
+              .rasterFunctionArguments,
+            Raster: {
+              rasterFunction: 'Clip',
+              rasterFunctionArguments: {
+                ClippingGeometry: operationalAndGroundRiskGeometry,
+                ClippingType: 1, // 1 = keep inside
+              },
+            },
+          },
+          variableName: 'Raster',
+        },
+      },
+    };
+
+    landuseHighlightLayer.rasterFunction = clippedRasterFunction as any;
   }, [flightVolumes]);
 
   return { highlightIntersectingLanduse };

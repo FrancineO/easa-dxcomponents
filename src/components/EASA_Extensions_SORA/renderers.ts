@@ -138,6 +138,47 @@ export const landuseRenderer = {
   }),
 };
 
+// Generate the proper raster function for ImageryLayers
+// This creates the Remap → Colormap chain that ArcGIS expects
+export const getLanduseRasterFunction = () => {
+  const landuseCodes = Object.keys(landusePopDensityLookup).map(Number);
+
+  // Build InputRanges and OutputValues for Remap function
+  const inputRanges: number[] = [];
+  const outputValues: number[] = [];
+  const colormap: number[][] = [];
+
+  landuseCodes.forEach((code, index) => {
+    // For Remap: map each landuse code to a sequential index
+    inputRanges.push(code, code + 0.0001);
+    outputValues.push(index);
+
+    // For Colormap: map each index to its color
+    const color = getLanduseColor(code);
+    colormap.push([index, color[0], color[1], color[2]]);
+  });
+
+  // Add NoData values to colormap
+  colormap.push([-1, 0, 0, 0]);
+  colormap.push([65536, 0, 0, 0]);
+
+  return {
+    rasterFunction: 'Colormap',
+    rasterFunctionArguments: {
+      Colormap: colormap,
+      Raster: {
+        rasterFunction: 'Remap',
+        rasterFunctionArguments: {
+          InputRanges: inputRanges,
+          OutputValues: outputValues,
+          NoDataRanges: [],
+        },
+        variableName: 'Raster',
+      },
+    },
+  };
+};
+
 // export const geozoneRenderer = {
 //   type: 'uniqueValue',
 //   field1: 'Restriction',
