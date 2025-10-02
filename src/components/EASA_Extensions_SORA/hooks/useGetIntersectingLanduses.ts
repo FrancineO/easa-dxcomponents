@@ -2,6 +2,7 @@ import { useState, useCallback } from 'react';
 import { LayerId, type FlightVolume } from '../types';
 import * as geometryEngine from '@arcgis/core/geometry/geometryEngine';
 import { getView } from '../map/view';
+import { landusePopDensityLookup } from '../renderers';
 
 const useGetIntersectingLanduses = (flightVolumes: FlightVolume[] | null) => {
   const [intersectingLanduseClasses, setIntersectingLanduseClasses] = useState<
@@ -83,7 +84,7 @@ const useGetIntersectingLanduses = (flightVolumes: FlightVolume[] | null) => {
       const counts = landuseHistograms.histograms?.[0]?.counts;
       if (counts) {
         counts.forEach((count: number, landuseClass: number) => {
-          if (count > 0) {
+          if (count > 0 && landusePopDensityLookup[landuseClass]) {
             intersectedLanduseClasses.push(landuseClass);
           }
         });
@@ -100,7 +101,7 @@ const useGetIntersectingLanduses = (flightVolumes: FlightVolume[] | null) => {
       const adjacentAreaIntersectedLanduseClasses: number[] = [];
       if (adjacentAreaCounts) {
         adjacentAreaCounts.forEach((count: number, landuseClass: number) => {
-          if (count > 0) {
+          if (count > 0 && landusePopDensityLookup[landuseClass]) {
             adjacentAreaIntersectedLanduseClasses.push(landuseClass);
           }
         });
