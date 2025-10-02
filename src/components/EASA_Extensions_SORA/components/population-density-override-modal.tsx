@@ -426,7 +426,7 @@ export const PopulationDensityOverrideModal = (props: Props) => {
                           minWidth: '20px',
                         }}
                       >
-                        {getLanduseIcon(landUse.pyLabel)}
+                        {getLanduseIcon(landUse!.pyLabel)}
                       </div>
                       <Text variant='h4' style={{ fontWeight: 'bold' }}>
                         {landUse.pyLabel}
