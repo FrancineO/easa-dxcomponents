@@ -10,8 +10,12 @@ import { getView } from '../../map/view';
 const VertexInfo = () => {
   const tooltipElement = useRef<HTMLDivElement | null>(null);
 
-  const [mousePoint, setMousePoint] = useState<{ x: number; y: number } | null>(null);
-  const [infoTextElement, setInfoTextElement] = useState<JSX.Element | null>(null);
+  const [mousePoint, setMousePoint] = useState<{ x: number; y: number } | null>(
+    null,
+  );
+  const [infoTextElement, setInfoTextElement] = useState<JSX.Element | null>(
+    null,
+  );
 
   const setMouseOverVertex = (mp: { x: number; y: number } | null) => {
     if (tooltipElement.current) {
@@ -27,39 +31,48 @@ const VertexInfo = () => {
     }
   };
 
-  const handleMouseMove = useCallback(async (mp: { x: number; y: number } | null) => {
-    if (!mp) return;
+  const handleMouseMove = useCallback(
+    async (mp: { x: number; y: number } | null) => {
+      if (!mp) return;
 
-    const vertexLv = getView().allLayerViews.find(lv => lv.layer.title === 'SVM Internal');
-
-    if (!vertexLv) {
-      setMousePoint(null);
-      return;
-    }
-
-    if ((vertexLv?.layer as __esri.GraphicsLayer)?.graphics?.length > 3) {
-      setInfoTextElement(
-        <>
-          <Text style={{ fontSize: '10px' }}>Right click to remove vertex</Text>
-          <Text style={{ fontSize: '10px' }}>or</Text>
-          <Text style={{ fontSize: '10px' }}>Drag to move vertex</Text>
-        </>
+      const vertexLv = getView().allLayerViews.find(
+        (lv) => lv.layer.title === 'SVM Internal',
       );
-    } else {
-      setInfoTextElement(<Text style={{ fontSize: '10px' }}>Drag to move vertex</Text>);
-    }
 
-    const result = await getView().hitTest(mp, { include: [vertexLv.layer] });
-    if (result.results.length > 0) {
-      const graphicHit = result.results[0] as __esri.GraphicHit;
-      const g = graphicHit.graphic;
-      if (g && (g.symbol as __esri.SimpleMarkerSymbol).size === 10) {
-        setMousePoint({ x: mp.x, y: mp.y });
+      if (!vertexLv) {
+        setMousePoint(null);
+        return;
       }
-    } else {
-      setMousePoint(null);
-    }
-  }, []);
+
+      if ((vertexLv?.layer as __esri.GraphicsLayer)?.graphics?.length > 3) {
+        setInfoTextElement(
+          <>
+            <Text style={{ fontSize: '10px' }}>
+              Right click to remove vertex
+            </Text>
+            <Text style={{ fontSize: '10px' }}>or</Text>
+            <Text style={{ fontSize: '10px' }}>Drag to move vertex</Text>
+          </>,
+        );
+      } else {
+        setInfoTextElement(
+          <Text style={{ fontSize: '10px' }}>Drag to move vertex</Text>,
+        );
+      }
+
+      const result = await getView().hitTest(mp, { include: [vertexLv.layer] });
+      if (result.results.length > 0) {
+        const graphicHit = result.results[0] as __esri.GraphicHit;
+        const g = graphicHit.graphic;
+        if (g && (g.symbol as __esri.SimpleMarkerSymbol).size === 10) {
+          setMousePoint({ x: mp.x, y: mp.y });
+        }
+      } else {
+        setMousePoint(null);
+      }
+    },
+    [],
+  );
 
   useEffect(() => {
     let mounted = true;
@@ -69,12 +82,19 @@ const VertexInfo = () => {
       .then(() => {
         if (!mounted) return;
 
-        const throttledSetMouseMove = throttle((event: __esri.ViewPointerMoveEvent) => {
-          if (!mounted || !getView().ready) return;
-          handleMouseMove({ x: event.x, y: event.y });
-        }, 100);
+        const throttledSetMouseMove = throttle(
+          (event: __esri.ViewPointerMoveEvent) => {
+            if (!mounted || !getView().ready) return;
+            handleMouseMove({ x: event.x, y: event.y });
+          },
+          100,
+        );
 
-        const handle = reactiveUtils.on(() => getView(), 'pointer-move', throttledSetMouseMove);
+        const handle = reactiveUtils.on(
+          () => getView(),
+          'pointer-move',
+          throttledSetMouseMove,
+        );
 
         return () => {
           mounted = false;
@@ -100,7 +120,11 @@ const VertexInfo = () => {
         <div>
           <div ref={tooltipElement} />
           <Popover
-            style={{ pointerEvents: 'none', borderRadius: '4px', padding: '4px' }}
+            style={{
+              pointerEvents: 'none',
+              borderRadius: '4px',
+              padding: '4px',
+            }}
             target={tooltipElement.current}
             strategy='fixed'
           >
@@ -109,7 +133,7 @@ const VertexInfo = () => {
                 gap: '0.25rem',
                 display: 'flex',
                 flexDirection: 'column',
-                alignItems: 'center'
+                alignItems: 'center',
               }}
             >
               {infoTextElement}

@@ -28,20 +28,23 @@ import * as Waypoint from '@pega/cosmos-react-core/lib/components/Icon/icons/way
 import * as Upload from '@pega/cosmos-react-core/lib/components/Icon/icons/upload.icon';
 import * as Download from '@pega/cosmos-react-core/lib/components/Icon/icons/download.icon';
 import * as reactiveUtils from '@arcgis/core/core/reactiveUtils';
-import Circle from '@arcgis/core/geometry/Circle';
 import VertexInfo from './vertex-info';
 
 import UploadModal from '../../components/upload-modal';
 import DownloadModal from '../../components/download-modal';
 import type { FlightPath } from '../../types';
 
-// Utility function to add ID to a graphic
-const addIdToGraphic = (graphic: __esri.Graphic): FlightPath => {
+// Utility function to add ID and tool type to a graphic
+const addIdToGraphic = (graphic: __esri.Graphic, tool?: Tool): FlightPath => {
   if (!graphic.attributes) {
     graphic.attributes = {};
   }
   if (!graphic.attributes.id) {
     graphic.attributes.id = generateId();
+  }
+  // Set isCircle property based on the tool used to create the graphic
+  if (tool === 'circle') {
+    graphic.attributes.isCircle = true;
   }
   return graphic as FlightPath;
 };
@@ -173,14 +176,26 @@ export const Toolbar = (props: Props) => {
     }
   }, [enterCreateMode, onEnterCreateModeRef]);
 
-  const enterUpdateMode = useCallback((g: Graphic) => {
+  const enterUpdateMode = useCallback((flightPath: FlightPath) => {
     if (sketchViewModelRef.current) {
       // clear the layer
       sketchViewModelRef.current.layer.removeAll();
       // add the graphic to the layer
-      sketchViewModelRef.current.layer.add(g);
+      sketchViewModelRef.current.layer.add(flightPath);
       // update the graphic
-      sketchViewModelRef.current.update([g]);
+      const tool = flightPath.attributes?.isCircle
+        ? ('move' as const)
+        : ('reshape' as const);
+      // const tool = 'reshape' as const;
+      const opts = {
+        tool,
+        highlightOptions: {
+          enabled: false,
+        },
+        enableRotation: false,
+        enableScaling: true,
+      };
+      sketchViewModelRef.current.update([flightPath], opts);
     }
   }, []);
 
@@ -241,40 +256,43 @@ export const Toolbar = (props: Props) => {
         }
       }
       if (event.state === 'complete') {
-        if (event.tool === 'circle') {
-          // The circle tool creates a polygon, so we need to convert it to a proper circle
-          // We'll use the current radius value for consistency
-          const polygon = event.graphic.geometry as __esri.Polygon;
-          const center = polygon.centroid;
-          const finalRadius = radiusRef.current;
+        // if (event.tool === 'circle') {
+        //   // The circle tool creates a polygon, so we need to convert it to a proper circle
+        //   // We'll use the current radius value for consistency
+        //   const polygon = event.graphic.geometry as __esri.Polygon;
+        //   const center = polygon.centroid;
+        //   const finalRadius = radiusRef.current;
 
-          event.graphic.geometry = new Circle({
-            center,
-            radius: finalRadius,
-            radiusUnit: 'meters',
-          });
+        //   event.graphic.geometry = new Circle({
+        //     center,
+        //     radius: finalRadius,
+        //     radiusUnit: 'meters',
+        //   });
 
-          sketchViewModelRef.current?.complete();
-          // } else if (isMultiModeRef.current) {
-          //   // Only call onFlightGeographyChange if we have a valid graphic and haven't processed it already
-          //   if (
-          //     event.graphic &&
-          //     event.graphic.geometry &&
-          //     event.graphic !== lastProcessedGraphicRef.current
-          //   ) {
-          //     lastProcessedGraphicRef.current = event.graphic;
-          //     onFlightGeographyChange(event.graphic, autoZoomToFlightPath);
-          //   }
-          //   // Clear the graphic state since we're in add mode
-          //   setGraphic(null);
-        }
+        //   sketchViewModelRef.current?.complete();
+        //   // } else if (isMultiModeRef.current) {
+        //   //   // Only call onFlightGeographyChange if we have a valid graphic and haven't processed it already
+        //   //   if (
+        //   //     event.graphic &&
+        //   //     event.graphic.geometry &&
+        //   //     event.graphic !== lastProcessedGraphicRef.current
+        //   //   ) {
+        //   //     lastProcessedGraphicRef.current = event.graphic;
+        //   //     onFlightGeographyChange(event.graphic, autoZoomToFlightPath);
+        //   //   }
+        //   //   // Clear the graphic state since we're in add mode
+        //   //   setGraphic(null);
+        // }
         //  else {
         // Normal mode - update the SketchViewModel and set the graphic
         // sketchViewModelRef.current?.update([event.graphic]);
         // setGraphic(event.graphic);
         // }
         // Add ID to the graphic and set it
-        const graphicWithId = addIdToGraphic(event.graphic);
+        const graphicWithId = addIdToGraphic(
+          event.graphic,
+          selectedTool || undefined,
+        );
         setGraphic(graphicWithId);
         // clear the svm layer
         sketchViewModelRef.current?.layer.removeAll();
@@ -282,7 +300,7 @@ export const Toolbar = (props: Props) => {
         enterCreateMode();
       }
     },
-    [sketchViewModelRef, enterCreateMode, onCircleRadiusChange],
+    [sketchViewModelRef, enterCreateMode, onCircleRadiusChange, selectedTool],
   );
 
   const onUpdate = useCallback(
@@ -328,11 +346,14 @@ export const Toolbar = (props: Props) => {
         // The graphic being edited by the SketchViewModel should already have the ID
         const originalGraphicInSketch = event.graphics[0];
         const graphicIdToPreserve = originalGraphicInSketch.attributes?.id;
+        const tool = originalGraphicInSketch.attributes?.isCircle;
 
         const g = new Graphic({
           geometry: originalGraphicInSketch.geometry.clone(),
           symbol: originalGraphicInSketch.symbol,
-          attributes: graphicIdToPreserve ? { id: graphicIdToPreserve } : {},
+          attributes: graphicIdToPreserve
+            ? { id: graphicIdToPreserve, isCircle: tool }
+            : {},
         });
 
         setGraphic(g);
@@ -360,7 +381,9 @@ export const Toolbar = (props: Props) => {
               if (!sketchViewModelRef.current.layer.graphics.includes(g)) {
                 sketchViewModelRef.current.layer.add(g);
               }
-              sketchViewModelRef.current.update([g]);
+              sketchViewModelRef.current.update([g], {
+                tool: g.attributes?.isCircle ? 'move' : 'reshape',
+              });
             }
           }, 100);
         }
@@ -447,7 +470,7 @@ export const Toolbar = (props: Props) => {
     // If we're in update mode (selectedFlightPath exists), preserve the original ID
     const graphicToSend = selectedFlightPath
       ? (graphic as FlightPath)
-      : addIdToGraphic(graphic);
+      : addIdToGraphic(graphic, selectedTool || undefined);
 
     onNewFlightPaths([graphicToSend], autoZoomToFlightPath);
     setAutoZoomToFlightPath(false);
@@ -564,25 +587,16 @@ export const Toolbar = (props: Props) => {
         // Don't return here - let the function continue to set the selected tool
       }
       if (sketchViewModelRef.current && tool !== 'geozone') {
-        if (tool === 'circle') {
-          sketchViewModelRef.current.defaultUpdateOptions = {
-            tool: 'move',
-            highlightOptions: {
-              enabled: true,
-            },
-            enableRotation: false,
-            enableScaling: true,
-          };
-        } else {
-          sketchViewModelRef.current.defaultUpdateOptions = {
-            tool: 'reshape',
-            highlightOptions: {
-              enabled: false,
-            },
-            enableRotation: false,
-            enableScaling: true,
-          };
-        }
+        const toolToUse = tool === 'circle' ? 'move' : 'reshape';
+        // const toolToUse = 'reshape';
+        sketchViewModelRef.current.defaultUpdateOptions = {
+          tool: toolToUse,
+          highlightOptions: {
+            enabled: true,
+          },
+          enableRotation: false,
+          enableScaling: true,
+        };
       }
       // Only clear graphics if not in add mode
       if (!isMultiModeRef.current) {
@@ -691,7 +705,7 @@ export const Toolbar = (props: Props) => {
                   shapeOperation: 'move',
                 },
                 highlightOptions: {
-                  enabled: false,
+                  enabled: true,
                 },
                 enableRotation: false,
                 enableScaling: true,
@@ -741,7 +755,9 @@ export const Toolbar = (props: Props) => {
       <UploadModal
         onUpload={(graphics: __esri.Graphic[]) => {
           // Add IDs to uploaded graphics
-          const graphicsWithIds = graphics.map(addIdToGraphic);
+          const graphicsWithIds = graphics.map((g) =>
+            addIdToGraphic(g, undefined),
+          );
           // setSelectedTool(getToolFromGeometry(graphicsWithIds[0].geometry));
           setAutoZoomToFlightPath(true);
           onNewFlightPaths(graphicsWithIds, false);

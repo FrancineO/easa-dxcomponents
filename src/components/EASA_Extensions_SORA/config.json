@@ -265,7 +265,7 @@
     "gliding": true,
     "E": 10,
     "operationReactionTime": 2,
-    "agolToken": "mzFcMRqhxzPAoRJavp2MJnT86fp9vdIuHnlcY6yRjycMNMkD4n52uRAbbfniWAIwE4VkkFjxn7piueub37C28XIU4wTaT-gzdVo1BIEBi_o04ZDiQOkeJB6YHAzmZHlviShd0iNcxQUdODzF9SLeRLfaKKTzv2Dv8z0PrMQhWbQ.",
+    "agolToken": "mzFcMRqhxzPAoRJavp2MJnT86fp9vdIuHnlcY6yRjycMNMkD4n52uRAbbfniWAIw0N97ihoHEIA2QxstLnXw9FnL-6h-Mh5h0ZCvlXIKT3LJb0s9NbbQUlePX8aUPI_0dXyzIpPJ98xMMO3uNemk46TGawH6Pju0mDcWkk9O424",
     "agolUrl": "https://easa.maps.arcgis.com/",
     "printServiceUrl": "https://utility.arcgisonline.com/arcgis/rest/services/Utilities/PrintingTools/GPServer/Export%20Web%20Map%20Task",
     "printWidth": 1000,

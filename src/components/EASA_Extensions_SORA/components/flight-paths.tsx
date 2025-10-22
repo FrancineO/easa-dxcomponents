@@ -181,8 +181,19 @@ export const FlightPaths: React.FC<FlightPathsProps> = ({
                 color: theme.base.palette['foreground-color'],
               }}
             >
-              💡 <strong>Tip:</strong> Click on a path in the list to edit it.
-              Click again to exit edit mode.
+              {selectedFlightPathIndex !== null &&
+              !selectedFlightPath?.attributes?.isCircle ? (
+                <>
+                  💡 <strong>Tip:</strong> Click the flight path on the map to
+                  toggle between transform mode and vertex edit mode. Click
+                  again in the list to exit edit mode.
+                </>
+              ) : (
+                <>
+                  💡 <strong>Tip:</strong> Click on a path in the list to edit
+                  it.
+                </>
+              )}
             </Text>
           </div>
         )}

@@ -181,6 +181,7 @@ export const getFlightPaths = (
       symbol: getSymbol(fg.type),
       attributes: {
         id: generateId(),
+        isCircle: fg.isCircle || false,
       },
     }) as FlightPath;
   });
