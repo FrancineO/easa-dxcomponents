@@ -139,6 +139,7 @@ export const Toolbar = (props: Props) => {
   const previousIsMultiModeRef = useRef<boolean>(false);
   const selectedToolRef = useRef<Tool | null>(null);
   const isMultiModeRef = useRef<boolean>(false);
+  const lastProcessedGraphicIdRef = useRef<string | null>(null);
 
   // Keep the ref in sync with the state
   useEffect(() => {
@@ -255,6 +256,10 @@ export const Toolbar = (props: Props) => {
           }
         }
       }
+      if (event.state === 'cancel') {
+        return;
+      }
+
       if (event.state === 'complete') {
         // if (event.tool === 'circle') {
         //   // The circle tool creates a polygon, so we need to convert it to a proper circle
@@ -450,6 +455,15 @@ export const Toolbar = (props: Props) => {
       }
       return;
     }
+
+    // Check if this is just a tool switch - if the graphic hasn't changed, don't call onNewFlightPaths
+    const currentGraphicId = graphic.attributes?.id;
+
+    if (currentGraphicId === lastProcessedGraphicIdRef.current) {
+      return;
+    }
+
+    lastProcessedGraphicIdRef.current = currentGraphicId;
 
     // ensure the graphic is added to the sketchViewModel layer
     if (
