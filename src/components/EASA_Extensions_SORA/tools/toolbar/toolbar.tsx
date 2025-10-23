@@ -294,8 +294,10 @@ export const Toolbar = (props: Props) => {
           selectedTool || undefined,
         );
         setGraphic(graphicWithId);
-        // clear the svm layer
-        sketchViewModelRef.current?.layer.removeAll();
+        // clear the svm layer only if not in multipath mode
+        if (!isMultiModeRef.current) {
+          sketchViewModelRef.current?.layer.removeAll();
+        }
         // keep the create mode active so user can continue adding more paths
         enterCreateMode();
       }
@@ -501,7 +503,8 @@ export const Toolbar = (props: Props) => {
       // Don't clear flight paths when changing tools - only clear when explicitly requested
       // onFlightGeographyChange(null);
     } else {
-      // sketchViewModelRef.current?.cancel();
+      // In multipath mode, only cancel current sketch operation but don't clear the layer
+      sketchViewModelRef.current?.cancel();
       setGraphic(null);
       // setIsLiveUpdating(false);
 
@@ -564,7 +567,10 @@ export const Toolbar = (props: Props) => {
 
   const handleToolClick = (tool: Tool) => {
     setAutoZoomToFlightPath(false);
-    clearCurrentDrawing();
+    // Only clear current drawing if not in multipath mode
+    if (!isMultiModeRef.current) {
+      clearCurrentDrawing();
+    }
     if (tool === selectedTool) {
       if (tool === 'geozone') {
         geozoneClickHandle?.remove();
