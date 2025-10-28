@@ -260,9 +260,68 @@ All properties in the configuration form need to be mapped to properties from th
 
 ### ⚠️ Important: Property Changes
 
-**If you add or remove any properties from the Flight Path component, you must contact the Pega team to inform them of these changes.**
+**If you add or remove any properties from the Flight Path component, you can handle the updates yourself by following the process below.**
 
-The Pega team may need to update other configurations in both the eSORA and CBO case types to reflect any component changes. You are responsible for updating the property mappings. Failure to communicate these changes may result in broken functionality or missing properties in the deployed component.
+You are responsible for updating the property mappings in both the eSORA and CBO case types to reflect any component changes. Failure to update these mappings may result in broken functionality or missing properties in the deployed component.
+
+#### Creating the DXComponentFlightPaths Ruleset
+
+Before pushing component changes, you need to ensure the `DXComponentFlightPaths` ruleset exists in your `SORA_Case` branch. This is especially important if you encounter the following error when running `npm run publish`:
+
+```
+Success : Given ruleset doesnt exist: Provide valid ruleset details or add default ruleset in access group
+Error: Error occurred in authentication. Please regenerate using authenticate
+```
+
+Follow these steps to create the required ruleset:
+
+1. **Open DevStudio**:
+
+   - Navigate to DevStudio in your Pega environment
+   - Ensure you're working in the `SORA_Case` branch
+
+2. **Create a Temporary Rule**:
+
+   - Click the "Create" button in the top-left corner
+   - Navigate to **Data Model** → **Property** (or any other rule type)
+   - This will open the rule creation dialog
+
+   ![DevStudio Create Menu](./screenshots/devstudio-create-menu.png)
+
+   _DevStudio Create menu showing Data Model → Property selection_
+
+3. **Save to DXComponentFlightPaths Ruleset**:
+
+   - In the save dialog, configure the following:
+     - **Save to Branch**: `SORA_Case`
+     - **Apply to**: `EASA-IAM-Work` (or your application)
+     - **Add to ruleset**: `DXComponentFlightPaths`
+   - Click "Save" to create the rule and establish the ruleset
+
+   ![Save Rule Dialog](./screenshots/save-rule-dialog.png)
+
+   _Save rule dialog with DXComponentFlightPaths ruleset configuration_
+
+4. **Verify Ruleset Creation**:
+
+   - Navigate to the branch content view
+   - Expand the `SORA_Case` branch structure
+   - Confirm that `DXComponentFlightPaths` ruleset now exists
+
+   ![Branch Content View](./screenshots/branch-content-view.png)
+
+   _Branch content showing DXComponentFlightPaths ruleset in SORA_Case_
+
+5. **Clean Up Temporary Rule**:
+
+   - Delete the temporary rule you created (it was only needed to establish the ruleset)
+   - The `DXComponentFlightPaths` ruleset will remain and be ready to accept your component push
+
+   ![Branch Content with DeleteMe](./screenshots/branch-content-deleteme.png)
+
+   _Branch content showing temporary "DeleteMe" rule ready for deletion_
+
+Once the ruleset is established, you can proceed with pushing your component changes to the `DXComponentFlightPaths` ruleset in the `SORA_Case` branch.
 
 ## Support
 
