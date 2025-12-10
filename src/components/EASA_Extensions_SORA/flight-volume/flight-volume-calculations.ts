@@ -373,6 +373,8 @@ export const getGroundRiskVolume = (
     );
   }
 
+  // TODO: this most likely needs to be removed as per Alberto
+  // the full if condition should be removed
   if (E !== '' && E > 0) {
     sGRB = E * hCV;
     // eslint-disable-next-line no-console
@@ -387,6 +389,8 @@ export const getGroundRiskVolume = (
   }
 
   if (!power) {
+    // TODO: this most likely needs to be changed as per Alberto to the next line
+    // sGRB = gliding ? (E) * hCV : hCV + cd / 2;
     sGRB = gliding ? (cL / cd) * hCV : hCV + cd / 2;
     // eslint-disable-next-line no-console
     console.log(

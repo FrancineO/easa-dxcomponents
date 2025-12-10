@@ -200,8 +200,7 @@ The system calculates ground risk values for:
 
 The final ground risk is determined by:
 
-- If critical area is provided: Use critical area-based risk
-- Otherwise: Use the maximum of dimension and speed-based risks
+- Using the critical area-based risk
 - If controlled ground area: Use row 0 (Controlled Ground Area) of the matrix
 
 ## Population Density Data Sources

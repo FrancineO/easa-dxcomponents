@@ -13,12 +13,17 @@ const calculateGroundRisk = (
   cd: number | null,
   vO: number | null,
   controlledGroundArea: boolean,
-  criticalArea: number | null
+  criticalArea: number | null,
 ): 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | null => {
   // Return null if inputs are invalid
-  if (populationDensity === null || cd === null || vO === null || criticalArea === null)
+  if (
+    populationDensity === null ||
+    cd === null ||
+    vO === null ||
+    criticalArea === null
+  )
     throw new GroundRiskError(
-      'Population density, characteristic dimension, maximum speed, or critical area is null'
+      'Population density, characteristic dimension, maximum speed, or critical area is null',
     );
 
   // calculated critical area in pega
@@ -68,7 +73,7 @@ const calculateGroundRisk = (
     [4, 5, 6, 7, 8], // < 500
     [5, 6, 7, 8, 9], // < 5,000
     [6, 7, 8, 9, 10], // < 50,000
-    [7, 8, null, null, null] // > 50,000
+    [7, 8, null, null, null], // > 50,000
   ];
 
   const color = 'rgb(179, 66, 151)';
@@ -80,20 +85,29 @@ const calculateGroundRisk = (
   // eslint-disable-next-line no-console
   console.log(`%c   densityCategory: ${densityCategory}`, `color: ${color}`);
   // eslint-disable-next-line no-console
-  console.log(`%c   dimensionCategory: ${dimensionCategory}`, `color: ${color}`);
+  console.log(
+    `%c   dimensionCategory: ${dimensionCategory}`,
+    `color: ${color}`,
+  );
   // eslint-disable-next-line no-console
   console.log(`%c   speedCategory: ${speedCategory}`, `color: ${color}`);
   // eslint-disable-next-line no-console
-  console.log(`%c   criticalAreaCategory: ${criticalAreaCategory}`, `color: ${color}`);
+  console.log(
+    `%c   criticalAreaCategory: ${criticalAreaCategory}`,
+    `color: ${color}`,
+  );
 
   // Get the ground risk values from the matrix for both dimension and speed
-  const groundRiskByDimension = groundRiskMatrix[densityCategory][dimensionCategory] ?? -1;
-  const groundRiskBySpeed = groundRiskMatrix[densityCategory][speedCategory] ?? -1;
-  const groundRiskByCriticalArea = groundRiskMatrix[densityCategory][criticalAreaCategory];
+  const groundRiskByDimension =
+    groundRiskMatrix[densityCategory][dimensionCategory] ?? -1;
+  const groundRiskBySpeed =
+    groundRiskMatrix[densityCategory][speedCategory] ?? -1;
+  const groundRiskByCriticalArea =
+    groundRiskMatrix[densityCategory][criticalAreaCategory];
 
   if (groundRiskByCriticalArea === null) {
     throw new GroundRiskError(
-      `Ground risk by critical area returned null. Population density: ${populationDensity}, cd: ${cd}, vO: ${vO}, criticalArea: ${criticalArea}`
+      `Ground risk by critical area returned null. Population density: ${populationDensity}, cd: ${cd}, vO: ${vO}, criticalArea: ${criticalArea}`,
     );
   }
   // // Return null if either combination is not part of SORA
@@ -108,15 +122,24 @@ const calculateGroundRisk = (
   let groundRisk: number | null = Math.max(
     groundRiskByDimension,
     groundRiskBySpeed,
-    groundRiskByCriticalArea
+    groundRiskByCriticalArea,
   );
 
   // eslint-disable-next-line no-console
-  console.log(`%c   groundRiskByDimension: ${groundRiskByDimension}`, `color: ${color}`);
+  console.log(
+    `%c   groundRiskByDimension: ${groundRiskByDimension}`,
+    `color: ${color}`,
+  );
   // eslint-disable-next-line no-console
-  console.log(`%c   groundRiskBySpeed: ${groundRiskBySpeed}`, `color: ${color}`);
+  console.log(
+    `%c   groundRiskBySpeed: ${groundRiskBySpeed}`,
+    `color: ${color}`,
+  );
   // eslint-disable-next-line no-console
-  console.log(`%c   groundRiskByCriticalArea: ${groundRiskByCriticalArea}`, `color: ${color}`);
+  console.log(
+    `%c   groundRiskByCriticalArea: ${groundRiskByCriticalArea}`,
+    `color: ${color}`,
+  );
 
   // if the critical area is not null, then use the critical area value
   if (groundRiskByCriticalArea !== null) {
@@ -137,7 +160,7 @@ const calculateGroundRisk = (
 
   if (groundRisk === null) {
     throw new GroundRiskError(
-      `Ground risk returned null. Controlled ground area: ${controlledGroundArea}. Population density: ${populationDensity},criticalArea: ${criticalArea}, cd: ${cd}, vO: ${vO}`
+      `Ground risk returned null. Controlled ground area: ${controlledGroundArea}. Population density: ${populationDensity},criticalArea: ${criticalArea}, cd: ${cd}, vO: ${vO}`,
     );
   }
 
@@ -156,7 +179,9 @@ const useGetIntrinsicGroundRisk = (params: {
   controlledGroundArea: boolean;
   criticalArea: number | null;
 }) => {
-  const [groundRisk, setGroundRisk] = useState<1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | null>(null);
+  const [groundRisk, setGroundRisk] = useState<
+    1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | null
+  >(null);
 
   const calculationInProgress = useRef(false);
   const paramsRef = useRef(params);
@@ -176,10 +201,17 @@ const useGetIntrinsicGroundRisk = (params: {
       return;
     }
 
-    const { populationDensity, cd, vO, controlledGroundArea, criticalArea } = currentParams;
+    const { populationDensity, cd, vO, controlledGroundArea, criticalArea } =
+      currentParams;
 
     // Check if params are valid
-    if (!populationDensity || cd === undefined || cd === null || vO === undefined || vO === null) {
+    if (
+      !populationDensity ||
+      cd === undefined ||
+      cd === null ||
+      vO === undefined ||
+      vO === null
+    ) {
       setGroundRisk(null);
       return;
     }
@@ -189,14 +221,14 @@ const useGetIntrinsicGroundRisk = (params: {
       cd,
       vO,
       controlledGroundArea,
-      criticalArea
+      criticalArea,
     );
     setGroundRisk(risk);
   }, []);
 
   return {
     groundRisk,
-    calculateIntrinsicGroundRisk
+    calculateIntrinsicGroundRisk,
   };
 };
 

@@ -14,6 +14,7 @@ import { getView } from '../../map/view';
 import SketchViewModel from '@arcgis/core/widgets/Sketch/SketchViewModel';
 import GraphicsLayer from '@arcgis/core/layers/GraphicsLayer';
 import Graphic from '@arcgis/core/Graphic';
+import Circle from '@arcgis/core/geometry/Circle';
 import { getFlightPaths, getSymbol } from './draw-utils';
 import generateId from '../../utils/id-utils';
 import type SimpleLineSymbol from '@arcgis/core/symbols/SimpleLineSymbol';
@@ -261,6 +262,31 @@ export const Toolbar = (props: Props) => {
       }
 
       if (event.state === 'complete') {
+        // For circle tool, convert the polygon to a proper circle with the correct radius
+        if (event.tool === 'circle' && event.graphic?.geometry) {
+          const geometry = event.graphic.geometry;
+          if (geometry.type === 'polygon') {
+            const polygon = geometry as __esri.Polygon;
+            const center = polygon.centroid;
+            const finalRadius = radiusRef.current;
+
+            event.graphic.geometry = new Circle({
+              center,
+              radius: finalRadius,
+              radiusUnit: 'meters',
+            });
+          } else if (geometry.type === 'circle') {
+            const circle = geometry as __esri.Circle;
+            // Update existing circle radius if needed
+            if (radiusRef.current && circle.radius !== radiusRef.current) {
+              event.graphic.geometry = new Circle({
+                center: circle.center,
+                radius: radiusRef.current,
+                radiusUnit: 'meters',
+              });
+            }
+          }
+        }
         // if (event.tool === 'circle') {
         //   // The circle tool creates a polygon, so we need to convert it to a proper circle
         //   // We'll use the current radius value for consistency
@@ -307,7 +333,7 @@ export const Toolbar = (props: Props) => {
         enterCreateMode();
       }
     },
-    [sketchViewModelRef, enterCreateMode, onCircleRadiusChange, selectedTool],
+    [sketchViewModelRef, enterCreateMode, onCircleRadiusChange, selectedTool, circleRadius],
   );
 
   const onUpdate = useCallback(

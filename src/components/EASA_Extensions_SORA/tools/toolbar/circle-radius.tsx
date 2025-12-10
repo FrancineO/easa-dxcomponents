@@ -1,5 +1,6 @@
-import React, { useState, useRef, useEffect, useCallback } from 'react';
-import { Button, Input } from '@pega/cosmos-react-core';
+import React, { useState, useRef, useEffect } from 'react';
+import { Input } from '@pega/cosmos-react-core';
+import useDebouncedEffect from '../../hooks/useDebouncedEffect';
 
 interface CircleRadiusProps {
   onCircleRadiusChange: (newRadius: number) => void;
@@ -11,29 +12,29 @@ export const CircleRadius: React.FC<CircleRadiusProps> = ({
   circleRadius,
 }) => {
   const [pendingRadius, setPendingRadius] = useState(500);
-  const pendingRadiusRef = useRef(500);
   const radiusRef = useRef(500);
 
-  // Keep pending radius ref in sync
-  useEffect(() => {
-    pendingRadiusRef.current = pendingRadius;
-  }, [pendingRadius]);
-
-  // Handle live radius updates from parent
+  // Handle live radius updates from parent (when user is dragging to create circle)
   useEffect(() => {
     if (circleRadius !== undefined) {
-      setPendingRadius(Math.round(circleRadius));
+      const roundedRadius = Math.round(circleRadius);
+      setPendingRadius(roundedRadius);
+      // Also update the ref so we don't trigger unnecessary updates
+      radiusRef.current = roundedRadius;
     }
   }, [circleRadius]);
 
-  // Function to apply radius changes
-  const applyRadiusChange = useCallback(() => {
-    if (pendingRadius !== radiusRef.current) {
-      radiusRef.current = pendingRadius;
-      // Update the current circle on the map with the new radius
-      onCircleRadiusChange(pendingRadius);
-    }
-  }, [pendingRadius, onCircleRadiusChange]);
+  // Debounced update - automatically apply radius changes after user stops typing
+  useDebouncedEffect(
+    () => {
+      if (pendingRadius !== radiusRef.current) {
+        radiusRef.current = pendingRadius;
+        onCircleRadiusChange(pendingRadius);
+      }
+    },
+    500, // 500ms delay - adjust if needed
+    [pendingRadius]
+  );
 
   return (
     <div
@@ -49,16 +50,11 @@ export const CircleRadius: React.FC<CircleRadiusProps> = ({
         value={`${pendingRadius}`}
         min={10}
         max={10000}
-        onChange={(e: any) => setPendingRadius(Number(e.target.value))}
+        onChange={(e: any) => {
+          const newValue = Number(e.target.value);
+          setPendingRadius(newValue);
+        }}
       />
-      <Button
-        variant='primary'
-        onClick={applyRadiusChange}
-        compact
-        disabled={pendingRadius === radiusRef.current}
-      >
-        OK
-      </Button>
     </div>
   );
 };
