@@ -333,7 +333,7 @@ export const Toolbar = (props: Props) => {
         enterCreateMode();
       }
     },
-    [sketchViewModelRef, enterCreateMode, onCircleRadiusChange, selectedTool, circleRadius],
+    [sketchViewModelRef, enterCreateMode, onCircleRadiusChange, selectedTool],
   );
 
   const onUpdate = useCallback(
