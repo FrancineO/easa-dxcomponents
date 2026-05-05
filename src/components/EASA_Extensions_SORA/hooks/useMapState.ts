@@ -27,6 +27,8 @@ const useMapState = (originalMapState: MapState | null) => {
     const zoom = view.zoom;
     if (zoom === -1) return;
 
+    const landuseLayer = map.layers.find((layer) => layer.id === LayerId.landuse);
+
     setMapState({
       basemap: basemap.portalItem.id,
       center: {
@@ -42,6 +44,9 @@ const useMapState = (originalMapState: MapState | null) => {
           map.layers.find((layer) => layer.id === LayerId.populationDensity)
             ?.visible ?? false,
       },
+      ...(landuseLayer !== undefined && {
+        landuseOpacity: (landuseLayer as any).opacity,
+      }),
     });
   };
 
@@ -80,6 +85,17 @@ const useMapState = (originalMapState: MapState | null) => {
             if (layerGroup) {
               reactiveUtils.watch(
                 () => layer.visible,
+                () => {
+                  if (!mounted) return;
+                  debouncedCallback(() => {
+                    updateMapState();
+                  });
+                },
+              );
+            }
+            if (layer.id === LayerId.landuse) {
+              reactiveUtils.watch(
+                () => (layer as any).opacity,
                 () => {
                   if (!mounted) return;
                   debouncedCallback(() => {

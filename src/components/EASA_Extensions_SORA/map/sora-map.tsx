@@ -27,6 +27,7 @@ import {
 } from '@pega/cosmos-react-core';
 import { Icon } from '@pega/cosmos-react-core';
 import BasemapChooser from '../tools/basemap-chooser/basemap-chooser';
+import ScaleBar from './scale-bar';
 import LocateViewModel from '@arcgis/core/widgets/Locate/LocateViewModel';
 import { merge } from 'lodash';
 import * as Plus from '@pega/cosmos-react-core/lib/components/Icon/icons/plus.icon';
@@ -196,6 +197,9 @@ const SoraMap = (props: Props) => {
         );
       if (hasPopulationDensityVisibilityProperty) {
         layer.visible = mapState?.layerVisibility?.PopulationDensity as boolean;
+      }
+      if (layer.id === LayerId.landuse && mapState?.landuseOpacity !== undefined) {
+        layer.opacity = mapState.landuseOpacity;
       }
     },
     [mapState],
@@ -549,6 +553,7 @@ const SoraMap = (props: Props) => {
               </Button>
             </CardContent>
           </Card>
+          <ScaleBar />
           <BasemapChooser
             basemapPortalItemIds={basemapPortalItemIdsArray}
             mapState={mapState}

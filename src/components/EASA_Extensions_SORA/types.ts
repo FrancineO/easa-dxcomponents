@@ -29,6 +29,7 @@ export type MapState = {
   zoom?: number;
   basemap?: string;
   layerVisibility?: LayerVisibility;
+  landuseOpacity?: number;
 };
 
 export type LayerVisibility = {

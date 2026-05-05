@@ -12,6 +12,7 @@ import {
 import { merge } from 'lodash';
 import { useEffect, useMemo, useState, useCallback, useRef } from 'react';
 import '../create-nonce';
+import StyledWrapper from './styles';
 import { Toolbar, type Tool } from './tools/toolbar/toolbar';
 import SearchTool from './tools/search-tool';
 import { useGetPopulationDensity } from './hooks/useGetPopulationDensity';
@@ -605,6 +606,7 @@ export const EasaExtensionsSORA = (props: ComponentProps) => {
   }, [forceClearToolbar]);
 
   return (
+    <StyledWrapper>
     <Card style={{ height: '100%' }}>
       <CardContent style={{ height: '100%' }}>
         {loading && <Progress variant='ring' placement='global' visible />}
@@ -758,6 +760,7 @@ export const EasaExtensionsSORA = (props: ComponentProps) => {
                 circleRadius={circleRadius}
                 onCircleRadiusChange={setCircleRadius}
                 selectedFlightPath={selectedFlightPath}
+                mapState={mapState}
               />
             </div>
           </div>
@@ -996,6 +999,7 @@ export const EasaExtensionsSORA = (props: ComponentProps) => {
         </div>
       </CardContent>
     </Card>
+    </StyledWrapper>
   );
 };
 export default withConfiguration(EasaExtensionsSORA);

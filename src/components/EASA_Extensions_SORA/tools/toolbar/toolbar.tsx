@@ -33,7 +33,8 @@ import VertexInfo from './vertex-info';
 
 import UploadModal from '../../components/upload-modal';
 import DownloadModal from '../../components/download-modal';
-import type { FlightPath } from '../../types';
+import LayerSettings from '../layer-settings';
+import type { FlightPath, MapState } from '../../types';
 
 // Utility function to add ID and tool type to a graphic
 const addIdToGraphic = (graphic: __esri.Graphic, tool?: Tool): FlightPath => {
@@ -84,6 +85,7 @@ type Props = {
   selectedFlightPath: FlightPath | null;
   onEnterCreateModeRef?: React.MutableRefObject<(() => void) | null>; // New prop to expose enterCreateMode function
   geozonePortalItemIds?: string; // New prop for geozone portal item IDs
+  mapState?: MapState | null;
 };
 
 // const bufferGraphicsLayerId = 'easa-sora-tool-buffer-graphics';
@@ -110,6 +112,7 @@ export const Toolbar = (props: Props) => {
     selectedFlightPath,
     onEnterCreateModeRef,
     geozonePortalItemIds,
+    mapState,
   } = props;
 
   const [selectedTool, setSelectedTool] = useState<Tool | null>(null);
@@ -851,6 +854,7 @@ export const Toolbar = (props: Props) => {
       <CardContent
         style={{ display: 'flex', flexDirection: 'row', gap: '2px' }}
       >
+        <LayerSettings mapState={mapState ?? null} />
         <Button
           variant='text'
           label='Download KML or GeoJSON file'
