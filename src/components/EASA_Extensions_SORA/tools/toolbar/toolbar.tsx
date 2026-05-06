@@ -485,10 +485,11 @@ export const Toolbar = (props: Props) => {
       return;
     }
 
-    // Check if this is just a tool switch - if the graphic hasn't changed, don't call onNewFlightPaths
+    // Check if this is just a tool switch - if the graphic hasn't changed, don't call onNewFlightPaths.
+    // Skip this check in edit mode so vertex moves on an existing flight path still trigger recalculation.
     const currentGraphicId = graphic.attributes?.id;
 
-    if (currentGraphicId === lastProcessedGraphicIdRef.current) {
+    if (currentGraphicId === lastProcessedGraphicIdRef.current && !selectedFlightPath) {
       return;
     }
 
