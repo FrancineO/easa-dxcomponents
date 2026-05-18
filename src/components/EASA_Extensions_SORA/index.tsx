@@ -403,6 +403,7 @@ export const EasaExtensionsSORA = (props: ComponentProps) => {
         };
       })
       .filter((value, index, self) => self.indexOf(value) === index) ?? null,
+    cd * 3,
   );
 
   // Set up the effect for flight geometry which comes in as a parameter

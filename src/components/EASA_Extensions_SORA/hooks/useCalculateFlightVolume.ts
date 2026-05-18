@@ -71,9 +71,10 @@ const useCalculateFlightVolumes = (params: FlightVolumesParams) => {
         };
 
         // Create flight geography
+        const flightGeographyWidth = currentParams.cd * 3; // minimum is 3 times the drone width as per annex
         const buffer = geometryEngine.buffer(
           flightPath.geometry as __esri.Polyline,
-          currentParams.cd * 3, // minimum is 3 times the drone width as per annex
+          flightGeographyWidth,
         ) as __esri.Polygon;
         const flightGeography = new Graphic({
           geometry: buffer,

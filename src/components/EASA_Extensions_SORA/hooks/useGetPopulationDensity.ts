@@ -87,7 +87,6 @@ export const useGetPopulationDensity = (
         );
       }
 
-      // const pixelSize = getPixelSize(hFG);
       const pixelSize = getPixelSize();
 
       const opStats = await layer.computeStatisticsHistograms({
@@ -95,8 +94,16 @@ export const useGetPopulationDensity = (
         pixelSize,
       });
 
-      if (opStats.statistics[0]?.avg) {
-        return _.round(opStats.statistics[0].avg, 2);
+      const stats = opStats.statistics[0];
+      if (stats?.avg && stats?.count) {
+        // Geographic average: multiply the cell-only average by the fraction of
+        // populated (non-NoData) cells. This accounts for uninhabited areas which
+        // have NoData in the raster and would otherwise be excluded from the average.
+        const pixelArea = pixelSize.x * pixelSize.y;
+        const totalCellCount =
+          Math.abs(geometryEngine.planarArea(geometry)) / pixelArea;
+        if (!totalCellCount) return _.round(stats.avg, 2);
+        return _.round((stats.avg * stats.count) / totalCellCount, 2);
       }
       return null;
     },
@@ -347,6 +354,54 @@ export const useGetPopulationDensity = (
     [overriddenLandUse],
   );
 
+  const getLanduseAvgPopDensityAdjacentArea = useCallback(
+    async (geometry: __esri.Polygon, layer: __esri.ImageryLayer) => {
+      const bufferedGeometry = geometryEngine.buffer(
+        geometry,
+        (layer.serviceRasterInfo.pixelSize.x / 2) * 1.22,
+      );
+      const clipRF = new RasterFunction({
+        functionName: 'Clip',
+        functionArguments: {
+          ClippingGeometry: bufferedGeometry as __esri.Polygon,
+          ClippingType: 1,
+        },
+      });
+      const landuseHistograms = await layer.computeHistograms({
+        geometry: bufferedGeometry as __esri.Polygon,
+        rasterFunction: clipRF as __esri.RasterFunction,
+      });
+      const counts = landuseHistograms.histograms?.[0]?.counts;
+      if (!counts) return null;
+
+      // Weighted geographic average: sum(count[i] * density[i]) / total_cells.
+      // total_cells includes all pixels (uninhabited land, water, etc.) so the
+      // result is the true area-averaged population density, not just the average
+      // over inhabited classes.
+      let weightedSum = 0;
+      let totalCells = 0;
+      counts.forEach((count: number, landuseClass: number) => {
+        totalCells += count;
+        if (count > 0) {
+          const override = overriddenLandUse?.find(
+            (lu) => lu.Code === landuseClass.toString(),
+          );
+          const density =
+            override?.OverridePopulationDensity != null
+              ? override.OverridePopulationDensity
+              : landusePopDensityLookup[landuseClass];
+          if (density != null) {
+            weightedSum += count * density;
+          }
+        }
+      });
+
+      if (!totalCells) return null;
+      return _.round(weightedSum / totalCells, 2);
+    },
+    [overriddenLandUse],
+  );
+
   const calculatePopDensities = useCallback(async () => {
     // Use the ref instead of the params dependency
     const currentFlightVolumes = flightVolumesRef.current;
@@ -398,7 +453,7 @@ export const useGetPopulationDensity = (
       if (!popDensityLayer) return;
 
       // First, get the landuse-based calculation for operational ground risk area
-      let maxPopDensityOperationalGroundRisk = null;
+      let maxPopDensityOperationalGroundRisk: number | null = null;
       if (landuseLayer && landuseLayer.loaded) {
         try {
           maxPopDensityOperationalGroundRisk =
@@ -449,9 +504,11 @@ export const useGetPopulationDensity = (
         popDensity.maxPopDensitySource = 'pop-density';
       }
 
-      // Calculate average density for all adjacent areas combined using landuse layer
+      // Compute landuse-based geographic average for adjacent areas and keep
+      // the higher of the two estimates (pop-density layer vs landuse layer).
       if (
         landuseLayer &&
+        landuseLayer.loaded &&
         currentFlightVolumes &&
         currentFlightVolumes.length > 0
       ) {
@@ -460,44 +517,26 @@ export const useGetPopulationDensity = (
           .filter(Boolean) as __esri.Polygon[];
 
         if (adjacentAreas.length > 0) {
-          try {
-            // Union all adjacent areas
-            const combinedAdjacentArea = geometryEngine.union(adjacentAreas);
-            if (combinedAdjacentArea) {
-              const avgPopDensityLanduseAdjacentArea = await getAvgDensity(
-                combinedAdjacentArea as __esri.Polygon,
-                landuseLayer,
-              );
-
-              // TODO: Is this correct? Can I just take an average of the two averages?
-              if (avgPopDensityLanduseAdjacentArea !== 0) {
-                const combined =
-                  (popDensity.avgPopDensityAdjacentArea ?? 0) +
-                  (avgPopDensityLanduseAdjacentArea ?? 0);
-
-                popDensity.avgPopDensityAdjacentArea =
-                  combined !== 0
-                    ? _.round(combined / 2, combined < 1 ? 2 : 0)
-                    : 0;
-              }
-            }
-          } catch (error) {
-            // If union fails, use the first adjacent area as fallback
-            const avgPopDensityLanduseAdjacentArea = await getAvgDensity(
-              adjacentAreas[0],
+          const computeLanduseAvg = async (area: __esri.Polygon) => {
+            const landuseAvg = await getLanduseAvgPopDensityAdjacentArea(
+              area,
               landuseLayer,
             );
-
-            if (avgPopDensityLanduseAdjacentArea !== 0) {
-              const combined =
-                (popDensity.avgPopDensityAdjacentArea ?? 0) +
-                (avgPopDensityLanduseAdjacentArea ?? 0);
-
-              popDensity.avgPopDensityAdjacentArea =
-                combined !== 0
-                  ? _.round(combined / 2, combined < 1 ? 2 : 0)
-                  : 0;
+            if (landuseAvg !== null && landuseAvg > 0) {
+              popDensity.avgPopDensityAdjacentArea = Math.max(
+                popDensity.avgPopDensityAdjacentArea ?? 0,
+                landuseAvg,
+              );
             }
+          };
+
+          try {
+            const combinedAdjacentArea = geometryEngine.union(adjacentAreas);
+            if (combinedAdjacentArea) {
+              await computeLanduseAvg(combinedAdjacentArea as __esri.Polygon);
+            }
+          } catch (error) {
+            await computeLanduseAvg(adjacentAreas[0]);
           }
         }
       }
@@ -514,7 +553,7 @@ export const useGetPopulationDensity = (
     } finally {
       calculationInProgress.current = false;
     }
-  }, [overriddenLandUse]); // Add overriddenLandUse dependency since it's used in landuse calculation
+  }, [overriddenLandUse, getLanduseAvgPopDensityAdjacentArea]);
 
   return {
     populationDensity,

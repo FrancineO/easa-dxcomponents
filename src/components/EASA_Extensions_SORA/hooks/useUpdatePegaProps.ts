@@ -17,6 +17,7 @@ const useUpdatePegaProps = (
   impactedGeoZones: string[] | null,
   impactedLandUse: ImpactedLandUse[] | null,
   impactedLandUseAdjacentArea: ImpactedLandUse[] | null,
+  flightGeographyWidth: number | null,
 ) => {
   const paramsRef = useRef({
     pConnect,
@@ -33,6 +34,7 @@ const useUpdatePegaProps = (
     impactedGeoZones,
     impactedLandUse,
     impactedLandUseAdjacentArea,
+    flightGeographyWidth,
   });
   const updateInProgress = useRef(false);
 
@@ -52,6 +54,7 @@ const useUpdatePegaProps = (
     impactedGeoZones,
     impactedLandUse,
     impactedLandUseAdjacentArea,
+    flightGeographyWidth,
   };
 
   // Empty dependency array since we're using ref
@@ -73,6 +76,7 @@ const useUpdatePegaProps = (
       impactedGeoZones: iGZ,
       impactedLandUse: iLU,
       impactedLandUseAdjacentArea: iLUAA,
+      flightGeographyWidth: fGW,
     } = currentParams;
 
     // if (!pD?.maxPopDensityOperationalGroundRisk || !pD?.avgPopDensityAdjacentArea || !pR || !gR)
@@ -116,6 +120,8 @@ const useUpdatePegaProps = (
     console.log('%c   impactedLandUse:', `color: ${color}`, iLU);
     // eslint-disable-next-line no-console
     console.log('%c   impactedLandUseAdjacentArea:', `color: ${color}`, iLUAA);
+    // eslint-disable-next-line no-console
+    console.log('%c   flightGeographyWidth:', `color: ${color}`, fGW);
 
     try {
       // eslint-disable-next-line no-console
@@ -173,6 +179,7 @@ const useUpdatePegaProps = (
             ImpactedGeoZones: iGZ,
             ImpactedLandUseList: iLU ?? null,
             ImpactedLandUseInAdjacentAreaList: iLUAA ?? null,
+            FlightGeographyWidth: fGW,
           },
         },
       });
