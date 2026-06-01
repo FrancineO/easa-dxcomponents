@@ -387,10 +387,10 @@ export const useGetPopulationDensity = (
             (lu) => lu.Code === landuseClass.toString(),
           );
           const density =
-            override?.OverridePopulationDensity != null
+            override?.OverridePopulationDensity !== null && override?.OverridePopulationDensity !== undefined
               ? override.OverridePopulationDensity
               : landusePopDensityLookup[landuseClass];
-          if (density != null) {
+          if (density !== null && density !== undefined) {
             weightedSum += count * density;
           }
         }

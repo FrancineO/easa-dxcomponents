@@ -2,6 +2,7 @@ import Color from '@arcgis/core/Color';
 import { SimpleFillSymbol } from '@arcgis/core/symbols';
 
 export const flightPathColor = [80, 80, 80];
+export const otherOperatorColor = [180, 0, 255];
 export const adjacentAreaColor = [98, 128, 177];
 export const groundRiskVolumeColor = [181, 45, 62];
 export const contingencyVolumeColor = [238, 191, 82];

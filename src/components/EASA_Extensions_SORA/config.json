@@ -27,6 +27,11 @@
       "format": "PROPERTY"
     },
     {
+      "name": "otherOperatorFlightPathsJSON",
+      "label": "Other operator flight paths",
+      "format": "PROPERTY"
+    },
+    {
       "name": "mapStateJSON",
       "label": "Map state",
       "format": "PROPERTY"
@@ -242,6 +247,7 @@
       "layerVisibility": { "popDensity": true, "geozones": true }
     },
     "flightPathJSON": "{\"spatialReference\":{\"latestWkid\":3857,\"wkid\":102100},\"rings\":[[[-983315.5512089686,4628094.701973546],[-969117.3732049979,4630679.228992439],[-973215.1145182232,4624162.972331126],[-983315.5512089686,4628094.701973546]]]}",
+    "otherOperatorFlightPathsJSON": null,
     "sGPS": 3,
     "sPos": 3,
     "sK": 3,
@@ -265,7 +271,7 @@
     "gliding": true,
     "E": 10,
     "operationReactionTime": 2,
-    "agolToken": "aoU0KJI5e89VeIMkKgCG8RQ..f7ETkW6q_85aMxnGoVDqqUj4gOPM09Yon6-wiajLqfUBB71LPRNpLQC2_kouFtfqTjn1c30CH9AHExlEM99Rmv4jr563A9TwIGr9hMyxwgRo6m8yX0CGA8nzIQ2-v126n16Gwgf0FUAtsgLmKhPJ8h4kAbmcYdjGTvocD08ECyvChB6MFfDdMwaBl0_0",
+    "agolToken": "awQ5k8pyONYiVm9xNQQwCaw..uFATsEndKNrnpjoIrgnjusfVCm2PmcrT-dRTjmFDB61YrQiI_pWSz12tksB_nYur0DLnhymap3hSriSxjeuaQbtTH25l8ZmyLWIpg0eNPQ1nLvK7WyiV_L8OMQkrk_SwhfhrvjwlnRDekkZvlg5U_n6Svqa6jfGGGODxCul2OToiWzNVh028frlIy7kV",
     "agolUrl": "https://easa.maps.arcgis.com/",
     "printServiceUrl": "https://utility.arcgisonline.com/arcgis/rest/services/Utilities/PrintingTools/GPServer/Export%20Web%20Map%20Task",
     "printWidth": 1000,

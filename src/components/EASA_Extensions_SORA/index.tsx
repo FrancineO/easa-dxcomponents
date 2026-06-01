@@ -33,6 +33,7 @@ import useGetIntrinsicGroundRisk, {
 import useMapState from './hooks/useMapState';
 import SoraMap from './map/sora-map';
 import useHighlightIntersectingLanduse from './hooks/useApplySpatialFilter';
+import useDisplayOtherOperatorFlightPaths from './hooks/useDisplayOtherOperatorFlightPaths';
 import LayerList from './tools/layer-list';
 import useGetIntersectingGeozones from './hooks/useGetIntersectingGeozones';
 import PopulationDensityOverrideModal from './components/population-density-override-modal';
@@ -78,6 +79,7 @@ export const EasaExtensionsSORA = (props: ComponentProps) => {
     getPConnect,
     height,
     flightPathJSON,
+    otherOperatorFlightPathsJSON,
     mapStateJSON,
     cd,
     vO,
@@ -311,6 +313,9 @@ export const EasaExtensionsSORA = (props: ComponentProps) => {
   const { highlightIntersectingLanduse } =
     useHighlightIntersectingLanduse(flightVolumes);
 
+  const { displayOtherOperatorFlightPaths } =
+    useDisplayOtherOperatorFlightPaths();
+
   const getGeozoneLabel = (geozone: __esri.Graphic) => {
     if (!geozone || !geozonesRenderer) return null;
     const def = geozonesDefintions.find(
@@ -405,6 +410,11 @@ export const EasaExtensionsSORA = (props: ComponentProps) => {
       .filter((value, index, self) => self.indexOf(value) === index) ?? null,
     cd * 3,
   );
+
+  useEffect(() => {
+    if (!layersAdded) return;
+    displayOtherOperatorFlightPaths(otherOperatorFlightPathsJSON);
+  }, [otherOperatorFlightPathsJSON, layersAdded, displayOtherOperatorFlightPaths]);
 
   // Set up the effect for flight geometry which comes in as a parameter
   useEffect(() => {
@@ -996,6 +1006,7 @@ export const EasaExtensionsSORA = (props: ComponentProps) => {
             intersectingGeozones={intersectingGeozones}
             intersectingLanduseClasses={intersectingLanduseClasses}
             geozonesRenderer={geozonesRenderer}
+            hasOtherOperatorFlightPaths={!!otherOperatorFlightPathsJSON}
           />
         </div>
       </CardContent>

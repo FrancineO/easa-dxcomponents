@@ -159,6 +159,9 @@ export const Default = {
     flightPathJSON: null,
     // flightPathJSON:
     //   '{"spatialReference":{"latestWkid":3857,"wkid":102100},"paths":[[[775678.2918865071,6818734.746604987],[1190387.388847621,7123737.59871983],[1363115.963515002,6924428.047466287]]],"type":"polyline"}',
+    otherOperatorFlightPathsJSON: null,
+    // otherOperatorFlightPathsJSON:
+    //   '[[{"spatialReference":{"latestWkid":3857,"wkid":102100},"paths":[[[-41146.9016257436,4962079.329558529],[-2011.1431437437425,4998769.103135402],[434.84176138113264,4998769.103135402],[34678.63043313101,5020782.967281527]]],"type":"polyline"}],[{"spatialReference":{"latestWkid":3857,"wkid":102100},"paths":[[[-38700.916720649344,4975532.246536719],[2880.8266664755065,5015890.997471281]]],"type":"polyline"}]]',
     sGPS: 3,
     sPos: 3,
     sK: 3,
@@ -196,7 +199,7 @@ export const Default = {
     // client: http://localhost:6006/
     // expiration: 21600
     agolToken:
-      'aoU0KJI5e89VeIMkKgCG8RQ..f7ETkW6q_85aMxnGoVDqqUj4gOPM09Yon6-wiajLqfUBB71LPRNpLQC2_kouFtfqTjn1c30CH9AHExlEM99Rmv4jr563A9TwIGr9hMyxwgRo6m8yX0CGA8nzIQ2-v126n16Gwgf0FUAtsgLmKhPJ8h4kAbmcYdjGTvocD08ECyvChB6MFfDdMwaBl0_0',
+      'awQ5k8pyONYiVm9xNQQwCaw..uFATsEndKNrnpjoIrgnjusfVCm2PmcrT-dRTjmFDB61YrQiI_pWSz12tksB_nYur0DLnhymap3hSriSxjeuaQbtTH25l8ZmyLWIpg0eNPQ1nLvK7WyiV_L8OMQkrk_SwhfhrvjwlnRDekkZvlg5U_n6Svqa6jfGGGODxCul2OToiWzNVh028frlIy7kV',
     agolUrl: 'https://easa.maps.arcgis.com/',
     printServiceUrl:
       'https://utility.arcgisonline.com/arcgis/rest/services/Utilities/PrintingTools/GPServer/Export%20Web%20Map%20Task',
