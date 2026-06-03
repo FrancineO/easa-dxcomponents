@@ -94,9 +94,8 @@ const useCalculateFlightVolumes = (params: FlightVolumesParams) => {
       const calculatedVolumes: FlightVolume[] = [];
       const allGraphics: __esri.Graphic[] = [];
 
-      for (const result of results) {
-        if (!result) continue;
-        const { cvResult, grVolumeResult, aaResult, flightGeography } = result;
+      for (const result of results.filter(Boolean)) {
+        const { cvResult, grVolumeResult, aaResult, flightGeography } = result!;
 
         allGraphics.push(
           cvResult.contingencyVolume,
