@@ -808,9 +808,11 @@ export const Toolbar = (props: Props) => {
           const graphicsWithIds = graphics.map((g) =>
             addIdToGraphic(g, undefined),
           );
-          // setSelectedTool(getToolFromGeometry(graphicsWithIds[0].geometry));
+          // Add to sketch layer so they render on the map immediately (same path
+          // drawn graphics take when the graphic useEffect fires).
+          sketchViewModelRef.current?.layer.addMany(graphicsWithIds);
           setAutoZoomToFlightPath(true);
-          onNewFlightPaths(graphicsWithIds, false);
+          onNewFlightPaths(graphicsWithIds, true);
         }}
         onClose={() => setUploadFileModalVisible(false)}
       />

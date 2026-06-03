@@ -20,12 +20,14 @@ const useCalculateFlightVolumes = (params: FlightVolumesParams) => {
   // Update the ref when params change
   paramsRef.current = params;
 
-  const calculateVolume = useCallback(() => {
+  const calculateVolume = useCallback(async () => {
     // Use the ref instead of the params dependency
     const currentParams = paramsRef.current;
 
     // Prevent multiple simultaneous calculations
-    if (calculationInProgress.current) return;
+    if (calculationInProgress.current) {
+      return;
+    }
 
     // Only proceed if we have flight geographies
     if (!currentParams.flightPaths || currentParams.flightPaths.length === 0) {
@@ -92,7 +94,7 @@ const useCalculateFlightVolumes = (params: FlightVolumesParams) => {
             cvResult,
           );
           if (grVolumeResult) {
-            const aaResult = getAdjacentArea(
+            const aaResult = await getAdjacentArea(
               { ...pathParams, flightGeography },
               cvResult.contingencyVolume.geometry,
               grVolumeResult.groundRiskVolume.geometry,

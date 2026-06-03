@@ -172,13 +172,10 @@ export const EasaExtensionsSORA = (props: ComponentProps) => {
       if (flightPaths?.length > 0 && !isMultiMode) {
         setLoading(true);
       }
-      try {
-        calculateVolume();
-      } catch (error: any) {
+      calculateVolume().catch((error: any) => {
         setErrorText(error.message);
         setLoading(false);
-        // Silently handle errors
-      }
+      });
     },
     300,
     [flightPaths, props, layersAdded, calculateVolume],

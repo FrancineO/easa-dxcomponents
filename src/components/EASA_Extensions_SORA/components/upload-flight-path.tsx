@@ -107,13 +107,13 @@ export const UploadFlightPath = (props: Props) => {
             const esriGraphic = geojsonToArcGIS(feature) as __esri.Graphic;
 
             const geometry = reproject(esriGraphic.geometry);
+
             return new Graphic({
               geometry,
               attributes: esriGraphic.attributes,
-              symbol:
-                geometry.type === 'polygon'
-                  ? (getSymbol('polygon') as SimpleFillSymbol)
-                  : undefined,
+              symbol: getSymbol(
+                geometry.type === 'polygon' ? 'polygon' : 'polyline',
+              ),
             });
           });
 

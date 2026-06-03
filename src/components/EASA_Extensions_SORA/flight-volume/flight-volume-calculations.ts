@@ -1,5 +1,6 @@
 import Graphic from '@arcgis/core/Graphic';
 import * as geometryEngine from '@arcgis/core/geometry/geometryEngine';
+import * as geometryEngineAsync from '@arcgis/core/geometry/geometryEngineAsync';
 import type { FlightVolumeParams } from '../types';
 import {
   adjacentAreaSymbol,
@@ -431,11 +432,11 @@ export const getGroundRiskVolume = (
   };
 };
 
-export const getAdjacentArea = (
+export const getAdjacentArea = async (
   { flightGeography, vO }: FlightVolumeParams,
   cv: __esri.Geometry,
   grVolume: __esri.Geometry,
-): AdjacentAreaResults | null => {
+): Promise<AdjacentAreaResults | null> => {
   if (!flightGeography)
     throw new Error(
       'Error calculating adjacent area. Flight geography is undefined. Please check the console for more information.',
@@ -452,7 +453,7 @@ export const getAdjacentArea = (
   // eslint-disable-next-line no-console
   console.log('%cAdjacent Area Calculations:', `color: ${color}`);
   let adjacentBufferDistance = 5000;
-  const threeMinRange = (vO * 3) / 60;
+  const threeMinRange = vO * 3 * 60;
   // eslint-disable-next-line no-console
   console.log(
     `%c adjacentBufferDistance: ${adjacentBufferDistance} (hardcoded)`,
@@ -461,9 +462,9 @@ export const getAdjacentArea = (
   // eslint-disable-next-line no-console
   console.log(`%c threeMinRange: ${threeMinRange}`, `color: ${color}`);
   // eslint-disable-next-line no-console
-  console.log('%c   (vO * 3) / 60', `color: ${color}`);
+  console.log('%c   vO * 3 * 60', `color: ${color}`);
   // eslint-disable-next-line no-console
-  console.log(`%c   ${vO} * 3 / 60`, `color: ${color}`);
+  console.log(`%c   ${vO} * 3 * 60`, `color: ${color}`);
 
   if (threeMinRange > 5000) {
     adjacentBufferDistance = threeMinRange > 35000 ? 35000 : threeMinRange;
@@ -494,19 +495,28 @@ export const getAdjacentArea = (
   // eslint-disable-next-line no-console
   console.log('%c--------------------------------', `color: ${color}`);
 
-  const flightPlusGroundRisk = geometryEngine.union([
+  const flightPlusGroundRisk = await geometryEngineAsync.union([
     flightGeography.geometry,
     cv,
     grVolume,
   ]);
 
-  const adjacentBuffer = geometryEngine.buffer(
-    flightPlusGroundRisk,
+  // Generalize the union before calling geodesicBuffer — the union of three
+  // heavily-buffered polygons can have hundreds of vertices, which causes the
+  // worker to hang. 15 m tolerance is imperceptible against a 5 km buffer.
+  const simplified = geometryEngine.generalize(flightPlusGroundRisk, 15, true, 'meters');
+  const inputGeom = simplified ?? flightPlusGroundRisk;
+
+  // eslint-disable-next-line no-console
+  console.log(`[aa] geodesicBuffer distance=${adjacentBufferDistance}m`);
+  const adjacentBuffer = await geometryEngineAsync.geodesicBuffer(
+    inputGeom,
     adjacentBufferDistance,
+    'meters',
   );
-  const aa = geometryEngine.difference(
+  const aa = await geometryEngineAsync.difference(
     adjacentBuffer,
-    flightPlusGroundRisk,
+    inputGeom,
   ) as __esri.Polygon;
 
   return {

@@ -23,24 +23,21 @@ import _ from 'lodash';
 // ];
 
 // const getPixelSize = (height: number) => {
+// The pop-density and landuse services have ~100 m native resolution.
+// Using the raw view resolution at high zoom (e.g. 0.6 m at zoom 18) would
+// request a ~277 M pixel image for a 5 km adjacent-area query and hit the
+// service's image-size limit. Clamp to a minimum of 100 m.
+const MIN_PIXEL_SIZE_METERS = 100;
+
 const getPixelSize = () => {
-  // const pixelSizeDef = pixelSizes.find(size => size.maxHeight >= height);
-  // if (!pixelSizeDef) {
+  const resolution = Math.max(getView().resolution, MIN_PIXEL_SIZE_METERS);
   return {
-    x: getView().resolution,
-    y: getView().resolution,
+    x: resolution,
+    y: resolution,
     spatialReference: {
       wkid: getView().spatialReference.wkid,
     },
   };
-  // }
-  // return {
-  //   x: pixelSizeDef.resolution,
-  //   y: pixelSizeDef.resolution,
-  //   spatialReference: {
-  //     wkid: getView().spatialReference.wkid
-  //   }
-  // };
 };
 
 export const useGetPopulationDensity = (
@@ -95,7 +92,7 @@ export const useGetPopulationDensity = (
       });
 
       const stats = opStats.statistics[0];
-      if (stats?.avg && stats?.count) {
+      if (stats?.count && stats?.avg != null) {
         // Geographic average: multiply the cell-only average by the fraction of
         // populated (non-NoData) cells. This accounts for uninhabited areas which
         // have NoData in the raster and would otherwise be excluded from the average.
