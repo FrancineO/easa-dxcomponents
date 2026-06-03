@@ -58,73 +58,63 @@ const useCalculateFlightVolumes = (params: FlightVolumesParams) => {
     try {
       calculationInProgress.current = true;
 
+      const baseParams = omit(currentParams, 'flightPaths');
+
+      const results = await Promise.all(
+        currentParams.flightPaths.map(async (flightPath) => {
+          const pathParams = { ...baseParams, flightPath };
+
+          const flightGeographyWidth = currentParams.cd * 3; // minimum is 3 times the drone width as per annex
+          const buffer = geometryEngine.buffer(
+            flightPath.geometry as __esri.Polyline,
+            flightGeographyWidth,
+          ) as __esri.Polygon;
+          const flightGeography = new Graphic({
+            geometry: buffer,
+            symbol: getFillSymbol(false),
+          });
+
+          const cvResult = getContingencyVolume({ ...pathParams, flightGeography });
+          if (!cvResult) return null;
+
+          const grVolumeResult = getGroundRiskVolume({ ...pathParams, flightGeography }, cvResult);
+          if (!grVolumeResult) return null;
+
+          const aaResult = await getAdjacentArea(
+            { ...pathParams, flightGeography },
+            cvResult.contingencyVolume.geometry,
+            grVolumeResult.groundRiskVolume.geometry,
+          );
+          if (!aaResult) return null;
+
+          return { cvResult, grVolumeResult, aaResult, flightGeography };
+        }),
+      );
+
       const calculatedVolumes: FlightVolume[] = [];
       const allGraphics: __esri.Graphic[] = [];
 
-      // Calculate volumes for each flight path
-      for (let i = 0; i < currentParams.flightPaths.length; i += 1) {
-        const flightPath = currentParams.flightPaths[i];
+      for (const result of results) {
+        if (!result) continue;
+        const { cvResult, grVolumeResult, aaResult, flightGeography } = result;
 
-        // Create params for this specific flight path
-        const pathParams = {
-          // don't pass the flightPaths in the currentParams
-          ...omit(currentParams, 'flightPaths'),
-          flightPath,
-        };
-
-        // Create flight geography
-        const flightGeographyWidth = currentParams.cd * 3; // minimum is 3 times the drone width as per annex
-        const buffer = geometryEngine.buffer(
-          flightPath.geometry as __esri.Polyline,
-          flightGeographyWidth,
-        ) as __esri.Polygon;
-        const flightGeography = new Graphic({
-          geometry: buffer,
-          symbol: getFillSymbol(false),
-        });
-
-        // Calculate volumes for this path
-        const cvResult = getContingencyVolume({
-          ...pathParams,
+        allGraphics.push(
+          cvResult.contingencyVolume,
+          grVolumeResult.groundRiskVolume,
+          aaResult.adjacentArea,
           flightGeography,
+        );
+
+        calculatedVolumes.push({
+          contingencyVolume: cvResult.contingencyVolume,
+          groundRiskVolume: grVolumeResult.groundRiskVolume,
+          adjacentArea: aaResult.adjacentArea,
+          flightGeography,
+          contingencyVolumeHeight: cvResult.contingencyVolumeHeight,
+          contingencyVolumeWidth: cvResult.contingencyVolumeWidth,
+          groundRiskBufferWidth: grVolumeResult.groundRiskBufferWidth,
+          adjacentVolumeWidth: aaResult.adjacentAreaWidth,
         });
-        if (cvResult) {
-          const grVolumeResult = getGroundRiskVolume(
-            { ...pathParams, flightGeography },
-            cvResult,
-          );
-          if (grVolumeResult) {
-            // eslint-disable-next-line no-await-in-loop
-            const aaResult = await getAdjacentArea(
-              { ...pathParams, flightGeography },
-              cvResult.contingencyVolume.geometry,
-              grVolumeResult.groundRiskVolume.geometry,
-            );
-            if (aaResult) {
-              // Add graphics to layer
-              allGraphics.push(
-                cvResult.contingencyVolume,
-                grVolumeResult.groundRiskVolume,
-                aaResult.adjacentArea,
-                flightGeography,
-              );
-
-              // Create flight volume for this path
-              const flightVolume: FlightVolume = {
-                contingencyVolume: cvResult.contingencyVolume,
-                groundRiskVolume: grVolumeResult.groundRiskVolume,
-                adjacentArea: aaResult.adjacentArea,
-                flightGeography,
-                contingencyVolumeHeight: cvResult.contingencyVolumeHeight,
-                contingencyVolumeWidth: cvResult.contingencyVolumeWidth,
-                groundRiskBufferWidth: grVolumeResult.groundRiskBufferWidth,
-                adjacentVolumeWidth: aaResult.adjacentAreaWidth,
-              };
-
-              calculatedVolumes.push(flightVolume);
-            }
-          }
-        }
       }
 
       // Add all graphics to layer at once
