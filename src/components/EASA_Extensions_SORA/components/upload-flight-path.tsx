@@ -9,7 +9,6 @@ import Polyline from '@arcgis/core/geometry/Polyline';
 import SpatialReference from '@arcgis/core/geometry/SpatialReference';
 import * as projection from '@arcgis/core/geometry/projection';
 import { merge } from '@storybook/manager-api';
-import { SimpleFillSymbol } from '@arcgis/core/symbols';
 import { getSymbol } from '../tools/toolbar/draw-utils';
 import * as geometryEngine from '@arcgis/core/geometry/geometryEngine';
 

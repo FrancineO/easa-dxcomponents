@@ -92,7 +92,7 @@ export const useGetPopulationDensity = (
       });
 
       const stats = opStats.statistics[0];
-      if (stats?.count && stats?.avg != null) {
+      if (stats?.count && stats?.avg !== null && stats?.avg !== undefined) {
         // Geographic average: multiply the cell-only average by the fraction of
         // populated (non-NoData) cells. This accounts for uninhabited areas which
         // have NoData in the raster and would otherwise be excluded from the average.

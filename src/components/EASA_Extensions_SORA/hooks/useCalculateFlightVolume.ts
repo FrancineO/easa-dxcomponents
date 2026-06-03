@@ -94,6 +94,7 @@ const useCalculateFlightVolumes = (params: FlightVolumesParams) => {
             cvResult,
           );
           if (grVolumeResult) {
+            // eslint-disable-next-line no-await-in-loop
             const aaResult = await getAdjacentArea(
               { ...pathParams, flightGeography },
               cvResult.contingencyVolume.geometry,
