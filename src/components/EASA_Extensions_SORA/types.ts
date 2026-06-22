@@ -12,7 +12,7 @@ export type ImpactedLandUse = {
 
 export type MapProps = {
   flightPathJSON: string | null;
-  otherOperatorFlightPathsJSON: string | null;
+  otherOperatorFlightPathsJSON?: string | null;
   mapStateJSON: string | null;
   agolUrl: string;
   agolToken: string;
@@ -202,7 +202,6 @@ function validateMapProps(obj: any): asserts obj is MapProps {
     'landusePortalItemId',
     'geozonePortalItemIds',
     'flightPathJSON',
-    'otherOperatorFlightPathsJSON',
     'mapStateJSON',
   ];
 
@@ -246,13 +245,6 @@ function validateMapProps(obj: any): asserts obj is MapProps {
     'flightPathJSON',
     'string | null',
     obj.flightPathJSON,
-  );
-  assertType(
-    typeof obj.otherOperatorFlightPathsJSON === 'string' ||
-      obj.otherOperatorFlightPathsJSON === null,
-    'otherOperatorFlightPathsJSON',
-    'string | null',
-    obj.otherOperatorFlightPathsJSON,
   );
   assertType(
     typeof obj.mapStateJSON === 'string' || obj.mapStateJSON === null,
@@ -311,7 +303,6 @@ export function validateComponentProps(
     'landusePortalItemId',
     'geozonePortalItemIds',
     'flightPathJSON',
-    'otherOperatorFlightPathsJSON',
     'mapStateJSON',
   ];
 
