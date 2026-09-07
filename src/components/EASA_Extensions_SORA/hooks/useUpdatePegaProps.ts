@@ -2,6 +2,8 @@ import { useCallback, useRef } from 'react';
 import type { ImpactedLandUse, MapState, PopulationDensity } from '../types';
 import _ from 'lodash';
 
+const DATA_VIEW_ID = 'D_MapOutputSavable';
+
 const useUpdatePegaProps = (
   pConnect: any,
   populationDensity: PopulationDensity | null,
@@ -59,7 +61,7 @@ const useUpdatePegaProps = (
 
   // Empty dependency array since we're using ref
   return useCallback(async () => {
-    // TODO: might have to call D_MapOutputSavable with all null values to clear the state
+    // TODO: might have to call the savable data page with all null values to clear the state
     const currentParams = paramsRef.current;
     const {
       populationDensity: pD,
@@ -156,33 +158,39 @@ const useUpdatePegaProps = (
         flightGeometryJSON = JSON.stringify(json);
       }
 
-      await PCore.getRestClient().invokeRestApi('updateDataObject', {
-        queryPayload: {
-          data_view_ID: 'D_MapOutputSavable',
+      const mapOutput = {
+        pyGUID: caseId,
+        MaxPopulationVolume: pD?.maxPopDensityOperationalGroundRisk ?? null,
+        AveragePopulationDensityInAdjacentArea:
+          pD?.avgPopDensityAdjacentArea ?? null,
+        MapImageJSON: pR ? JSON.stringify(pR) : null,
+        FlightGeometryJSON: flightGeometryJSON,
+        FlightPathCount: fPs?.length ?? 0,
+        MapStateJSON: mS ? JSON.stringify(mS) : null,
+        IntrinsicGroundRisk: eT ? -1 : gR,
+        ErrorText: eT,
+        ContingencyVolumeHeight: hCVRounded,
+        AdjacentVolumeWidth: aVW,
+        ContingencyVolumeWidth: cVW,
+        GroundRiskBufferWidth: gRW,
+        ImpactedGeoZones: iGZ,
+        ImpactedLandUseList: iLU ?? null,
+        ImpactedLandUseInAdjacentAreaList: iLUAA ?? null,
+        FlightGeographyWidth: fGW,
+      };
+
+      // The `updateDataObject` route key issues a PATCH, which the current
+      // Pega version does not persist. We always send the complete map output
+      // rather than a delta, so replacing the object with a PUT is equivalent.
+      await PCore.getRestClient().invokeCustomRestApi(
+        `/api/application/v2/data/${DATA_VIEW_ID}`,
+        {
+          method: 'PUT',
+          withoutDefaultHeaders: false,
+          body: { data: mapOutput },
         },
-        body: {
-          data: {
-            pyGUID: caseId,
-            MaxPopulationVolume: pD?.maxPopDensityOperationalGroundRisk,
-            AveragePopulationDensityInAdjacentArea:
-              pD?.avgPopDensityAdjacentArea,
-            MapImageJSON: pR ? JSON.stringify(pR) : null,
-            FlightGeometryJSON: flightGeometryJSON,
-            FlightPathCount: fPs?.length ?? 0,
-            MapStateJSON: mS ? JSON.stringify(mS) : null,
-            IntrinsicGroundRisk: eT ? -1 : gR,
-            ErrorText: eT,
-            ContingencyVolumeHeight: hCVRounded,
-            AdjacentVolumeWidth: aVW,
-            ContingencyVolumeWidth: cVW,
-            GroundRiskBufferWidth: gRW,
-            ImpactedGeoZones: iGZ,
-            ImpactedLandUseList: iLU ?? null,
-            ImpactedLandUseInAdjacentAreaList: iLUAA ?? null,
-            FlightGeographyWidth: fGW,
-          },
-        },
-      });
+        pC.getContextName(),
+      );
       // eslint-disable-next-line no-console
       console.log('%c   Pega props updated', `color: ${color}`);
       // eslint-disable-next-line no-console
