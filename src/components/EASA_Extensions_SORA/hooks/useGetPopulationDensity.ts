@@ -8,7 +8,11 @@ import {
   type ImpactedLandUse,
   LayerId,
 } from '../types';
-import { landusePopDensityLookup } from '../renderers';
+import {
+  getLanduseCountsByCode,
+  getLanduseHistogramRasterFunctionJson,
+  landusePopDensityLookup,
+} from '../renderers';
 import _ from 'lodash';
 // import * as reactiveUtils from '@arcgis/core/core/reactiveUtils';
 
@@ -268,27 +272,19 @@ export const useGetPopulationDensity = (
         opAndGr as __esri.Polygon,
         (layer.serviceRasterInfo.pixelSize.x / 2) * 1.22,
       );
-      const clipRF = new RasterFunction({
-        functionName: 'Clip',
-        functionArguments: {
-          ClippingGeometry: bufferedOpAndGr as __esri.Polygon,
-          ClippingType: 1, // 1 = keep inside, set outside to NoData
-        },
-      });
-
       const landuseHistograms = await layer.computeHistograms({
         geometry: bufferedOpAndGr as __esri.Polygon,
-        rasterFunction: clipRF as __esri.RasterFunction,
+        rasterFunction: new RasterFunction(
+          getLanduseHistogramRasterFunctionJson(
+            bufferedOpAndGr as __esri.Polygon,
+          ),
+        ) as __esri.RasterFunction,
       });
-      const intersectedLanduseClasses: number[] = [];
-      const counts = landuseHistograms.histograms?.[0]?.counts;
-      if (counts) {
-        counts.forEach((count: number, landuseClass: number) => {
-          if (count > 0) {
-            intersectedLanduseClasses.push(landuseClass);
-          }
-        });
-      }
+      const intersectedLanduseClasses = [
+        ...getLanduseCountsByCode(
+          landuseHistograms.histograms?.[0]?.counts,
+        ).keys(),
+      ];
       // Use corrected values if available, otherwise use default lookup
       const densities = intersectedLanduseClasses.map((index) => {
         const corrected = overriddenLandUse?.find(
@@ -329,37 +325,52 @@ export const useGetPopulationDensity = (
           ClippingType: 1,
         },
       });
-      const landuseHistograms = await layer.computeHistograms({
-        geometry: bufferedGeometry as __esri.Polygon,
-        rasterFunction: clipRF as __esri.RasterFunction,
-      });
-      const counts = landuseHistograms.histograms?.[0]?.counts;
-      if (!counts) return null;
+
+      // Two histograms are needed. The remapped one gives an exact count per
+      // land use class, but drops every class with no lookup entry, and those
+      // still have to count towards the area. The unremapped one is only ever
+      // summed, and a total is correct whether or not the service buckets the
+      // bins, which is what makes it safe to read without the remap.
+      const [totalHistograms, landuseHistograms] = await Promise.all([
+        layer.computeHistograms({
+          geometry: bufferedGeometry as __esri.Polygon,
+          rasterFunction: clipRF as __esri.RasterFunction,
+        }),
+        layer.computeHistograms({
+          geometry: bufferedGeometry as __esri.Polygon,
+          rasterFunction: new RasterFunction(
+            getLanduseHistogramRasterFunctionJson(
+              bufferedGeometry as __esri.Polygon,
+            ),
+          ) as __esri.RasterFunction,
+        }),
+      ]);
 
       // Weighted geographic average: sum(count[i] * density[i]) / total_cells.
       // total_cells includes all pixels (uninhabited land, water, etc.) so the
       // result is the true area-averaged population density, not just the average
       // over inhabited classes.
+      const totalCells = (totalHistograms.histograms?.[0]?.counts ?? []).reduce(
+        (total: number, count: number) => total + count,
+        0,
+      );
+      if (!totalCells) return null;
+
       let weightedSum = 0;
-      let totalCells = 0;
-      counts.forEach((count: number, landuseClass: number) => {
-        totalCells += count;
-        if (count > 0) {
+      getLanduseCountsByCode(landuseHistograms.histograms?.[0]?.counts).forEach(
+        (count, landuseClass) => {
           const override = overriddenLandUse?.find(
             (lu) => lu.Code === landuseClass.toString(),
           );
           const density =
-            override?.OverridePopulationDensity !== null &&
-            override?.OverridePopulationDensity !== undefined
-              ? override.OverridePopulationDensity
-              : landusePopDensityLookup[landuseClass];
+            override?.OverridePopulationDensity ??
+            landusePopDensityLookup[landuseClass];
           if (density !== null && density !== undefined) {
             weightedSum += count * density;
           }
-        }
-      });
+        },
+      );
 
-      if (!totalCells) return null;
       return _.round(weightedSum / totalCells, 2);
     },
     [overriddenLandUse],

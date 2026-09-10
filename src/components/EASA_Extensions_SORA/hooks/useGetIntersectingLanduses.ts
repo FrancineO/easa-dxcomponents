@@ -1,8 +1,13 @@
 import { useState, useCallback } from 'react';
 import { LayerId, type FlightVolume } from '../types';
 import * as geometryEngine from '@arcgis/core/geometry/geometryEngine';
+import RasterFunction from '@arcgis/core/layers/support/RasterFunction';
 import { getView } from '../map/view';
-import { landusePopDensityLookup } from '../renderers';
+import {
+  getLanduseCountsByCode,
+  getLanduseHistogramRasterFunctionJson,
+  landusePopDensityLookup,
+} from '../renderers';
 
 const useGetIntersectingLanduses = (flightVolumes: FlightVolume[] | null) => {
   const [intersectingLanduseClasses, setIntersectingLanduseClasses] = useState<
@@ -76,36 +81,36 @@ const useGetIntersectingLanduses = (flightVolumes: FlightVolume[] | null) => {
         LayerId.landuse,
       ) as __esri.ImageryLayer;
 
-      const landuseHistograms = await landuseLayer?.computeHistograms({
-        geometry,
-      });
+      const rasterFunction = new RasterFunction(
+        getLanduseHistogramRasterFunctionJson(),
+      ) as __esri.RasterFunction;
 
-      const intersectedLanduseClasses: number[] = [];
-      const counts = landuseHistograms.histograms?.[0]?.counts;
-      if (counts) {
-        counts.forEach((count: number, landuseClass: number) => {
-          if (count > 0 && landusePopDensityLookup[landuseClass]) {
-            intersectedLanduseClasses.push(landuseClass);
-          }
-        });
-      }
+      const [landuseHistograms, adjacentAreaLanduseHistograms] =
+        await Promise.all([
+          landuseLayer?.computeHistograms({ geometry, rasterFunction }),
+          landuseLayer?.computeHistograms({
+            geometry: adjacentAreaGeometry,
+            rasterFunction,
+          }),
+        ]);
 
-      const adjacentAreaLanduseHistograms =
-        await landuseLayer?.computeHistograms({
-          geometry: adjacentAreaGeometry,
-        });
+      // A class with a null density is drawn and legended but never reported
+      // as intersecting, because null is falsy. 1221 is the only one today.
+      // Pending a decision from EASA on whether it should be reported.
+      const hasDensity = (landuseClass: number) =>
+        Boolean(landusePopDensityLookup[landuseClass]);
 
-      const adjacentAreaCounts =
-        adjacentAreaLanduseHistograms.histograms?.[0]?.counts;
+      const intersectedLanduseClasses = [
+        ...getLanduseCountsByCode(
+          landuseHistograms.histograms?.[0]?.counts,
+        ).keys(),
+      ].filter(hasDensity);
 
-      const adjacentAreaIntersectedLanduseClasses: number[] = [];
-      if (adjacentAreaCounts) {
-        adjacentAreaCounts.forEach((count: number, landuseClass: number) => {
-          if (count > 0 && landusePopDensityLookup[landuseClass]) {
-            adjacentAreaIntersectedLanduseClasses.push(landuseClass);
-          }
-        });
-      }
+      const adjacentAreaIntersectedLanduseClasses = [
+        ...getLanduseCountsByCode(
+          adjacentAreaLanduseHistograms.histograms?.[0]?.counts,
+        ).keys(),
+      ].filter(hasDensity);
 
       setIntersectingLanduseClasses(intersectedLanduseClasses);
       setIntersectingAdjacentAreaLanduseClasses(

@@ -8,7 +8,7 @@ import {
 } from '@pega/cosmos-react-core';
 import {
   landusePopDensityLookup,
-  landUseLabels,
+  getLanduseLabel,
   getLanduseColor,
 } from '../renderers';
 import TooltipElement from '../components/tooltip-element';
@@ -75,7 +75,7 @@ const LandusePopDensityLegend = ({
           };
         }
         acc[groupKey].landuses.push({
-          label: landUseLabels[landuseNumber],
+          label: getLanduseLabel(landuseNumber),
           density: null,
           landuse: landuseNumber,
           color,
@@ -96,7 +96,7 @@ const LandusePopDensityLegend = ({
         };
       }
       acc[groupKey].landuses.push({
-        label: landUseLabels[landuseNumber],
+        label: getLanduseLabel(landuseNumber),
         density,
         landuse: landuseNumber,
         color,

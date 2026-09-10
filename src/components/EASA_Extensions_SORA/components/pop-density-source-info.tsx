@@ -1,5 +1,8 @@
 import type { ImpactedLandUse, PopulationDensitySource } from '../types';
-import { landusePopDensityLookup, landUseLabels } from '../renderers';
+import {
+  landusePopDensityLookup,
+  getLanduseLabel as getLanduseClassLabel,
+} from '../renderers';
 import getLanduseIcon from '../legends/landuse-icons';
 import TooltipElement from './tooltip-element';
 import { Icon } from '@pega/cosmos-react-core';
@@ -61,7 +64,7 @@ export const PopDensitySourceInfo = (props: PopDensitySourceInfoProps) => {
 
   // Helper function to get the landuse label
   const getLanduseLabel = (landuseClass: number): string => {
-    return landUseLabels[landuseClass] || 'Unknown';
+    return getLanduseClassLabel(landuseClass);
   };
 
   // Helper function to find all landuse classes with the highest default density
