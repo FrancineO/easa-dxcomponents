@@ -1,3 +1,5 @@
+import type { ImpactedLandUse } from './types';
+
 export const populationDensityColors = {
   noValue: [0, 0, 0, 0], // Transparent
   veryLow: [224, 240, 255, 255], // Very Light Blue
@@ -91,7 +93,11 @@ export const landusePeopleOutdoor: Array<number> = [
   1210, 1222, 1241, 1410, 1421, 1422, 3310,
 ];
 
-// TODO: 1122 and 1123 should be excluded from the map
+// landusePopDensityLookup is the single source of truth for which classes are
+// active: a class absent from it is not drawn, not legended, not reported as
+// intersecting and contributes nothing to the maximum. 1122 (low density urban
+// fabric) and 1123 (very low density urban fabric) are excluded that way.
+// Labels are kept separate so a class can be named without being switched on.
 export const landUseLabels: Record<number, string> = {
   1111: 'High density urban fabric',
   1121: 'Medium density urban fabric',
@@ -114,6 +120,33 @@ export const landUseLabels: Record<number, string> = {
   3316: 'Beaches, dunes and sand plains',
   3317: 'Beaches, dunes and sand plains',
   3318: 'Beaches, dunes and sand plains',
+};
+
+// Build the ImpactedLandUse records reported to Pega and shown in the override
+// modal. Kept in one place so that label, density and outdoor/assembly
+// derivation cannot drift between the three callers.
+export const buildImpactedLandUse = (
+  landuseClasses: number[] | null | undefined,
+  overrides?: ImpactedLandUse[] | null,
+): ImpactedLandUse[] | null => {
+  if (!landuseClasses) return null;
+
+  return landuseClasses.map((landuse) => {
+    const existingOverride = overrides?.find(
+      (override) => override.Code === `${landuse}`,
+    );
+
+    return {
+      pyLabel: landUseLabels[landuse],
+      Code: `${landuse}`,
+      PopulationDensity: landusePopDensityLookup[landuse] ?? 0,
+      PeopleOutdoor: landusePeopleOutdoor.includes(landuse),
+      AssemblyOfPeople: landusePeopleOutdoor.includes(landuse),
+      OverridePopulationDensity:
+        existingOverride?.OverridePopulationDensity ?? null,
+      OverrideReason: existingOverride?.OverrideReason ?? null,
+    };
+  });
 };
 
 export const landuseRenderer = {

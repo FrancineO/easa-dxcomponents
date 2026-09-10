@@ -291,51 +291,16 @@ export const useGetPopulationDensity = (
       }
       // Use corrected values if available, otherwise use default lookup
       const densities = intersectedLanduseClasses.map((index) => {
-        // eslint-disable-next-line no-console
-        console.log(
-          `Processing landuse index: ${index} (type: ${typeof index})`,
+        const corrected = overriddenLandUse?.find(
+          (lu) => lu.Code === index.toString(),
         );
 
-        if (overriddenLandUse) {
-          // eslint-disable-next-line no-console
-          console.log(`Looking for override with Code: '${index.toString()}'`);
-          // eslint-disable-next-line no-console
-          console.log(
-            'Available overrides:',
-            overriddenLandUse.map((lu) => ({
-              Code: lu.Code,
-              pyLabel: lu.pyLabel,
-              OverridePopulationDensity: lu.OverridePopulationDensity,
-            })),
-          );
-
-          const corrected = overriddenLandUse.find(
-            (lu) => lu.Code === index.toString(),
-          );
-
-          if (corrected && corrected.OverridePopulationDensity !== null) {
-            // eslint-disable-next-line no-console
-            console.log(`Found override for landuse ${index}:`, corrected);
-            return corrected.OverridePopulationDensity;
-          }
-          // eslint-disable-next-line no-console
-          console.log(`No override found for landuse ${index}`);
+        if (corrected && corrected.OverridePopulationDensity !== null) {
+          return corrected.OverridePopulationDensity;
         }
-        const defaultDensity = landusePopDensityLookup[index];
-        // eslint-disable-next-line no-console
-        console.log(
-          `Using default density for landuse ${index}:`,
-          defaultDensity,
-        );
-        return defaultDensity;
-      });
 
-      // eslint-disable-next-line no-console
-      console.log('Intersected landuse classes:', intersectedLanduseClasses);
-      // eslint-disable-next-line no-console
-      console.log('Corrected landuse data:', overriddenLandUse);
-      // eslint-disable-next-line no-console
-      console.log('Calculated densities:', densities);
+        return landusePopDensityLookup[index];
+      });
 
       // Filter out undefined/null values and ensure we have valid densities
       const validDensities = densities.filter(
@@ -384,7 +349,8 @@ export const useGetPopulationDensity = (
             (lu) => lu.Code === landuseClass.toString(),
           );
           const density =
-            override?.OverridePopulationDensity !== null && override?.OverridePopulationDensity !== undefined
+            override?.OverridePopulationDensity !== null &&
+            override?.OverridePopulationDensity !== undefined
               ? override.OverridePopulationDensity
               : landusePopDensityLookup[landuseClass];
           if (density !== null && density !== undefined) {

@@ -46,11 +46,7 @@ import Legends from './legends/legends';
 import { getFlightPaths } from './tools/toolbar/draw-utils';
 import useGetIntersectingLanduses from './hooks/useGetIntersectingLanduses';
 import { getView } from './map/view';
-import {
-  landUseLabels,
-  landusePeopleOutdoor,
-  landusePopDensityLookup,
-} from './renderers';
+import { buildImpactedLandUse } from './renderers';
 import geozonesDefintions from './geozone-definitions';
 import CircleRadius from './tools/toolbar/circle-radius';
 
@@ -321,29 +317,10 @@ export const EasaExtensionsSORA = (props: ComponentProps) => {
   };
 
   // Helper function to build impacted landuse data with existing overrides
-  const buildImpactedLandUseData = useCallback(() => {
-    if (!intersectingLanduseClasses) return null;
-
-    return intersectingLanduseClasses
-      .map((landuse) => {
-        // Check if there's an existing override for this landuse
-        const existingOverride = overriddenLandUse?.find(
-          (override: ImpactedLandUse) => override.Code === `${landuse}`,
-        );
-
-        return {
-          pyLabel: landUseLabels[landuse],
-          Code: `${landuse}`,
-          PopulationDensity: landusePopDensityLookup[landuse] ?? 0,
-          PeopleOutdoor: landusePeopleOutdoor.includes(landuse),
-          AssemblyOfPeople: landusePeopleOutdoor.includes(landuse),
-          OverridePopulationDensity:
-            existingOverride?.OverridePopulationDensity ?? null,
-          OverrideReason: existingOverride?.OverrideReason ?? null,
-        };
-      })
-      .filter((value, index, self) => self.indexOf(value) === index);
-  }, [intersectingLanduseClasses, overriddenLandUse]);
+  const buildImpactedLandUseData = useCallback(
+    () => buildImpactedLandUse(intersectingLanduseClasses, overriddenLandUse),
+    [intersectingLanduseClasses, overriddenLandUse],
+  );
 
   // TODO: do we need to send contingencyVolumeHeight, adjacentVolumeWidth, contingencyVolumeWidth, groundRiskBufferWidth as an array?
   // Or do we need to send the max values?
@@ -388,19 +365,7 @@ export const EasaExtensionsSORA = (props: ComponentProps) => {
       .filter((gz) => gz !== null)
       .filter((value, index, self) => self.indexOf(value) === index) ?? null,
     (overriddenLandUse || buildImpactedLandUseData()) ?? null,
-    intersectingAdjacentAreaLanduseClasses
-      ?.map((landuse) => {
-        return {
-          pyLabel: landUseLabels[landuse],
-          Code: `${landuse}`,
-          PopulationDensity: landusePopDensityLookup[landuse] ?? 0,
-          PeopleOutdoor: landusePeopleOutdoor.includes(landuse),
-          AssemblyOfPeople: landusePeopleOutdoor.includes(landuse),
-          OverridePopulationDensity: null,
-          OverrideReason: null,
-        };
-      })
-      .filter((value, index, self) => self.indexOf(value) === index) ?? null,
+    buildImpactedLandUse(intersectingAdjacentAreaLanduseClasses),
     cd * 3,
   );
 
@@ -554,29 +519,7 @@ export const EasaExtensionsSORA = (props: ComponentProps) => {
   const populationDensityCorrectionModal = useCallback(() => {
     return (
       <PopulationDensityOverrideModal
-        impactedLandUse={
-          intersectingLanduseClasses
-            ?.map((landuse) => {
-              // Check if there's an existing override for this landuse
-              const existingOverride = overriddenLandUse?.find(
-                (override) => override.Code === `${landuse}`,
-              );
-
-              return {
-                pyLabel: landUseLabels[landuse],
-                Code: `${landuse}`,
-                // get population density form the landuse lookup
-                PopulationDensity: landusePopDensityLookup[landuse] ?? 0,
-                PeopleOutdoor: landusePeopleOutdoor.includes(landuse),
-                AssemblyOfPeople: landusePeopleOutdoor.includes(landuse),
-                OverridePopulationDensity:
-                  existingOverride?.OverridePopulationDensity ?? null,
-                OverrideReason: existingOverride?.OverrideReason ?? null,
-              };
-            })
-            .filter((value, index, self) => self.indexOf(value) === index) ??
-          null
-        }
+        impactedLandUse={buildImpactedLandUseData()}
         onClose={() => setShowPopulationDensityCorrection(false)}
         onSave={(overriddenLandUseData: ImpactedLandUse[]) => {
           setOverriddenLandUse(overriddenLandUseData);
@@ -584,7 +527,7 @@ export const EasaExtensionsSORA = (props: ComponentProps) => {
         }}
       />
     );
-  }, [intersectingLanduseClasses, overriddenLandUse]);
+  }, [buildImpactedLandUseData]);
 
   // Create modal when button is clicked
   useEffect(() => {
