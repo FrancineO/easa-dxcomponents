@@ -60,9 +60,13 @@ export const landusePopDensityLookup: Record<number, number | null> = {
   // country calling code, so 491111 is 1111 in Germany. Only the classes where
   // the state deviates are prefixed, everything else keeps the plain code and
   // the value above. Supplied by LBA via JRC, September 2026.
+  //
+  // 491122 (low density urban fabric) is deliberately not here. LBA supplied a
+  // value for it, but the class is not one of those requested under the
+  // LBA-EASA partnership agreement, and LBA withdrew it. German 491122 pixels
+  // are therefore ignored, exactly as plain 1122 is everywhere else.
   491111: 49999,
   491121: 4999,
-  491122: 4999,
   491130: 4999,
   491210: 4999,
   491222: 49999,
@@ -120,9 +124,6 @@ export const landusePeopleOutdoor: Array<number> = [
 export const landUseLabels: Record<number, string> = {
   1111: 'High density urban fabric',
   1121: 'Medium density urban fabric',
-  // Named but deliberately absent from landusePopDensityLookup, so it stays
-  // switched off Europe wide. Germany's 491122 resolves its label through here.
-  1122: 'Low density urban fabric',
   1130: 'Urban vegetation',
   1210: 'Industrial or commercial units',
   1221: 'Transport infrastructure',

@@ -28,9 +28,11 @@ describe('country prefixed land use codes', () => {
     expect(getLanduseLabel(491111)).toBe('High density urban fabric (Germany)');
   });
 
-  it('labels 491122, whose base class is switched off Europe wide', () => {
+  it('excludes 491122, which LBA withdrew as outside the agreement', () => {
     expect(landusePopDensityLookup[1122]).toBeUndefined();
-    expect(getLanduseLabel(491122)).toBe('Low density urban fabric (Germany)');
+    expect(landusePopDensityLookup[491122]).toBeUndefined();
+    // no label either, so it can only ever fall through as unknown
+    expect(getLanduseLabel(491122)).toBe('Landuse 491122');
   });
 
   it('takes the outdoor classification from the base class', () => {
@@ -94,13 +96,14 @@ describe('histogram remapping', () => {
         .map(Number)
         .sort((a, b) => a - b),
     );
-    expect(landuseHistogramCodes).toContain(491122);
+    expect(landuseHistogramCodes).toContain(491111);
+    expect(landuseHistogramCodes).not.toContain(491122);
   });
 
   it('reads bin indices back as land use codes', () => {
     const counts = landuseHistogramCodes.map(() => 0);
     const firstCode = landuseHistogramCodes[0];
-    const germanCode = 491122;
+    const germanCode = 491410;
     counts[0] = 7;
     counts[landuseHistogramCodes.indexOf(germanCode)] = 3;
 

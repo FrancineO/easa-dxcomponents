@@ -255,10 +255,11 @@ needs no entry in any other table:
 | People outdoor     | Base class in `landusePeopleOutdoor`           |
 | Assembly of people | Base class in `landusePeopleOutdoor`           |
 
-Germany's thirteen values were supplied by LBA in September 2026. One of them,
-491122, has a base class that carries no Europe wide density, so low density
-urban fabric counts towards the ground risk in Germany while remaining
-switched off elsewhere.
+Germany's values were supplied by LBA in September 2026. LBA initially supplied
+thirteen, including 491122 (low density urban fabric), but withdrew that one:
+the class is not among those requested under the LBA-EASA partnership
+agreement. Twelve are implemented. German 491122 pixels exist in the raster and
+are ignored, exactly as plain 1122 is everywhere else.
 
 Reading a histogram depends on this. `computeHistograms` returns one bin per
 integer pixel value only while the value range is small; prefixed codes take
