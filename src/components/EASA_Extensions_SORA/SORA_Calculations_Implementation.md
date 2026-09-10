@@ -209,29 +209,47 @@ The final ground risk is determined by:
 
 The system uses predefined population density values for different land use types:
 
-| Land Use Code | Description                                                | Population Density (people/km²) |
-| ------------- | ---------------------------------------------------------- | ------------------------------- |
-| 1111          | Continuous urban fabric                                    | 13,400                          |
-| 1121          | Discontinuous dense urban fabric                           | 8,500                           |
-| 1130          | Discontinuous medium density urban fabric                  | 4,000                           |
-| 1210          | Discontinuous low density urban fabric                     | 6,500                           |
-| 1221          | Discontinuous very low density urban fabric                | null                            |
-| 1222          | Isolated structures                                        | 49,900                          |
-| 1230          | Industrial, commercial, public, military and private units | 7,300                           |
-| 1242          | Transport units                                            | 49,900                          |
-| 1330          | Construction sites                                         | 3,500                           |
-| 1410          | Green urban areas                                          | 10,000                          |
-| 1421          | Sports and leisure facilities                              | 4,500                           |
-| 1422          | Allotments and community gardens                           | 8,200                           |
-| 3310-3318     | Beaches, dunes and sand plains                             | 49,900                          |
+| Land Use Code | Description                    | Population Density (people/km²) |
+| ------------- | ------------------------------ | ------------------------------- |
+| 1111          | High density urban fabric      | 13,400                          |
+| 1121          | Medium density urban fabric    | 8,500                           |
+| 1130          | Urban vegetation               | 4,000                           |
+| 1210          | Industrial or commercial units | 6,500                           |
+| 1221          | Transport infrastructure       | null (no data)                  |
+| 1222          | Major stations                 | 49,900                          |
+| 1230          | Port areas                     | 7,300                           |
+| 1242          | Airport terminals              | 49,900                          |
+| 1330          | Construction sites             | 3,500                           |
+| 1410          | Green urban areas              | 10,000                          |
+| 1421          | Sport and leisure green        | 4,500                           |
+| 1422          | Sport and leisure built-up     | 8,200                           |
+| 3310-3318     | Beaches, dunes and sand plains | 49,900                          |
+
+`landusePopDensityLookup` in `renderers.ts` is the single source of truth for
+which land use classes are active. A class absent from it is excluded
+everywhere as a consequence: it is not drawn on the map, not listed in the
+legend, not reported as an intersecting class, and contributes nothing to the
+maximum. Notably absent are 1122 (low density urban fabric) and 1123 (very low
+density urban fabric).
+
+A class present with a `null` density is drawn and appears in the legend, but
+is filtered out of the intersecting-class list because `null` is falsy. 1221 is
+the only such class today.
 
 ### Population Density Calculation Process
 
 1. **Intersect flight volumes with land use data** to identify affected areas
-2. **Calculate maximum population density** in operational ground risk area
-3. **Calculate average population density** in adjacent area
+2. **Calculate maximum population density** in the operational + ground risk
+   volume, as the maximum over every land use class the volume intersects. This
+   is a maximum, not an area-weighted value: a single pixel of a high-density
+   class sets the value for the whole operation.
+3. **Calculate average population density** in the adjacent area, as an
+   area-weighted mean. Classes with no density entry count towards the area but
+   contribute zero.
 4. **Apply user overrides** if corrections are provided
-5. **Use the maximum density** for ground risk assessment
+5. **Take the higher of the land use result and the GHS-POP layer** for both
+   figures. A land use value below GHS-POP therefore has no effect on the
+   outcome.
 
 ## Formula Selection Logic
 
