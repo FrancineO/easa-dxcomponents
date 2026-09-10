@@ -236,6 +236,37 @@ A class present with a `null` density is drawn and appears in the legend, but
 is filtered out of the intersecting-class list because `null` is falsy. 1221 is
 the only such class today.
 
+### Country Specific Land Use Codes
+
+Member states may set their own population densities for LUISA classes. Those
+values are carried in the raster as the LUISA code prefixed with the country
+calling code, so 491111 is 1111 in Germany and 3511111 would be 1111 in
+Portugal. Only the classes where a state deviates are prefixed; every other
+class keeps the plain code and the Europe wide value.
+
+Density is looked up on the prefixed code. Everything else is derived from the
+base class by stripping the prefix, so a state that deviates on densities alone
+needs no entry in any other table:
+
+| Derived from       | Source                                         |
+| ------------------ | ---------------------------------------------- |
+| Population density | The prefixed code in `landusePopDensityLookup` |
+| Label              | Base class, suffixed with the country name     |
+| People outdoor     | Base class in `landusePeopleOutdoor`           |
+| Assembly of people | Base class in `landusePeopleOutdoor`           |
+
+Germany's thirteen values were supplied by LBA in September 2026. One of them,
+491122, has a base class that carries no Europe wide density, so low density
+urban fabric counts towards the ground risk in Germany while remaining
+switched off elsewhere.
+
+Reading a histogram depends on this. `computeHistograms` returns one bin per
+integer pixel value only while the value range is small; prefixed codes take
+the range past 490,000, at which point the service buckets the bins and the bin
+index stops being the pixel value. The known codes are therefore remapped to
+sequential indices server side before every histogram query and translated back
+by `getLanduseCountsByCode`. Nothing else should read a bin index directly.
+
 ### Population Density Calculation Process
 
 1. **Intersect flight volumes with land use data** to identify affected areas
