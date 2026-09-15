@@ -321,6 +321,14 @@ export const getLanduseHistogramRasterFunctionJson = (
     NoDataRanges: [],
   };
 
+  // Bin width depends on the pixel type, not the value range. The service
+  // returns one bin per value for a 16 bit raster but a fixed 256 bin
+  // histogram for a 32 bit one, and the land use raster is S32. Narrowing the
+  // remap output back down forces unit bins again, which is what makes the bin
+  // index equal the output value. Verified against LUISA_Europe_new_50.
+  const outputPixelType: __esri.RasterFunction['outputPixelType'] =
+    landuseHistogramCodes.length > 256 ? 'u16' : 'u8';
+
   if (clippingGeometry) {
     functionArguments.Raster = {
       functionName: 'Clip',
@@ -331,7 +339,7 @@ export const getLanduseHistogramRasterFunctionJson = (
     };
   }
 
-  return { functionName: 'Remap', functionArguments };
+  return { functionName: 'Remap', functionArguments, outputPixelType };
 };
 
 // Translate a histogram produced by getLanduseHistogramRasterFunction back to

@@ -27,10 +27,11 @@ import _ from 'lodash';
 // ];
 
 // const getPixelSize = (height: number) => {
-// The pop-density and landuse services have ~100 m native resolution.
-// Using the raw view resolution at high zoom (e.g. 0.6 m at zoom 18) would
-// request a ~277 M pixel image for a 5 km adjacent-area query and hit the
-// service's image-size limit. Clamp to a minimum of 100 m.
+// Only the pop-density queries below use this. That service is 200 m native
+// (the landuse service is 50 m, but its histogram calls pass no pixelSize and
+// so run at native resolution). Using the raw view resolution at high zoom
+// (e.g. 0.6 m at zoom 18) would request a ~277 M pixel image for a 5 km
+// adjacent-area query and hit the service's image-size limit. Clamp to 100 m.
 const MIN_PIXEL_SIZE_METERS = 100;
 
 const getPixelSize = () => {

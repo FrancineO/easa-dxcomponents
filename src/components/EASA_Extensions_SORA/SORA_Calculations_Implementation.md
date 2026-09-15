@@ -268,6 +268,12 @@ index stops being the pixel value. The known codes are therefore remapped to
 sequential indices server side before every histogram query and translated back
 by `getLanduseCountsByCode`. Nothing else should read a bin index directly.
 
+The remap alone is not enough. Bin width follows the _pixel type_, not the
+value range: the service returns one bin per value for the old 16 bit raster
+but a fixed 256 bin histogram for the current S32 one, remapped or not. The
+remap therefore also narrows `outputPixelType` to `u8`, which restores unit
+bins. Verified against `LUISA_Europe_new_50`.
+
 ### Population Density Calculation Process
 
 1. **Intersect flight volumes with land use data** to identify affected areas

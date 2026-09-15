@@ -1,5 +1,6 @@
 import {
   buildImpactedLandUse,
+  getLanduseHistogramRasterFunctionJson,
   getBaseLanduseCode,
   getLanduseCountry,
   getLanduseCountsByCode,
@@ -113,6 +114,30 @@ describe('histogram remapping', () => {
         [germanCode, 3],
       ]),
     );
+  });
+
+  it('narrows the output pixel type, without which the service buckets bins', () => {
+    const rf = getLanduseHistogramRasterFunctionJson();
+    // the land use raster is S32, which the service histograms into 256 bins
+    // regardless of value range. u8 is what restores one bin per class.
+    expect(rf.outputPixelType).toBe('u8');
+    expect(rf.functionName).toBe('Remap');
+    expect(rf.functionArguments.AllowUnmatched).toBe(false);
+    expect(rf.functionArguments.OutputValues).toEqual(
+      landuseHistogramCodes.map((_, index) => index),
+    );
+    // indices must stay inside u8
+    expect(landuseHistogramCodes.length).toBeLessThanOrEqual(256);
+  });
+
+  it('chains the clip inside the remap when a geometry is given', () => {
+    const geometry = {} as __esri.Polygon;
+    expect(
+      getLanduseHistogramRasterFunctionJson().functionArguments.Raster,
+    ).toBeUndefined();
+    expect(
+      getLanduseHistogramRasterFunctionJson(geometry).functionArguments.Raster,
+    ).toMatchObject({ functionName: 'Clip' });
   });
 
   it('ignores empty bins and bins past the known codes', () => {
