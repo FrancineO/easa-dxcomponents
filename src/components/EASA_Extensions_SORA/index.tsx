@@ -41,12 +41,13 @@ import FlightPaths from './components/flight-paths';
 import GeozoneInfo from './components/geozone-info';
 import TooltipElement from './components/tooltip-element';
 import { getGeozoneFields } from './config/geozone-fields';
+import componentConfig from './config.json';
 
 import Legends from './legends/legends';
 import { getFlightPaths } from './tools/toolbar/draw-utils';
 import useGetIntersectingLanduses from './hooks/useGetIntersectingLanduses';
 import { getView } from './map/view';
-import { buildImpactedLandUse } from './renderers';
+import { buildImpactedLandUse, landuseHistogramCodes } from './renderers';
 import geozonesDefintions from './geozone-definitions';
 import CircleRadius from './tools/toolbar/circle-radius';
 
@@ -66,6 +67,15 @@ import CircleRadius from './tools/toolbar/circle-radius';
 // TODO: allow the user to upload a gpx or kml. low priority
 
 // TODO: need to handle the geozones correctly. Only have geozones for denmark at the moment.
+
+// Pega serves a cached bundle until the component is republished, and a stale
+// build is hard to spot from the UI alone. Module scope, so this runs once when
+// the bundle loads. The land use class count is included because it changes on
+// its own whenever the tables move, which a hand maintained version does not.
+// eslint-disable-next-line no-console
+console.info(
+  `EASA_Extensions_SORA v${componentConfig.version} · ${landuseHistogramCodes.length} land use classes`,
+);
 
 export const EasaExtensionsSORA = (props: ComponentProps) => {
   // check that the props are valid by testing the values against their types

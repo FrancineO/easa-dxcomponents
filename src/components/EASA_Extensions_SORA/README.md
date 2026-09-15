@@ -144,6 +144,21 @@ Before deploying the component to a Pega system, you need to update the `tasks.c
    - **Generate development build?**: Enter `y` for yes
      - **Important**: This is required for components using ArcGIS JS API. The component will not publish successfully without a development build.
 
+### Verifying the Deployed Build
+
+Pega serves a cached bundle until the component is republished, and a stale
+build looks normal in the UI. On load the component logs a single line to the
+browser console:
+
+```
+EASA_Extensions_SORA v1.0.0 · 33 land use classes
+```
+
+Check it against your local run after publishing. If the numbers differ, Pega is
+still serving the old bundle - republish and hard-refresh. The land use class
+count is derived from `landusePopDensityLookup`, so it moves on its own whenever
+those tables change.
+
 ### Troubleshooting Deployment
 
 - Ensure all authentication credentials are correct
