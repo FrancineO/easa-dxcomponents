@@ -1,6 +1,9 @@
 {
   "extends": "@pega/tsconfig/index.json",
   "include": ["./**/*", ".storybook/**/*"],
+  // build output: bundles under dist are emitted JS and must not be type
+  // checked, and lib holds generated declarations
+  "exclude": ["node_modules", "dist", "lib"],
   "compilerOptions": {
     "skipLibCheck": true,
     "noEmit": true,
