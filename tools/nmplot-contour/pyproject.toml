@@ -1,0 +1,25 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "nmplot-contour"
+version = "1.0.0"
+description = "Convert NMPlot noise grids (.grd) to contour-band GeoJSON"
+requires-python = ">=3.10"
+dependencies = [
+    "numpy>=1.24",
+    "pyproj>=3.4",
+    "matplotlib>=3.7",
+    "shapely>=2.0",
+]
+
+[project.optional-dependencies]
+# Only needed for --tif; the default GeoJSON path does not use rasterio.
+tif = ["rasterio>=1.3"]
+
+[project.scripts]
+nmplot-contour = "nmplot_contour.cli:main"
+
+[tool.setuptools.packages.find]
+include = ["nmplot_contour*"]

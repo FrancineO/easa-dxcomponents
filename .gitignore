@@ -138,3 +138,11 @@ dist
 # Devcontainer certs
 .devcontainer/root_ca.crt
 src/easa-dxcomponents.code-workspace
+
+# Python (tools/)
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+.pytest_cache/
