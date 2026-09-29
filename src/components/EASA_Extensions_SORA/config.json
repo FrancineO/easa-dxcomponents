@@ -186,7 +186,7 @@
       "name": "popDensityPortalItemId",
       "label": "Population density portal item id",
       "format": "TEXT",
-      "defaultValue": "0bfa97c0648449069cf45586578459c5"
+      "defaultValue": "80efb859d34a4a8f9141a31768b3fa65"
     },
     {
       "name": "basemapPortalItemIds",
