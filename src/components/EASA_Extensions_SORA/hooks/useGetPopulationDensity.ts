@@ -16,31 +16,27 @@ import {
 import _ from 'lodash';
 // import * as reactiveUtils from '@arcgis/core/core/reactiveUtils';
 
-// const pixelSizes: { maxHeight: number; resolution: number }[] = [
-//   { maxHeight: 152, resolution: 200 },
-//   { maxHeight: 305, resolution: 400 },
-//   { maxHeight: 762, resolution: 1000 },
-//   { maxHeight: 1524, resolution: 2000 },
-//   { maxHeight: 3048, resolution: 4000 },
-//   { maxHeight: 6096, resolution: 5000 },
-//   { maxHeight: 18288, resolution: 10000 }
-// ];
+// Only the pop-density queries below use this. The reported maximum depends on
+// the pixel size the service is asked for, because coarser pixels make it
+// aggregate: over one 2 km box on Berlin the same data reports a maximum of
+// 32,675 at 100 m and 4,050 at 2,000 m. Deriving the size from the view
+// resolution therefore made the result depend on how far the map happened to
+// be zoomed out, which is enough to move an operation between ground risk
+// bands. The layer's own resolution is the only defensible choice: it is
+// deterministic, and it never asks for more detail than the data holds, which
+// is what the view-based clamp was there to prevent.
+const FALLBACK_PIXEL_SIZE_METERS = 100;
 
-// const getPixelSize = (height: number) => {
-// Only the pop-density queries below use this. That service is 200 m native
-// (the landuse service is 50 m, but its histogram calls pass no pixelSize and
-// so run at native resolution). Using the raw view resolution at high zoom
-// (e.g. 0.6 m at zoom 18) would request a ~277 M pixel image for a 5 km
-// adjacent-area query and hit the service's image-size limit. Clamp to 100 m.
-const MIN_PIXEL_SIZE_METERS = 100;
-
-const getPixelSize = () => {
-  const resolution = Math.max(getView().resolution, MIN_PIXEL_SIZE_METERS);
+const getPixelSize = (layer: __esri.ImageryLayer) => {
+  const rasterInfo = layer.serviceRasterInfo;
   return {
-    x: resolution,
-    y: resolution,
+    x: rasterInfo?.pixelSize?.x ?? FALLBACK_PIXEL_SIZE_METERS,
+    y: rasterInfo?.pixelSize?.y ?? FALLBACK_PIXEL_SIZE_METERS,
+    // the native pixel size is expressed in the service's own spatial
+    // reference, so it has to be sent alongside it
     spatialReference: {
-      wkid: getView().spatialReference.wkid,
+      wkid:
+        rasterInfo?.spatialReference?.wkid ?? getView().spatialReference.wkid,
     },
   };
 };
@@ -66,8 +62,7 @@ export const useGetPopulationDensity = (
         );
       }
 
-      // const pixelSize = getPixelSize(hFG);
-      const pixelSize = getPixelSize();
+      const pixelSize = getPixelSize(layer);
       const adjacentStats = await layer.computeStatisticsHistograms({
         geometry,
         pixelSize,
@@ -89,7 +84,7 @@ export const useGetPopulationDensity = (
         );
       }
 
-      const pixelSize = getPixelSize();
+      const pixelSize = getPixelSize(layer);
 
       const opStats = await layer.computeStatisticsHistograms({
         geometry,
