@@ -13,6 +13,10 @@ import {
   getLanduseHistogramRasterFunctionJson,
   landusePopDensityLookup,
 } from '../renderers';
+import {
+  computeHistogramsTiled,
+  computeStatisticsHistogramsTiled,
+} from '../utils/image-service-query';
 import _ from 'lodash';
 // import * as reactiveUtils from '@arcgis/core/core/reactiveUtils';
 
@@ -24,7 +28,8 @@ import _ from 'lodash';
 // be zoomed out, which is enough to move an operation between ground risk
 // bands. The layer's own resolution is the only defensible choice: it is
 // deterministic, and it never asks for more detail than the data holds, which
-// is what the view-based clamp was there to prevent.
+// is what the view-based clamp was there to prevent. Large flight paths are
+// tiled instead of coarsened when they would exceed the image size limit.
 const FALLBACK_PIXEL_SIZE_METERS = 100;
 
 const getPixelSize = (layer: __esri.ImageryLayer) => {
@@ -63,13 +68,15 @@ export const useGetPopulationDensity = (
       }
 
       const pixelSize = getPixelSize(layer);
-      const adjacentStats = await layer.computeStatisticsHistograms({
+      const adjacentStats = await computeStatisticsHistogramsTiled(
+        layer,
         geometry,
         pixelSize,
-      });
+      );
 
-      if (adjacentStats.statistics[0]?.max) {
-        return _.round(adjacentStats.statistics[0].max, 2);
+      const max = adjacentStats.statistics[0]?.max;
+      if (max !== undefined && max !== null) {
+        return _.round(max, 2);
       }
       return 0;
     },
@@ -86,19 +93,23 @@ export const useGetPopulationDensity = (
 
       const pixelSize = getPixelSize(layer);
 
-      const opStats = await layer.computeStatisticsHistograms({
+      const opStats = await computeStatisticsHistogramsTiled(
+        layer,
         geometry,
         pixelSize,
-      });
+      );
 
       const stats = opStats.statistics[0];
       if (stats?.count && stats?.avg !== null && stats?.avg !== undefined) {
         // Geographic average: multiply the cell-only average by the fraction of
         // populated (non-NoData) cells. This accounts for uninhabited areas which
         // have NoData in the raster and would otherwise be excluded from the average.
+        // Use geodesic area so the denominator matches service pixel metres
+        // regardless of the map spatial reference.
         const pixelArea = pixelSize.x * pixelSize.y;
         const totalCellCount =
-          Math.abs(geometryEngine.planarArea(geometry)) / pixelArea;
+          Math.abs(geometryEngine.geodesicArea(geometry, 'square-meters')) /
+          pixelArea;
         if (!totalCellCount) return _.round(stats.avg, 2);
         return _.round((stats.avg * stats.count) / totalCellCount, 2);
       }
@@ -268,13 +279,12 @@ export const useGetPopulationDensity = (
         opAndGr as __esri.Polygon,
         (layer.serviceRasterInfo.pixelSize.x / 2) * 1.22,
       );
-      const landuseHistograms = await layer.computeHistograms({
+      const landuseHistograms = await computeHistogramsTiled(layer, {
         geometry: bufferedOpAndGr as __esri.Polygon,
-        rasterFunction: new RasterFunction(
-          getLanduseHistogramRasterFunctionJson(
-            bufferedOpAndGr as __esri.Polygon,
-          ),
-        ) as __esri.RasterFunction,
+        rasterFunction: (tile) =>
+          new RasterFunction(
+            getLanduseHistogramRasterFunctionJson(tile),
+          ) as __esri.RasterFunction,
       });
       const intersectedLanduseClasses = [
         ...getLanduseCountsByCode(
@@ -314,31 +324,29 @@ export const useGetPopulationDensity = (
         geometry,
         (layer.serviceRasterInfo.pixelSize.x / 2) * 1.22,
       );
-      const clipRF = new RasterFunction({
-        functionName: 'Clip',
-        functionArguments: {
-          ClippingGeometry: bufferedGeometry as __esri.Polygon,
-          ClippingType: 1,
-        },
-      });
-
       // Two histograms are needed. The remapped one gives an exact count per
       // land use class, but drops every class with no lookup entry, and those
       // still have to count towards the area. The unremapped one is only ever
       // summed, and a total is correct whether or not the service buckets the
       // bins, which is what makes it safe to read without the remap.
       const [totalHistograms, landuseHistograms] = await Promise.all([
-        layer.computeHistograms({
+        computeHistogramsTiled(layer, {
           geometry: bufferedGeometry as __esri.Polygon,
-          rasterFunction: clipRF as __esri.RasterFunction,
+          rasterFunction: (tile) =>
+            new RasterFunction({
+              functionName: 'Clip',
+              functionArguments: {
+                ClippingGeometry: tile,
+                ClippingType: 1,
+              },
+            }) as __esri.RasterFunction,
         }),
-        layer.computeHistograms({
+        computeHistogramsTiled(layer, {
           geometry: bufferedGeometry as __esri.Polygon,
-          rasterFunction: new RasterFunction(
-            getLanduseHistogramRasterFunctionJson(
-              bufferedGeometry as __esri.Polygon,
-            ),
-          ) as __esri.RasterFunction,
+          rasterFunction: (tile) =>
+            new RasterFunction(
+              getLanduseHistogramRasterFunctionJson(tile),
+            ) as __esri.RasterFunction,
         }),
       ]);
 

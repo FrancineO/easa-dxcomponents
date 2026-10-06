@@ -8,6 +8,7 @@ import {
   getLanduseHistogramRasterFunctionJson,
   landusePopDensityLookup,
 } from '../renderers';
+import { computeHistogramsTiled } from '../utils/image-service-query';
 
 const useGetIntersectingLanduses = (flightVolumes: FlightVolume[] | null) => {
   const [intersectingLanduseClasses, setIntersectingLanduseClasses] = useState<
@@ -79,7 +80,13 @@ const useGetIntersectingLanduses = (flightVolumes: FlightVolume[] | null) => {
     getView().when(async () => {
       const landuseLayer = getView().map?.findLayerById(
         LayerId.landuse,
-      ) as __esri.ImageryLayer;
+      ) as __esri.ImageryLayer | undefined;
+
+      if (!landuseLayer) {
+        setIntersectingLanduseClasses([]);
+        setIntersectingAdjacentAreaLanduseClasses([]);
+        return;
+      }
 
       const rasterFunction = new RasterFunction(
         getLanduseHistogramRasterFunctionJson(),
@@ -87,8 +94,8 @@ const useGetIntersectingLanduses = (flightVolumes: FlightVolume[] | null) => {
 
       const [landuseHistograms, adjacentAreaLanduseHistograms] =
         await Promise.all([
-          landuseLayer?.computeHistograms({ geometry, rasterFunction }),
-          landuseLayer?.computeHistograms({
+          computeHistogramsTiled(landuseLayer, { geometry, rasterFunction }),
+          computeHistogramsTiled(landuseLayer, {
             geometry: adjacentAreaGeometry,
             rasterFunction,
           }),
