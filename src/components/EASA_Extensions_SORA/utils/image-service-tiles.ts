@@ -76,12 +76,13 @@ export const sumHistogramCounts = (
   countArrays: Array<number[] | undefined | null>,
 ): number[] => {
   const merged: number[] = [];
-  for (const counts of countArrays) {
-    if (!counts) continue;
-    for (let i = 0; i < counts.length; i += 1) {
-      merged[i] = (merged[i] ?? 0) + (counts[i] ?? 0);
-    }
-  }
+  countArrays
+    .filter((counts): counts is number[] => Boolean(counts))
+    .forEach((counts) => {
+      counts.forEach((value, i) => {
+        merged[i] = (merged[i] ?? 0) + (value ?? 0);
+      });
+    });
   return merged;
 };
 

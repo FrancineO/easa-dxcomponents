@@ -31,12 +31,14 @@ const mapPool = async <T, R>(
   const results: R[] = new Array(items.length);
   let next = 0;
 
-  const worker = async () => {
-    while (next < items.length) {
-      const index = next;
-      next += 1;
-      results[index] = await fn(items[index]);
-    }
+  const worker = (): Promise<void> => {
+    if (next >= items.length) return Promise.resolve();
+    const index = next;
+    next += 1;
+    return fn(items[index]).then((result) => {
+      results[index] = result;
+      return worker();
+    });
   };
 
   await Promise.all(
@@ -123,25 +125,31 @@ export const getGeometryTiles = async (
     return [geometry];
   }
 
-  const tiles: __esri.Polygon[] = [];
-  for (const bound of bounds) {
-    const inset = insetSharedTileEdges(bound, full, pixelSize.x, pixelSize.y);
-    if (!inset) continue;
+  const tiles = bounds
+    .map((bound) => {
+      const inset = insetSharedTileEdges(
+        bound,
+        full,
+        pixelSize.x,
+        pixelSize.y,
+      );
+      if (!inset) return null;
 
-    const tilePolygon = Polygon.fromExtent(
-      new Extent({
-        ...inset,
-        spatialReference: serviceSr,
-      }),
-    );
-    const intersection = asPolygon(
-      geometryEngine.intersect(projected, tilePolygon) as __esri.Geometry,
-    );
-    if (!intersection) continue;
-    const area = Math.abs(geometryEngine.planarArea(intersection));
-    if (!area) continue;
-    tiles.push(intersection);
-  }
+      const tilePolygon = Polygon.fromExtent(
+        new Extent({
+          ...inset,
+          spatialReference: serviceSr,
+        }),
+      );
+      const intersection = asPolygon(
+        geometryEngine.intersect(projected, tilePolygon) as __esri.Geometry,
+      );
+      if (!intersection) return null;
+      const area = Math.abs(geometryEngine.planarArea(intersection));
+      if (!area) return null;
+      return intersection;
+    })
+    .filter((tile): tile is __esri.Polygon => tile !== null);
 
   if (tiles.length === 0) {
     throw new Error(
