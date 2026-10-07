@@ -10,6 +10,27 @@ import {
 
 const g = 9.81;
 
+// Geometries are stored in Web Mercator, where a planar buffer of N metres is
+// only N * cos(latitude) metres on the ground (~38% short at 52°N), so every
+// SORA volume is buffered geodesically instead. A geodesic buffer treats each
+// edge as a great circle, which bows away from the straight Mercator line the
+// user drew on long edges; densifying first pins every volume to the drawn
+// line. At 2 km spacing the bow is ~0.1 m at 52°N, well under the narrowest
+// flight geography, while keeping vertex counts low enough for the worker.
+const GEODESIC_DENSIFY_SPACING_METERS = 2000;
+
+export const geodesicBufferAlongDrawnLine = <
+  T extends __esri.Polyline | __esri.Polygon,
+>(
+  geometry: T,
+  distanceMeters: number,
+) =>
+  geometryEngine.geodesicBuffer(
+    geometryEngine.densify(geometry, GEODESIC_DENSIFY_SPACING_METERS, 'meters'),
+    distanceMeters,
+    'meters',
+  ) as __esri.Polygon;
+
 export interface ContingencyVolumeResults {
   contingencyVolume: __esri.Graphic;
   contingencyVolumeHeight: number;
@@ -242,7 +263,10 @@ export const getContingencyVolume = ({
     );
   }
 
-  const buffer = geometryEngine.buffer(flightGeography.geometry, sCV);
+  const buffer = geodesicBufferAlongDrawnLine(
+    flightGeography.geometry as __esri.Polygon,
+    sCV,
+  );
 
   if (!buffer) {
     throw new Error(
@@ -417,7 +441,10 @@ export const getGroundRiskVolume = (
     flightGeography.geometry,
     cv.contingencyVolume.geometry,
   ]);
-  const grBuffer = geometryEngine.buffer(flightPlusCVBuffer, sGRB);
+  const grBuffer = geodesicBufferAlongDrawnLine(
+    flightPlusCVBuffer as __esri.Polygon,
+    sGRB,
+  );
   const grPolygon = geometryEngine.difference(
     grBuffer,
     flightPlusCVBuffer,
@@ -504,8 +531,19 @@ export const getAdjacentArea = async (
   // Generalize the union before calling geodesicBuffer — the union of three
   // heavily-buffered polygons can have hundreds of vertices, which causes the
   // worker to hang. 15 m tolerance is imperceptible against a 5 km buffer.
-  const simplified = geometryEngine.generalize(flightPlusGroundRisk, 15, true, 'meters');
-  const inputGeom = simplified ?? flightPlusGroundRisk;
+  // Generalizing strips the vertices along straight edges, so densify again
+  // afterwards or long edges bow away from the inner volumes.
+  const simplified = geometryEngine.generalize(
+    flightPlusGroundRisk,
+    15,
+    true,
+    'meters',
+  );
+  const inputGeom = geometryEngine.densify(
+    simplified ?? flightPlusGroundRisk,
+    GEODESIC_DENSIFY_SPACING_METERS,
+    'meters',
+  );
 
   // eslint-disable-next-line no-console
   console.log(`[aa] geodesicBuffer distance=${adjacentBufferDistance}m`);
@@ -514,10 +552,10 @@ export const getAdjacentArea = async (
     adjacentBufferDistance,
     'meters',
   );
-  const aa = await geometryEngineAsync.difference(
+  const aa = (await geometryEngineAsync.difference(
     adjacentBuffer,
     inputGeom,
-  ) as __esri.Polygon;
+  )) as __esri.Polygon;
 
   return {
     adjacentArea: new Graphic({

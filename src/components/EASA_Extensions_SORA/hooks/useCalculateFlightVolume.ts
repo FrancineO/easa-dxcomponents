@@ -2,13 +2,13 @@ import { useCallback, useState, useRef } from 'react';
 import GraphicsLayer from '@arcgis/core/layers/GraphicsLayer';
 import { getView } from '../map/view';
 import {
+  geodesicBufferAlongDrawnLine,
   getAdjacentArea,
   getContingencyVolume,
   getGroundRiskVolume,
 } from '../flight-volume/flight-volume-calculations';
 import type { FlightVolume, FlightVolumesParams } from '../types';
 import { omit } from 'lodash';
-import * as geometryEngine from '@arcgis/core/geometry/geometryEngine';
 import Graphic from '@arcgis/core/Graphic';
 import { getFillSymbol } from '../tools/toolbar/draw-utils';
 
@@ -65,19 +65,25 @@ const useCalculateFlightVolumes = (params: FlightVolumesParams) => {
           const pathParams = { ...baseParams, flightPath };
 
           const flightGeographyWidth = currentParams.cd * 3; // minimum is 3 times the drone width as per annex
-          const buffer = geometryEngine.buffer(
+          const buffer = geodesicBufferAlongDrawnLine(
             flightPath.geometry as __esri.Polyline,
             flightGeographyWidth,
-          ) as __esri.Polygon;
+          );
           const flightGeography = new Graphic({
             geometry: buffer,
             symbol: getFillSymbol(false),
           });
 
-          const cvResult = getContingencyVolume({ ...pathParams, flightGeography });
+          const cvResult = getContingencyVolume({
+            ...pathParams,
+            flightGeography,
+          });
           if (!cvResult) return null;
 
-          const grVolumeResult = getGroundRiskVolume({ ...pathParams, flightGeography }, cvResult);
+          const grVolumeResult = getGroundRiskVolume(
+            { ...pathParams, flightGeography },
+            cvResult,
+          );
           if (!grVolumeResult) return null;
 
           const aaResult = await getAdjacentArea(
