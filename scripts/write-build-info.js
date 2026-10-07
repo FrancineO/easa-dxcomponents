@@ -1,7 +1,9 @@
 /* eslint-disable no-console */
 // Regenerates build-info.json, which the SORA component logs on load so the
-// build deployed to Pega can be identified. Wired to the prepublish and
-// prebuildComponent npm hooks, so it runs without being remembered.
+// build deployed to Pega can be identified. Wired to the postinstall,
+// prepublish and prebuildComponent npm hooks, so it runs without being
+// remembered. The file is gitignored; postinstall makes sure a fresh checkout
+// has it before anything imports it.
 const { execSync } = require('child_process');
 const fs = require('fs');
 const path = require('path');
