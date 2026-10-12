@@ -255,8 +255,16 @@ needs no entry in any other table:
 | People outdoor     | Base class in `landusePeopleOutdoor`           |
 | Assembly of people | Base class in `landusePeopleOutdoor`           |
 
-Germany's values were supplied by LBA in September 2026. LBA initially supplied
-thirteen, including 491122 (low density urban fabric), but withdrew that one:
+Germany's values were supplied by LBA in September 2026 and revised in October.
+The first set rounded each class up to the top of its ground risk band, 4,999 or
+49,999, to show conservatism. That does not move the iGRC, which is banded, but
+the adjacent area figure is an area weighted mean, so the ceilings inflated it
+and produced containment requirements stricter than intended. The revised values
+are the ENACT 90th percentile rounded up to the next 100, except for three
+classes with no ENACT value which keep 49,999.
+
+LBA initially supplied thirteen, including 491122 (low density urban fabric),
+but withdrew that one:
 the class is not among those requested under the LBA-EASA partnership
 agreement. Twelve are implemented. German 491122 pixels exist in the raster and
 are ignored, exactly as plain 1122 is everywhere else.

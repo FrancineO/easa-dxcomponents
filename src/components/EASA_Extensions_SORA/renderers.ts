@@ -59,23 +59,31 @@ export const landusePopDensityLookup: Record<number, number | null> = {
   // their values are carried in the raster as the LUISA code prefixed with the
   // country calling code, so 491111 is 1111 in Germany. Only the classes where
   // the state deviates are prefixed, everything else keeps the plain code and
-  // the value above. Supplied by LBA via JRC, September 2026.
+  // the value above. Supplied by LBA via JRC, revised October 2026.
+  //
+  // LBA's first set rounded every class up to the top of its ground risk band,
+  // 4,999 or 49,999, to show conservatism. That does not move the iGRC, since
+  // the bands are <500, <5,000 and <50,000, but the adjacent area figure is an
+  // area weighted mean rather than a band, so the ceilings inflated it and
+  // produced containment requirements stricter than intended. These values are
+  // the ENACT 90th percentile rounded up to the next 100 instead. The three
+  // classes with no ENACT value keep 49,999.
   //
   // 491122 (low density urban fabric) is deliberately not here. LBA supplied a
   // value for it, but the class is not one of those requested under the
   // LBA-EASA partnership agreement, and LBA withdrew it. German 491122 pixels
   // are therefore ignored, exactly as plain 1122 is everywhere else.
-  491111: 49999,
-  491121: 4999,
-  491130: 4999,
-  491210: 4999,
+  491111: 10000,
+  491121: 4900,
+  491130: 2900,
+  491210: 4200,
   491222: 49999,
-  491230: 4999,
+  491230: 4900,
   491242: 49999,
-  491330: 4999,
-  491410: 49999,
-  491421: 4999,
-  491422: 4999,
+  491330: 2300,
+  491410: 7000,
+  491421: 3100,
+  491422: 4900,
   493310: 49999,
 };
 

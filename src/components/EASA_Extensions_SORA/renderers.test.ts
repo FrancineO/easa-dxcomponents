@@ -45,8 +45,10 @@ describe('country prefixed land use codes', () => {
 
   it('uses the national density, not the base class density', () => {
     expect(landusePopDensityLookup[1111]).toBe(13400);
-    expect(landusePopDensityLookup[491111]).toBe(49999);
-    expect(landusePopDensityLookup[491121]).toBe(4999);
+    expect(landusePopDensityLookup[491111]).toBe(10000);
+    expect(landusePopDensityLookup[491121]).toBe(4900);
+    // the three classes with no ENACT value keep the band ceiling
+    expect(landusePopDensityLookup[491222]).toBe(49999);
   });
 });
 
@@ -61,7 +63,7 @@ describe('buildImpactedLandUse', () => {
       {
         pyLabel: 'Green urban areas (Germany)',
         Code: '491410',
-        PopulationDensity: 49999,
+        PopulationDensity: 7000,
         PeopleOutdoor: true,
         AssemblyOfPeople: true,
         OverridePopulationDensity: null,
@@ -75,7 +77,7 @@ describe('buildImpactedLandUse', () => {
       {
         pyLabel: 'Green urban areas (Germany)',
         Code: '491410',
-        PopulationDensity: 49999,
+        PopulationDensity: 7000,
         OverridePopulationDensity: 120,
         OverrideReason: 'surveyed',
         PeopleOutdoor: true,
