@@ -65,9 +65,16 @@ export const landusePopDensityLookup: Record<number, number | null> = {
   // 4,999 or 49,999, to show conservatism. That does not move the iGRC, since
   // the bands are <500, <5,000 and <50,000, but the adjacent area figure is an
   // area weighted mean rather than a band, so the ceilings inflated it and
-  // produced containment requirements stricter than intended. These values are
-  // the ENACT 90th percentile rounded up to the next 100 instead. The three
-  // classes with no ENACT value keep 49,999.
+  // produced containment requirements stricter than intended.
+  //
+  // These values are the ENACT 90th percentile rounded up to the next 100,
+  // except for 491121, 491230 and 491422. Those are the only classes whose
+  // ENACT 90th exceeds 5,000 and does so only marginally, at 5,928, 5,421 and
+  // 5,434, and LBA set all three to 4,900 rather than let a small exceedance
+  // push the class out of the <5,000 ground risk band. 491111 was not capped;
+  // at 9,960 it clears the boundary decisively and sits in <50,000. That
+  // reading of the rule is inferred from the values, not stated by LBA, and is
+  // pending confirmation. The three classes with no ENACT value keep 49,999.
   //
   // 491122 (low density urban fabric) is deliberately not here. LBA supplied a
   // value for it, but the class is not one of those requested under the
