@@ -106,12 +106,22 @@ export const useGetPopulationDensity = (
         // have NoData in the raster and would otherwise be excluded from the average.
         // Use geodesic area so the denominator matches service pixel metres
         // regardless of the map spatial reference.
+        //
+        // The fraction is clamped to 1 because it is a fraction: a geometry
+        // cannot hold more populated cells than it holds cells. The clamp is not
+        // theoretical. JRC_CENSUS_2021_*_pop_per_sqkm reports a count of exactly
+        // twice area/pixelArea at every box size and at both 100 m and 200 m
+        // pixel sizes, which doubled the reported average until this was added.
+        // Why the service does that is not yet understood, so a layer that does
+        // use NoData will still be under-corrected; that needs the count itself
+        // explained before it can be relied on.
         const pixelArea = pixelSize.x * pixelSize.y;
         const totalCellCount =
           Math.abs(geometryEngine.geodesicArea(geometry, 'square-meters')) /
           pixelArea;
         if (!totalCellCount) return _.round(stats.avg, 2);
-        return _.round((stats.avg * stats.count) / totalCellCount, 2);
+        const populatedFraction = Math.min(1, stats.count / totalCellCount);
+        return _.round(stats.avg * populatedFraction, 2);
       }
       return null;
     },
